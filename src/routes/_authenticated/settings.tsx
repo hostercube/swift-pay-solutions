@@ -122,6 +122,59 @@ function SettingsPage() {
         )}
       </div>
 
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Public profile / tip jar</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Share <code className="font-mono text-xs">/m/&lt;slug&gt;</code> so anyone can send
+          you a tip or donation.
+        </p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <Field label="URL slug (letters, numbers, hyphens)">
+            <Input
+              value={p.slug ?? ""}
+              onChange={(v) =>
+                setP({ ...p, slug: v.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) })
+              }
+            />
+          </Field>
+          <Field label="Minimum tip amount ৳">
+            <Input
+              value={String(p.tip_min_amount ?? 10)}
+              onChange={(v) => setP({ ...p, tip_min_amount: Number(v) || 0 })}
+            />
+          </Field>
+          <label className="flex items-center gap-2 md:col-span-2">
+            <input
+              type="checkbox"
+              checked={p.accept_tips}
+              onChange={(e) => setP({ ...p, accept_tips: e.target.checked })}
+            />
+            <span className="text-sm">Accept public tips</span>
+          </label>
+          <label className="md:col-span-2">
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Public bio
+            </div>
+            <textarea
+              value={p.public_bio ?? ""}
+              onChange={(e) => setP({ ...p, public_bio: e.target.value })}
+              rows={3}
+              className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
+            />
+          </label>
+        </div>
+        {p.slug && (
+          <a
+            href={`/m/${p.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex text-xs text-brand hover:underline"
+          >
+            Preview → /m/{p.slug}
+          </a>
+        )}
+      </div>
+
       <div className="mt-6 flex justify-end">
         <button
           onClick={save}
