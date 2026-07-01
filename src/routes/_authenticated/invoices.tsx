@@ -64,8 +64,6 @@ function InvoicesPage() {
         </Link>
       }
     >
-      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
       <div className="mb-4 inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
         {(["all","live","test"] as const).map((m) => (
           <button key={m} onClick={() => setModeFilter(m)}
