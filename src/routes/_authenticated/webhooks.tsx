@@ -58,7 +58,9 @@ function WebhooksPage() {
       url,
       events: selected,
       signing_secret: randomSecret(),
+      mode,
     });
+
     if (error) return toast.error(error.message);
     setUrl("");
     toast.success("Webhook endpoint added");
