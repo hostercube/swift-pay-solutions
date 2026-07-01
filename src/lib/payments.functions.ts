@@ -79,3 +79,124 @@ export const rejectTransaction = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/**
+ * Super-admin updates a payout row. When status flips to `processed`, fires the
+ * `payout.processed` webhook + merchant notification.
+ */
+export const updatePayoutStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { payoutId: string; status: "approved" | "processed" | "rejected"; note?: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const patch: Record<string, unknown> = {
+      status: data.status,
+      admin_note: data.note ?? null,
+    };
+    if (data.status === "processed") {
+      patch.processed_at = new Date().toISOString();
+      patch.processed_by = userId;
+    }
+
+    const { data: row, error } = await supabase
+      .from("payouts")
+      .update(patch)
+      .eq("id", data.payoutId)
+      .select("*")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Payout update failed");
+
+    if (data.status === "processed") {
+      dispatchWebhooks({
+        merchantId: (row as { merchant_id: string }).merchant_id,
+        invoiceId: (row as { id: string }).id,
+        event: "payout.processed",
+        data: row,
+      }).catch(() => undefined);
+
+      notify({
+        merchantId: (row as { merchant_id: string }).merchant_id,
+        event: "payout.processed",
+        title: "Payout processed",
+        body: `Amount ৳ ${(row as { amount: number }).amount} sent to ${(row as { method: string }).method}.`,
+        metadata: { payoutId: (row as { id: string }).id },
+      }).catch(() => undefined);
+    }
+    return { ok: true };
+  });
+
+/** Merchant creates a refund request against a completed invoice. */
+export const createRefund = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { invoiceId: string; amount: number; reason?: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: inv, error: iErr } = await supabase
+      .from("invoices")
+      .select("id, merchant_id, amount, currency, status")
+      .eq("id", data.invoiceId)
+      .maybeSingle();
+    if (iErr || !inv) throw new Error(iErr?.message ?? "Invoice not found");
+    if (inv.merchant_id !== userId) throw new Error("Forbidden");
+    if (inv.status !== "completed") throw new Error("Only completed invoices can be refunded");
+    if (data.amount <= 0 || data.amount > Number(inv.amount))
+      throw new Error("Invalid refund amount");
+
+    const { error } = await supabase.from("refunds").insert({
+      merchant_id: userId,
+      invoice_id: inv.id,
+      amount: data.amount,
+      currency: inv.currency,
+      reason: data.reason ?? null,
+      status: "requested",
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Super-admin approves / rejects / processes a refund. Fires webhook on processed. */
+export const updateRefundStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { refundId: string; status: "approved" | "processed" | "rejected"; note?: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const patch: Record<string, unknown> = { status: data.status, admin_note: data.note ?? null };
+    if (data.status === "processed") {
+      patch.processed_at = new Date().toISOString();
+      patch.processed_by = userId;
+    }
+
+    const { data: row, error } = await supabase
+      .from("refunds")
+      .update(patch)
+      .eq("id", data.refundId)
+      .select("*")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Refund update failed");
+
+    if (data.status === "processed") {
+      dispatchWebhooks({
+        merchantId: (row as { merchant_id: string }).merchant_id,
+        invoiceId: (row as { invoice_id: string }).invoice_id,
+        event: "refund.processed",
+        data: row,
+      }).catch(() => undefined);
+
+      notify({
+        merchantId: (row as { merchant_id: string }).merchant_id,
+        event: "refund.processed",
+        title: "Refund processed",
+        body: `Refund of ${(row as { currency: string }).currency} ${(row as { amount: number }).amount} completed.`,
+        metadata: { refundId: (row as { id: string }).id },
+      }).catch(() => undefined);
+    }
+    return { ok: true };
+  });
