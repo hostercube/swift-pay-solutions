@@ -23,7 +23,9 @@ type Invoice = {
   description: string | null;
   redirect_url: string | null;
   expires_at: string | null;
+  mode: string;
 };
+
 
 type Method = {
   id: string;
