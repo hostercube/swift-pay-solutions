@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -61,6 +62,11 @@ const StatusRoute = StatusRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/status': typeof StatusRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/status': typeof StatusRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
   '/status': typeof StatusRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/docs'
+    | '/portal'
     | '/pricing'
     | '/status'
     | '/admin'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/docs'
+    | '/portal'
     | '/pricing'
     | '/status'
     | '/api-keys'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/docs'
+    | '/portal'
     | '/pricing'
     | '/status'
     | '/_authenticated/admin'
@@ -555,6 +567,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
+  PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
   StatusRoute: typeof StatusRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
@@ -578,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -979,6 +999,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
+  PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,
   StatusRoute: StatusRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,

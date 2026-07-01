@@ -44,6 +44,11 @@ export function SiteFooter() {
                 System status
               </Link>
             </li>
+            <li>
+              <Link to="/portal" className="text-muted-foreground hover:text-foreground">
+                Customer portal
+              </Link>
+            </li>
           </ul>
 
         </div>

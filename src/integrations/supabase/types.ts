@@ -1272,6 +1272,21 @@ export type Database = {
           verified_at: string
         }[]
       }
+      get_customer_invoices: {
+        Args: { _email: string; _invoice_number: string }
+        Returns: {
+          amount: number
+          business_name: string
+          created_at: string
+          currency: string
+          description: string
+          expires_at: string
+          id: string
+          invoice_number: string
+          paid_at: string
+          status: Database["public"]["Enums"]["invoice_status"]
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
