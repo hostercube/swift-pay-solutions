@@ -42,6 +42,7 @@ import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
+import { Route as AuthenticatedAdminIncidentsRouteImport } from './routes/_authenticated/admin/incidents'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
@@ -223,6 +224,12 @@ const AuthenticatedAdminMerchantsRoute =
     path: '/merchants',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminIncidentsRoute =
+  AuthenticatedAdminIncidentsRouteImport.update({
+    id: '/incidents',
+    path: '/incidents',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminFxRoute = AuthenticatedAdminFxRouteImport.update({
   id: '/fx',
   path: '/fx',
@@ -290,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
+  '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -330,6 +338,7 @@ export interface FileRoutesByTo {
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
+  '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -373,6 +382,7 @@ export interface FileRoutesById {
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
+  '/_authenticated/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -416,6 +426,7 @@ export interface FileRouteTypes {
     | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/fx'
+    | '/admin/incidents'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/settings'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/fx'
+    | '/admin/incidents'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/settings'
@@ -498,6 +510,7 @@ export interface FileRouteTypes {
     | '/pay/$invoiceId'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/fx'
+    | '/_authenticated/admin/incidents'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/settings'
@@ -760,6 +773,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMerchantsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/incidents': {
+      id: '/_authenticated/admin/incidents'
+      path: '/incidents'
+      fullPath: '/admin/incidents'
+      preLoaderRoute: typeof AuthenticatedAdminIncidentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/fx': {
       id: '/_authenticated/admin/fx'
       path: '/fx'
@@ -815,6 +835,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
+  AuthenticatedAdminIncidentsRoute: typeof AuthenticatedAdminIncidentsRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -825,6 +846,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
   {
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
+    AuthenticatedAdminIncidentsRoute: AuthenticatedAdminIncidentsRoute,
     AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
