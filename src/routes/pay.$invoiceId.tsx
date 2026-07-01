@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Shield, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Shield, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadReceipt } from "@/lib/pdf-receipt";
 
 export const Route = createFileRoute("/pay/$invoiceId")({
   head: () => ({ meta: [{ title: "Checkout · PayNOC" }] }),
@@ -24,6 +25,9 @@ type Invoice = {
   redirect_url: string | null;
   expires_at: string | null;
   mode: string;
+  display_currency?: string | null;
+  discount_amount?: number | null;
+  discount_code?: string | null;
 };
 
 
