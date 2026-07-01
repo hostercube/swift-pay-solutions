@@ -52,9 +52,18 @@ type Txn = {
   note: string | null;
 };
 
+type Brand = {
+  business_name: string | null;
+  brand_color: string | null;
+  logo_url: string | null;
+  support_email: string | null;
+  checkout_footer: string | null;
+};
+
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
   const [inv, setInv] = useState<Invoice | null>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
   const [selected, setSelected] = useState<Method | null>(null);
   const [txns, setTxns] = useState<Txn[]>([]);
@@ -67,21 +76,21 @@ function CheckoutPage() {
       .from("checkout_invoices").select("*").eq("id", invoiceId).maybeSingle();
     setInv((i ?? null) as Invoice | null);
     if (i) {
-      const { data: m } = await supabase
-        .from("checkout_methods").select("*")
-        .eq("merchant_id", (i as Invoice).merchant_id)
-        .order("sort_order", { ascending: true });
+      const merchantId = (i as Invoice).merchant_id;
+      const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
+        supabase.from("checkout_methods").select("*").eq("merchant_id", merchantId).order("sort_order", { ascending: true }),
+        supabase.from("transactions").select("id, status, method_type, gross_amount, provider_txn_id, reference, created_at, verified_at, note").eq("invoice_id", invoiceId).order("created_at", { ascending: false }),
+        supabase.from("checkout_brand").select("business_name, brand_color, logo_url, support_email, checkout_footer").eq("merchant_id", merchantId).maybeSingle(),
+      ]);
       setMethods((m ?? []) as Method[]);
-      const { data: t } = await supabase
-        .from("transactions").select("id, status, method_type, gross_amount, provider_txn_id, reference, created_at, verified_at, note")
-        .eq("invoice_id", invoiceId)
-        .order("created_at", { ascending: false });
       setTxns((t ?? []) as Txn[]);
+      setBrand((b ?? null) as Brand | null);
     }
     setLoading(false);
   }, [invoiceId]);
 
   useEffect(() => { load(); }, [load]);
+
 
   // Poll for verification if we have a pending txn
   useEffect(() => {
