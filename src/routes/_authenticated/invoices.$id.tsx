@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, ExternalLink } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { verifyTransaction, rejectTransaction } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({
   head: () => ({ meta: [{ title: "Invoice · PayNOC" }] }),
@@ -65,38 +67,29 @@ function InvoiceDetailPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const verifyFn = useServerFn(verifyTransaction);
+  const rejectFn = useServerFn(rejectTransaction);
+
   async function verify(t: Txn) {
     if (!inv) return;
-    // Mark transaction verified + invoice completed
-    const { error: e1 } = await supabase
-      .from("transactions")
-      .update({ status: "verified", verified_at: new Date().toISOString(), verified_by: user!.id })
-      .eq("id", t.id);
-    if (e1) return toast.error(e1.message);
-    const { error: e2 } = await supabase
-      .from("invoices")
-      .update({
-        status: "completed",
-        paid_at: new Date().toISOString(),
-        fee_amount: t.fee_amount,
-        net_amount: t.net_amount,
-        method_type: t.method_type as never,
-      })
-      .eq("id", inv.id);
-    if (e2) return toast.error(e2.message);
-    toast.success("Payment verified");
-    load();
+    try {
+      await verifyFn({ data: { transactionId: t.id } });
+      toast.success("Payment verified — webhook dispatched");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Verification failed");
+    }
   }
 
   async function reject(t: Txn) {
     const note = prompt("Reason for rejection (optional):") ?? undefined;
-    const { error } = await supabase
-      .from("transactions")
-      .update({ status: "rejected", note: note || null })
-      .eq("id", t.id);
-    if (error) return toast.error(error.message);
-    toast.success("Transaction rejected");
-    load();
+    try {
+      await rejectFn({ data: { transactionId: t.id, note } });
+      toast.success("Transaction rejected");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Reject failed");
+    }
   }
 
   async function cancel() {
