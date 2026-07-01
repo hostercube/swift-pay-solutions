@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -49,6 +50,11 @@ import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/pricing': typeof PricingRoute
+  '/status': typeof StatusRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
@@ -302,6 +309,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/pricing': typeof PricingRoute
+  '/status': typeof StatusRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -343,6 +351,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/pricing': typeof PricingRoute
+  '/status': typeof StatusRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/byo-gateways': typeof AuthenticatedByoGatewaysRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/docs'
     | '/pricing'
+    | '/status'
     | '/admin'
     | '/api-keys'
     | '/byo-gateways'
@@ -425,6 +435,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/docs'
     | '/pricing'
+    | '/status'
     | '/api-keys'
     | '/byo-gateways'
     | '/dashboard'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/docs'
     | '/pricing'
+    | '/status'
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
     | '/_authenticated/byo-gateways'
@@ -507,6 +519,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
   PricingRoute: typeof PricingRoute
+  StatusRoute: typeof StatusRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
@@ -516,6 +529,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -896,6 +916,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
   PricingRoute: PricingRoute,
+  StatusRoute: StatusRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
