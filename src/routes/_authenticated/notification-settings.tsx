@@ -26,6 +26,8 @@ type Settings = {
   inapp_enabled: boolean;
   notify_email: string | null;
   notify_phone: string | null;
+  slack_webhook_url: string | null;
+  discord_webhook_url: string | null;
   events: Record<string, boolean>;
 };
 
@@ -35,6 +37,8 @@ const DEFAULTS: Settings = {
   inapp_enabled: true,
   notify_email: null,
   notify_phone: null,
+  slack_webhook_url: null,
+  discord_webhook_url: null,
   events: {
     "invoice.completed": true,
     "invoice.failed": true,
