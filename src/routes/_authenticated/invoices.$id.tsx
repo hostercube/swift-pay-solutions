@@ -220,6 +220,11 @@ function InvoiceDetailPage() {
                         {t.status === "pending" ? (
                           can("operator") ? (
                             <div className="inline-flex gap-2">
+                              {["bkash","nagad"].includes(String(t.method_type).toLowerCase()) && (
+                                <button onClick={() => autoVerify(t)} className="rounded-md border border-brand/30 px-2 py-1 text-xs text-brand">
+                                  Auto-verify
+                                </button>
+                              )}
                               <button onClick={() => verify(t)} className="rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
                                 Verify
                               </button>
