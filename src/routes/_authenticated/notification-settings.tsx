@@ -154,6 +154,35 @@ function NotifSettingsPage() {
 
         <section className="rounded-2xl border border-glass-border bg-card/40 p-6 backdrop-blur">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Chat integrations
+          </h2>
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium">Slack incoming webhook URL</div>
+              <input
+                placeholder="https://hooks.slack.com/services/…"
+                value={s.slack_webhook_url ?? ""}
+                onChange={(e) => setS({ ...s, slack_webhook_url: e.target.value || null })}
+                className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm font-mono outline-none focus:border-brand"
+              />
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Discord webhook URL</div>
+              <input
+                placeholder="https://discord.com/api/webhooks/…"
+                value={s.discord_webhook_url ?? ""}
+                onChange={(e) => setS({ ...s, discord_webhook_url: e.target.value || null })}
+                className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm font-mono outline-none focus:border-brand"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paste a webhook URL from either service to receive alerts in your channel.
+            </p>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-glass-border bg-card/40 p-6 backdrop-blur">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Events
           </h2>
           <div className="space-y-4">
