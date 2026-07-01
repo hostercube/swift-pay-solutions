@@ -305,25 +305,41 @@ function CheckoutPage() {
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | null }) {
+  const brandColor = brand?.brand_color || null;
+  const style = brandColor
+    ? ({ ["--brand" as never]: brandColor, ["--brand-2" as never]: brandColor } as React.CSSProperties)
+    : undefined;
+  const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background" style={style}>
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 flex items-center justify-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
-            <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
-          </span>
-          <span className="font-display text-lg font-bold">PayNOC secure checkout</span>
+          {brand?.logo_url ? (
+            <img src={brand.logo_url} alt={name} className="h-9 w-9 rounded-lg object-contain" />
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
+              <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
+            </span>
+          )}
+          <span className="font-display text-lg font-bold">{name}</span>
         </div>
         {children}
-        <div className="mt-8 text-center text-[11px] text-muted-foreground">
-          Payments are encrypted and processed by the merchant. PayNOC does not hold funds.
+        <div className="mt-8 space-y-1 text-center text-[11px] text-muted-foreground">
+          {brand?.checkout_footer && <div>{brand.checkout_footer}</div>}
+          {brand?.support_email && (
+            <div>
+              Need help? <a href={`mailto:${brand.support_email}`} className="underline">{brand.support_email}</a>
+            </div>
+          )}
+          <div>Secured by PayNOC · Payments processed by the merchant.</div>
         </div>
       </div>
     </div>
   );
 }
+
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
