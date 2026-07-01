@@ -16,6 +16,10 @@ type Profile = {
   phone: string | null;
   email: string;
   avatar_url: string | null;
+  brand_color: string | null;
+  logo_url: string | null;
+  support_email: string | null;
+  checkout_footer: string | null;
 };
 
 function SettingsPage() {
@@ -27,7 +31,7 @@ function SettingsPage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, business_name, phone, email, avatar_url")
+      .select("full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setP(data as Profile | null));
@@ -41,6 +45,10 @@ function SettingsPage() {
       business_name: p.business_name,
       phone: p.phone,
       avatar_url: p.avatar_url,
+      brand_color: p.brand_color,
+      logo_url: p.logo_url,
+      support_email: p.support_email,
+      checkout_footer: p.checkout_footer,
     }).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -68,6 +76,42 @@ function SettingsPage() {
           <Input value={p.avatar_url ?? ""} onChange={(v) => setP({ ...p, avatar_url: v })} />
         </Field>
       </div>
+
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Checkout branding</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Shown on your hosted checkout page (<code className="font-mono text-xs">/pay/&lt;invoice&gt;</code>).
+        </p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <Field label="Logo URL">
+            <Input value={p.logo_url ?? ""} onChange={(v) => setP({ ...p, logo_url: v })} />
+          </Field>
+          <Field label="Brand color (hex)">
+            <div className="flex items-center gap-2">
+              <Input value={p.brand_color ?? ""} onChange={(v) => setP({ ...p, brand_color: v })} />
+              <input
+                type="color"
+                value={p.brand_color || "#6366f1"}
+                onChange={(e) => setP({ ...p, brand_color: e.target.value })}
+                className="h-9 w-12 cursor-pointer rounded border border-glass-border bg-transparent"
+              />
+            </div>
+          </Field>
+          <Field label="Support email (shown to payers)">
+            <Input value={p.support_email ?? ""} onChange={(v) => setP({ ...p, support_email: v })} />
+          </Field>
+          <Field label="Checkout footer text">
+            <Input value={p.checkout_footer ?? ""} onChange={(v) => setP({ ...p, checkout_footer: v })} />
+          </Field>
+        </div>
+        {p.logo_url && (
+          <div className="mt-4 flex items-center gap-3 rounded-lg border border-glass-border bg-card/40 p-3">
+            <img src={p.logo_url} alt="Logo preview" className="h-10 w-10 rounded object-contain" />
+            <span className="text-xs text-muted-foreground">Preview</span>
+          </div>
+        )}
+      </div>
+
       <div className="mt-6 flex justify-end">
         <button
           onClick={save}

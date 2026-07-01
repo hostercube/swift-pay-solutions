@@ -52,9 +52,18 @@ type Txn = {
   note: string | null;
 };
 
+type Brand = {
+  business_name: string | null;
+  brand_color: string | null;
+  logo_url: string | null;
+  support_email: string | null;
+  checkout_footer: string | null;
+};
+
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
   const [inv, setInv] = useState<Invoice | null>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
   const [selected, setSelected] = useState<Method | null>(null);
   const [txns, setTxns] = useState<Txn[]>([]);
@@ -67,21 +76,21 @@ function CheckoutPage() {
       .from("checkout_invoices").select("*").eq("id", invoiceId).maybeSingle();
     setInv((i ?? null) as Invoice | null);
     if (i) {
-      const { data: m } = await supabase
-        .from("checkout_methods").select("*")
-        .eq("merchant_id", (i as Invoice).merchant_id)
-        .order("sort_order", { ascending: true });
+      const merchantId = (i as Invoice).merchant_id;
+      const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
+        supabase.from("checkout_methods").select("*").eq("merchant_id", merchantId).order("sort_order", { ascending: true }),
+        supabase.from("transactions").select("id, status, method_type, gross_amount, provider_txn_id, reference, created_at, verified_at, note").eq("invoice_id", invoiceId).order("created_at", { ascending: false }),
+        supabase.from("checkout_brand").select("business_name, brand_color, logo_url, support_email, checkout_footer").eq("merchant_id", merchantId).maybeSingle(),
+      ]);
       setMethods((m ?? []) as Method[]);
-      const { data: t } = await supabase
-        .from("transactions").select("id, status, method_type, gross_amount, provider_txn_id, reference, created_at, verified_at, note")
-        .eq("invoice_id", invoiceId)
-        .order("created_at", { ascending: false });
       setTxns((t ?? []) as Txn[]);
+      setBrand((b ?? null) as Brand | null);
     }
     setLoading(false);
   }, [invoiceId]);
 
   useEffect(() => { load(); }, [load]);
+
 
   // Poll for verification if we have a pending txn
   useEffect(() => {
@@ -151,12 +160,12 @@ function CheckoutPage() {
 
   if (loading) {
     return (
-      <Shell><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
+      <Shell brand={brand}><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
     );
   }
   if (!inv) {
     return (
-      <Shell>
+      <Shell brand={brand}>
         <div className="glass rounded-2xl border border-glass-border p-8 text-center">
           <XCircle className="mx-auto h-10 w-10 text-destructive" />
           <h1 className="mt-3 font-display text-xl font-bold">Invoice unavailable</h1>
@@ -173,7 +182,7 @@ function CheckoutPage() {
 
   if (verified) {
     return (
-      <Shell>
+      <Shell brand={brand}>
         <div className="glass rounded-2xl border border-glass-border p-8 text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-brand" />
           <h1 className="mt-3 font-display text-2xl font-bold">Payment confirmed</h1>
@@ -191,7 +200,7 @@ function CheckoutPage() {
   }
 
   return (
-    <Shell>
+    <Shell brand={brand}>
       <div className="mb-6 flex items-baseline justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Amount due</div>
@@ -296,25 +305,41 @@ function CheckoutPage() {
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | null }) {
+  const brandColor = brand?.brand_color || null;
+  const style = brandColor
+    ? ({ ["--brand" as never]: brandColor, ["--brand-2" as never]: brandColor } as React.CSSProperties)
+    : undefined;
+  const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background" style={style}>
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 flex items-center justify-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
-            <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
-          </span>
-          <span className="font-display text-lg font-bold">PayNOC secure checkout</span>
+          {brand?.logo_url ? (
+            <img src={brand.logo_url} alt={name} className="h-9 w-9 rounded-lg object-contain" />
+          ) : (
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
+              <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
+            </span>
+          )}
+          <span className="font-display text-lg font-bold">{name}</span>
         </div>
         {children}
-        <div className="mt-8 text-center text-[11px] text-muted-foreground">
-          Payments are encrypted and processed by the merchant. PayNOC does not hold funds.
+        <div className="mt-8 space-y-1 text-center text-[11px] text-muted-foreground">
+          {brand?.checkout_footer && <div>{brand.checkout_footer}</div>}
+          {brand?.support_email && (
+            <div>
+              Need help? <a href={`mailto:${brand.support_email}`} className="underline">{brand.support_email}</a>
+            </div>
+          )}
+          <div>Secured by PayNOC · Payments processed by the merchant.</div>
         </div>
       </div>
     </div>
   );
 }
+
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
