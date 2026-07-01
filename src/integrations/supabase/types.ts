@@ -973,6 +973,8 @@ export type Database = {
           invoice_number: string | null
           merchant_id: string | null
           metadata: Json | null
+          method_id: string | null
+          method_type: Database["public"]["Enums"]["payment_method_type"] | null
           mode: string | null
           paid_at: string | null
           redirect_url: string | null
@@ -991,6 +993,10 @@ export type Database = {
           invoice_number?: string | null
           merchant_id?: string | null
           metadata?: Json | null
+          method_id?: string | null
+          method_type?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
           mode?: string | null
           paid_at?: string | null
           redirect_url?: string | null
@@ -1009,12 +1015,31 @@ export type Database = {
           invoice_number?: string | null
           merchant_id?: string | null
           metadata?: Json | null
+          method_id?: string | null
+          method_type?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
           mode?: string | null
           paid_at?: string | null
           redirect_url?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invoices_method_id_fkey"
+            columns: ["method_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_method_id_fkey"
+            columns: ["method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       checkout_methods: {
         Row: {
