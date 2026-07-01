@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateApiKey, jsonResponse, CORS_HEADERS } from "@/lib/api-auth.server";
+import { logApiRequest } from "@/lib/api-log.server";
 
 export const Route = createFileRoute("/api/public/v1/invoices/$id")({
   server: {
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/api/public/v1/invoices/$id")({
       GET: async ({ request, params }) => {
         const auth = await authenticateApiKey(request);
         if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
+        const started = Date.now();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin
@@ -18,11 +20,19 @@ export const Route = createFileRoute("/api/public/v1/invoices/$id")({
           .eq("merchant_id", auth.merchantId)
           .maybeSingle();
 
-        if (error) return jsonResponse({ error: error.message }, 500);
-        if (!data) return jsonResponse({ error: "Invoice not found" }, 404);
-
-        const origin = new URL(request.url).origin;
-        return jsonResponse({ data: { ...data, checkout_url: `${origin}/pay/${data.id}` } });
+        let res: Response;
+        let err: string | null = null;
+        if (error) { res = jsonResponse({ error: error.message }, 500); err = error.message; }
+        else if (!data) { res = jsonResponse({ error: "Invoice not found" }, 404); err = "Not found"; }
+        else {
+          const origin = new URL(request.url).origin;
+          res = jsonResponse({ data: { ...data, checkout_url: `${origin}/pay/${data.id}` } });
+        }
+        logApiRequest({
+          merchantId: auth.merchantId, apiKeyId: auth.keyId, request,
+          status: res.status, startedAt: started, errorMessage: err,
+        });
+        return res;
       },
     },
   },

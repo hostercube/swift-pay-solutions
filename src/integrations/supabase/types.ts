@@ -53,6 +53,48 @@ export type Database = {
         }
         Relationships: []
       }
+      api_request_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          latency_ms: number
+          merchant_id: string
+          method: string
+          path: string
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          latency_ms: number
+          merchant_id: string
+          method: string
+          path: string
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          latency_ms?: number
+          merchant_id?: string
+          method?: string
+          path?: string
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string

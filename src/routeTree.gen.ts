@@ -35,6 +35,7 @@ import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedByoGatewaysRouteImport } from './routes/_authenticated/byo-gateways'
+import { Route as AuthenticatedApiLogsRouteImport } from './routes/_authenticated/api-logs'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -186,6 +187,11 @@ const AuthenticatedByoGatewaysRoute =
     path: '/byo-gateways',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedApiLogsRoute = AuthenticatedApiLogsRouteImport.update({
+  id: '/api-logs',
+  path: '/api-logs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/api-logs': typeof AuthenticatedApiLogsRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fraud': typeof AuthenticatedFraudRoute
@@ -326,6 +333,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/status': typeof StatusRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/api-logs': typeof AuthenticatedApiLogsRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fraud': typeof AuthenticatedFraudRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
+  '/_authenticated/api-logs': typeof AuthenticatedApiLogsRoute
   '/_authenticated/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fraud': typeof AuthenticatedFraudRoute
@@ -416,6 +425,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/admin'
     | '/api-keys'
+    | '/api-logs'
     | '/byo-gateways'
     | '/dashboard'
     | '/fraud'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/status'
     | '/api-keys'
+    | '/api-logs'
     | '/byo-gateways'
     | '/dashboard'
     | '/fraud'
@@ -502,6 +513,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
+    | '/_authenticated/api-logs'
     | '/_authenticated/byo-gateways'
     | '/_authenticated/dashboard'
     | '/_authenticated/fraud'
@@ -736,6 +748,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedByoGatewaysRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/api-logs': {
+      id: '/_authenticated/api-logs'
+      path: '/api-logs'
+      fullPath: '/api-logs'
+      preLoaderRoute: typeof AuthenticatedApiLogsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/api-keys': {
       id: '/_authenticated/api-keys'
       path: '/api-keys'
@@ -895,6 +914,7 @@ const AuthenticatedInvoicesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
+  AuthenticatedApiLogsRoute: typeof AuthenticatedApiLogsRoute
   AuthenticatedByoGatewaysRoute: typeof AuthenticatedByoGatewaysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
@@ -917,6 +937,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
+  AuthenticatedApiLogsRoute: AuthenticatedApiLogsRoute,
   AuthenticatedByoGatewaysRoute: AuthenticatedByoGatewaysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFraudRoute: AuthenticatedFraudRoute,
