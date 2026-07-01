@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -11,6 +12,7 @@ const nav = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 w-full">
@@ -45,18 +47,30 @@ export function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
-            <Link
-              to="/"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/"
-              className="inline-flex items-center rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.02]"
-            >
-              Get started
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.02]"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/auth"
+                  className="inline-flex items-center rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.02]"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -83,10 +97,11 @@ export function SiteHeader() {
                 </Link>
               ))}
               <Link
-                to="/"
+                to={isAuthenticated ? "/dashboard" : "/auth"}
+                onClick={() => setOpen(false)}
                 className="mt-2 block rounded-lg bg-gradient-brand px-3 py-2.5 text-center text-sm font-semibold text-brand-foreground"
               >
-                Get started
+                {isAuthenticated ? "Dashboard" : "Get started"}
               </Link>
             </div>
           </div>
