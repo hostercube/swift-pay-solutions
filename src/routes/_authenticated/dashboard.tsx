@@ -51,12 +51,19 @@ function DashboardPage() {
       </div>
 
       <div className="mt-8 glass rounded-2xl border border-glass-border p-8">
-        <h2 className="font-display text-lg font-semibold">Get started</h2>
-        <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
-          <li>1. Configure your payment methods (bKash, Nagad, bank transfer, etc.).</li>
-          <li>2. Generate API keys and integrate PayNOC checkout on your site.</li>
-          <li>3. Add a webhook endpoint to receive payment notifications.</li>
-        </ol>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Get started</h2>
+            <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
+              <li>1. Add business info & payment methods (bKash, Nagad, bank transfer).</li>
+              <li>2. Generate API keys and integrate PayNOC checkout on your site.</li>
+              <li>3. Add a webhook endpoint to receive payment notifications.</li>
+            </ol>
+          </div>
+          <a href="/onboarding" className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Open wizard →
+          </a>
+        </div>
       </div>
     </MerchantShell>
   );
