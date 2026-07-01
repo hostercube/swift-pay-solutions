@@ -57,7 +57,9 @@ export const verifyTransaction = createServerFn({ method: "POST" })
       invoiceId: invoice.id,
       event: "invoice.completed",
       data: invoice,
+      mode: ((invoice as { mode?: "live" | "test" }).mode ?? "live"),
     }).catch(() => undefined);
+
 
     notify({
       merchantId: txn.merchant_id,
