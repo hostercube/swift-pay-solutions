@@ -19,6 +19,7 @@ import {
   BookOpen,
   Plug,
   Rocket,
+  Repeat,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/onboarding", label: "Get started", icon: Rocket },
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/invoices", label: "Invoices", icon: Receipt },
+  { to: "/recurring", label: "Recurring", icon: Repeat },
   { to: "/transactions", label: "Transactions", icon: CreditCard },
   { to: "/payouts", label: "Payouts", icon: Wallet },
   { to: "/refunds", label: "Refunds", icon: Receipt },

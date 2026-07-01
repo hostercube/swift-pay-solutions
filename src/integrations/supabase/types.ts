@@ -761,6 +761,72 @@ export type Database = {
           },
         ]
       }
+      recurring_schedules: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          description: string | null
+          id: string
+          interval_count: number
+          interval_unit: string
+          is_active: boolean
+          last_run_at: string | null
+          merchant_id: string
+          mode: string
+          name: string
+          next_run_at: string
+          redirect_url: string | null
+          runs_count: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          id?: string
+          interval_count?: number
+          interval_unit: string
+          is_active?: boolean
+          last_run_at?: string | null
+          merchant_id: string
+          mode?: string
+          name: string
+          next_run_at: string
+          redirect_url?: string | null
+          runs_count?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          id?: string
+          interval_count?: number
+          interval_unit?: string
+          is_active?: boolean
+          last_run_at?: string | null
+          merchant_id?: string
+          mode?: string
+          name?: string
+          next_run_at?: string
+          redirect_url?: string | null
+          runs_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           accepted_at: string | null
