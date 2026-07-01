@@ -23,6 +23,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
 import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
+import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
@@ -108,6 +109,12 @@ const AuthenticatedMethodsRoute = AuthenticatedMethodsRouteImport.update({
   path: '/methods',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIpWhitelistRoute =
+  AuthenticatedIpWhitelistRouteImport.update({
+    id: '/ip-whitelist',
+    path: '/ip-whitelist',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
@@ -182,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
+  '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
+  '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -237,6 +246,7 @@ export interface FileRoutesById {
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
+  '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/api-keys'
     | '/dashboard'
     | '/invoices'
+    | '/ip-whitelist'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/api-keys'
     | '/dashboard'
     | '/invoices'
+    | '/ip-whitelist'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -320,6 +332,7 @@ export interface FileRouteTypes {
     | '/_authenticated/api-keys'
     | '/_authenticated/dashboard'
     | '/_authenticated/invoices'
+    | '/_authenticated/ip-whitelist'
     | '/_authenticated/methods'
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
@@ -449,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMethodsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ip-whitelist': {
+      id: '/_authenticated/ip-whitelist'
+      path: '/ip-whitelist'
+      fullPath: '/ip-whitelist'
+      preLoaderRoute: typeof AuthenticatedIpWhitelistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invoices': {
       id: '/_authenticated/invoices'
       path: '/invoices'
@@ -576,6 +596,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
+  AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -590,6 +611,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
+  AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
   AuthenticatedNotificationSettingsRoute:
     AuthenticatedNotificationSettingsRoute,
