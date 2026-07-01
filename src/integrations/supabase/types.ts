@@ -167,6 +167,129 @@ export type Database = {
         }
         Relationships: []
       }
+      digest_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          frequency: string
+          last_sent_at: string | null
+          merchant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          last_sent_at?: string | null
+          merchant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          last_sent_at?: string | null
+          merchant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_type: string
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          merchant_id: string
+          updated_at: string
+          uses_count: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_type: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          merchant_id: string
+          updated_at?: string
+          uses_count?: number
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_type?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          merchant_id?: string
+          updated_at?: string
+          uses_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
+      disputes: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          evidence_url: string | null
+          id: string
+          invoice_id: string
+          merchant_id: string
+          merchant_note: string | null
+          reason: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          invoice_id: string
+          merchant_id: string
+          merchant_note?: string | null
+          reason: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          invoice_id?: string
+          merchant_id?: string
+          merchant_note?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fraud_blocklist: {
         Row: {
           block_type: string
@@ -302,6 +425,9 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           description: string | null
+          discount_amount: number
+          discount_code: string | null
+          display_currency: string | null
           expires_at: string | null
           fee_amount: number
           id: string
@@ -326,6 +452,9 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
+          discount_amount?: number
+          discount_code?: string | null
+          display_currency?: string | null
           expires_at?: string | null
           fee_amount?: number
           id?: string
@@ -352,6 +481,9 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           description?: string | null
+          discount_amount?: number
+          discount_code?: string | null
+          display_currency?: string | null
           expires_at?: string | null
           fee_amount?: number
           id?: string
@@ -459,6 +591,7 @@ export type Database = {
       notification_settings: {
         Row: {
           created_at: string
+          discord_webhook_url: string | null
           email_enabled: boolean
           events: Json
           id: string
@@ -466,11 +599,13 @@ export type Database = {
           merchant_id: string
           notify_email: string | null
           notify_phone: string | null
+          slack_webhook_url: string | null
           sms_enabled: boolean
           updated_at: string
         }
         Insert: {
           created_at?: string
+          discord_webhook_url?: string | null
           email_enabled?: boolean
           events?: Json
           id?: string
@@ -478,11 +613,13 @@ export type Database = {
           merchant_id: string
           notify_email?: string | null
           notify_phone?: string | null
+          slack_webhook_url?: string | null
           sms_enabled?: boolean
           updated_at?: string
         }
         Update: {
           created_at?: string
+          discord_webhook_url?: string | null
           email_enabled?: boolean
           events?: Json
           id?: string
@@ -490,6 +627,7 @@ export type Database = {
           merchant_id?: string
           notify_email?: string | null
           notify_phone?: string | null
+          slack_webhook_url?: string | null
           sms_enabled?: boolean
           updated_at?: string
         }
@@ -591,6 +729,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_schedules: {
+        Row: {
+          account_name: string | null
+          account_number: string
+          created_at: string
+          enabled: boolean
+          frequency: string
+          id: string
+          last_run_at: string | null
+          merchant_id: string
+          method: string
+          min_amount: number
+          next_run_at: string
+          runs_count: number
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number: string
+          created_at?: string
+          enabled?: boolean
+          frequency: string
+          id?: string
+          last_run_at?: string | null
+          merchant_id: string
+          method: string
+          min_amount?: number
+          next_run_at?: string
+          runs_count?: number
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          merchant_id?: string
+          method?: string
+          min_amount?: number
+          next_run_at?: string
+          runs_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           account_name: string | null
@@ -683,6 +869,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accept_tips: boolean
           avatar_url: string | null
           brand_color: string | null
           business_name: string | null
@@ -694,11 +881,15 @@ export type Database = {
           logo_url: string | null
           mfa_enabled: boolean
           phone: string | null
+          public_bio: string | null
+          slug: string | null
           status: string
           support_email: string | null
+          tip_min_amount: number
           updated_at: string
         }
         Insert: {
+          accept_tips?: boolean
           avatar_url?: string | null
           brand_color?: string | null
           business_name?: string | null
@@ -710,11 +901,15 @@ export type Database = {
           logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null
+          public_bio?: string | null
+          slug?: string | null
           status?: string
           support_email?: string | null
+          tip_min_amount?: number
           updated_at?: string
         }
         Update: {
+          accept_tips?: boolean
           avatar_url?: string | null
           brand_color?: string | null
           business_name?: string | null
@@ -726,8 +921,11 @@ export type Database = {
           logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null
+          public_bio?: string | null
+          slug?: string | null
           status?: string
           support_email?: string | null
+          tip_min_amount?: number
           updated_at?: string
         }
         Relationships: []
@@ -1244,6 +1442,15 @@ export type Database = {
       }
     }
     Functions: {
+      apply_discount_code: {
+        Args: { _code: string; _invoice_id: string }
+        Returns: {
+          discount: number
+          message: string
+          new_amount: number
+          ok: boolean
+        }[]
+      }
       check_fraud_block: {
         Args: {
           _email: string
@@ -1351,6 +1558,20 @@ export type Database = {
           invoice_number: string
           paid_at: string
           status: Database["public"]["Enums"]["invoice_status"]
+        }[]
+      }
+      get_public_merchant: {
+        Args: { _slug: string }
+        Returns: {
+          accept_tips: boolean
+          brand_color: string
+          business_name: string
+          id: string
+          logo_url: string
+          public_bio: string
+          slug: string
+          support_email: string
+          tip_min_amount: number
         }[]
       }
       has_role: {
