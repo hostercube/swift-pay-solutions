@@ -65,6 +65,10 @@ export async function dispatchWebhooks(opts: {
         responseBody = String(err).slice(0, 4000);
       }
 
+      const nextRetryAt = status === "failed"
+        ? new Date(Date.now() + 60_000).toISOString() // 1 min for first retry
+        : null;
+
       await supabaseAdmin.from("webhook_deliveries").insert({
         merchant_id: opts.merchantId,
         endpoint_id: ep.id,
@@ -76,6 +80,7 @@ export async function dispatchWebhooks(opts: {
         http_status: httpStatus,
         response_body: responseBody,
         attempts: 1,
+        next_retry_at: nextRetryAt,
         delivered_at: status === "success" ? new Date().toISOString() : null,
       });
 
