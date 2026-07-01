@@ -96,6 +96,18 @@ function RefundsPage() {
     }
   };
 
+  const approveAndProcess = async (id: string) => {
+    try {
+      await updateFn({ data: { refundId: id, status: "approved", note: notes[id] } });
+      await updateFn({ data: { refundId: id, status: "processed", note: notes[id] } });
+      toast.success("Refund approved & processed");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  };
+
+
   return (
     <MerchantShell title="Refunds" subtitle="Request full or partial refunds against completed invoices.">
       <Card className="p-5">
