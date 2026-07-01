@@ -19,6 +19,7 @@ import {
   BookOpen,
   Plug,
   Rocket,
+  Repeat,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
