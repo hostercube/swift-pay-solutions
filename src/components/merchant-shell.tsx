@@ -26,6 +26,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/transactions", label: "Transactions", icon: CreditCard },
   { to: "/payouts", label: "Payouts", icon: Wallet },
+  { to: "/refunds", label: "Refunds", icon: Receipt },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/methods", label: "Payment methods", icon: CreditCard },
   { to: "/team", label: "Team", icon: Users },

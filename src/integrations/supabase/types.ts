@@ -945,6 +945,15 @@ export type Database = {
       }
     }
     Functions: {
+      check_fraud_block: {
+        Args: {
+          _email: string
+          _ip: string
+          _merchant_id: string
+          _phone: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

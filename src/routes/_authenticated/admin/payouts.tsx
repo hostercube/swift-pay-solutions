@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
+import { updatePayoutStatus } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/payouts")({
   head: () => ({ meta: [{ title: "Admin · Payouts" }] }),
@@ -35,9 +36,9 @@ const COLOR: Record<string, string> = {
 };
 
 function AdminPayoutsPage() {
-  const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const updateFn = useServerFn(updatePayoutStatus);
 
   const load = async () => {
     const { data } = await supabase
@@ -50,19 +51,14 @@ function AdminPayoutsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const update = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from("payouts")
-      .update({
-        status,
-        admin_note: notes[id] ?? null,
-        processed_at: status === "processed" ? new Date().toISOString() : null,
-        processed_by: status === "processed" ? user?.id ?? null : null,
-      })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success(`Payout ${status}`);
-    load();
+  const update = async (id: string, status: "approved" | "processed" | "rejected") => {
+    try {
+      await updateFn({ data: { payoutId: id, status, note: notes[id] } });
+      toast.success(`Payout ${status}`);
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed");
+    }
   };
 
   return (
