@@ -31,6 +31,8 @@ type Invoice = {
   paid_at: string | null;
   expires_at: string | null;
   created_at: string;
+  merchant_id: string;
+
 };
 
 type Txn = {
