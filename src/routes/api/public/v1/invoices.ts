@@ -73,7 +73,6 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           ? new Date(Date.now() + expiresInHours * 3_600_000).toISOString()
           : null;
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin
           .from("invoices")
           .insert({
