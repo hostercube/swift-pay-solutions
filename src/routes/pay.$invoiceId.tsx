@@ -105,6 +105,48 @@ function CheckoutPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Load fx rate whenever a display currency is chosen
+  useEffect(() => {
+    const cur = displayCurrency ?? inv?.display_currency ?? null;
+    if (!cur || cur === (inv?.currency ?? "BDT")) {
+      setFxRate(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("fx_rates")
+        .select("rate")
+        .eq("base_currency", inv?.currency ?? "BDT")
+        .eq("quote_currency", cur)
+        .maybeSingle();
+      setFxRate(data ? Number((data as { rate: number }).rate) : null);
+    })();
+  }, [displayCurrency, inv?.display_currency, inv?.currency]);
+
+  async function applyCoupon() {
+    if (!inv || !couponInput.trim()) return;
+    setCouponBusy(true);
+    const rpc = supabase.rpc as unknown as (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => Promise<{ data: unknown }>;
+    const { data } = await rpc("apply_discount_code", {
+      _invoice_id: inv.id,
+      _code: couponInput.trim(),
+    });
+    setCouponBusy(false);
+    const row = Array.isArray(data) ? data[0] : null;
+    const r = row as { ok?: boolean; message?: string } | null;
+    if (r?.ok) {
+      toast.success(r.message || "Discount applied");
+      setCouponInput("");
+      load();
+    } else {
+      toast.error(r?.message || "Could not apply code");
+    }
+  }
+
+
 
   // Poll for verification if we have a pending txn
   useEffect(() => {
