@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Plus, ExternalLink, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -39,8 +41,25 @@ function InvoicesPage() {
       });
   }, [user]);
 
+  function copyLink(id: string) {
+    const url = `${window.location.origin}/pay/${id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Checkout link copied");
+  }
+
   return (
-    <MerchantShell title="Invoices" subtitle="Your most recent 100 payment requests.">
+    <MerchantShell
+      title="Invoices"
+      subtitle="Create payment requests and share checkout links with your customers."
+      actions={
+        <Link
+          to="/invoices/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+        >
+          <Plus className="h-4 w-4" /> New invoice
+        </Link>
+      }
+    >
       <div className="glass overflow-hidden rounded-2xl border border-glass-border">
         <table className="w-full text-sm">
           <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -50,20 +69,25 @@ function InvoicesPage() {
               <th className="px-4 py-3">Amount</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Created</th>
+              <th className="px-4 py-3 text-right">Checkout</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
             )}
             {!loading && rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                No invoices yet — create one via the API.
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                No invoices yet — click <span className="text-foreground">New invoice</span> to create one.
               </td></tr>
             )}
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-mono text-xs">{r.invoice_number}</td>
+                <td className="px-4 py-3">
+                  <Link to="/invoices/$id" params={{ id: r.id }} className="font-mono text-xs hover:text-brand">
+                    {r.invoice_number}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">
                   <div>{r.customer_name || "—"}</div>
                   <div className="text-xs text-muted-foreground">{r.customer_email || ""}</div>
@@ -73,6 +97,26 @@ function InvoicesPage() {
                 </td>
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
+                <td className="px-4 py-3 text-right">
+                  <div className="inline-flex items-center gap-2">
+                    <button
+                      onClick={() => copyLink(r.id)}
+                      className="text-muted-foreground hover:text-foreground"
+                      title="Copy checkout link"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    <a
+                      href={`/pay/${r.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-foreground"
+                      title="Open checkout"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
