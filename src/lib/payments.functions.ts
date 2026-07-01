@@ -146,7 +146,8 @@ export const createRefund = createServerFn({ method: "POST" })
     if (data.amount <= 0 || data.amount > Number(inv.amount))
       throw new Error("Invalid refund amount");
 
-    const { error } = await supabase.from("refunds").insert({
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("refunds").insert({
       merchant_id: userId,
       invoice_id: inv.id,
       amount: data.amount,
