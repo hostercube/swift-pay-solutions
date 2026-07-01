@@ -32,9 +32,14 @@ export const Route = createFileRoute("/api/public/hooks/expire-invoices")({
 
         // Fire webhooks (best-effort)
         try {
-          const { triggerWebhook } = await import("@/lib/webhooks.server");
+          const { dispatchWebhooks } = await import("@/lib/webhooks.server");
           for (const inv of due) {
-            await triggerWebhook(inv.merchant_id, "invoice.expired", { invoice_id: inv.id }, inv.id);
+            await dispatchWebhooks({
+              merchantId: inv.merchant_id,
+              invoiceId: inv.id,
+              event: "invoice.expired",
+              data: { invoice_id: inv.id },
+            });
           }
         } catch (e) {
           console.error("expire webhook error", e);
