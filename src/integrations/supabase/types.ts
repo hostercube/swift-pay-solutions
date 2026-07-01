@@ -600,38 +600,50 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          brand_color: string | null
           business_name: string | null
+          checkout_footer: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          logo_url: string | null
           mfa_enabled: boolean
           phone: string | null
           status: string
+          support_email: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          brand_color?: string | null
           business_name?: string | null
+          checkout_footer?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null
           status?: string
+          support_email?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          brand_color?: string | null
           business_name?: string | null
+          checkout_footer?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null
           status?: string
+          support_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -911,6 +923,33 @@ export type Database = {
       }
     }
     Views: {
+      checkout_brand: {
+        Row: {
+          brand_color: string | null
+          business_name: string | null
+          checkout_footer: string | null
+          logo_url: string | null
+          merchant_id: string | null
+          support_email: string | null
+        }
+        Insert: {
+          brand_color?: string | null
+          business_name?: string | null
+          checkout_footer?: string | null
+          logo_url?: string | null
+          merchant_id?: string | null
+          support_email?: string | null
+        }
+        Update: {
+          brand_color?: string | null
+          business_name?: string | null
+          checkout_footer?: string | null
+          logo_url?: string | null
+          merchant_id?: string | null
+          support_email?: string | null
+        }
+        Relationships: []
+      }
       checkout_invoices: {
         Row: {
           amount: number | null
