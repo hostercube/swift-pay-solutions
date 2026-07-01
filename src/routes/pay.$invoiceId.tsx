@@ -76,6 +76,10 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ sender_number: "", sender_name: "", provider_txn_id: "" });
+  const [couponInput, setCouponInput] = useState("");
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [displayCurrency, setDisplayCurrency] = useState<string | null>(null);
+  const [fxRate, setFxRate] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const rpc = supabase.rpc as unknown as (
