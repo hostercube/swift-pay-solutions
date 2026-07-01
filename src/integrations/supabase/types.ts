@@ -92,6 +92,57 @@ export type Database = {
         }
         Relationships: []
       }
+      fraud_blocklist: {
+        Row: {
+          block_type: string
+          created_at: string
+          id: string
+          merchant_id: string
+          reason: string | null
+          value: string
+        }
+        Insert: {
+          block_type: string
+          created_at?: string
+          id?: string
+          merchant_id: string
+          reason?: string | null
+          value: string
+        }
+        Update: {
+          block_type?: string
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          reason?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      fx_rates: {
+        Row: {
+          base_currency: string
+          id: string
+          quote_currency: string
+          rate: number
+          updated_at: string
+        }
+        Insert: {
+          base_currency: string
+          id?: string
+          quote_currency: string
+          rate: number
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          id?: string
+          quote_currency?: string
+          rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
@@ -387,6 +438,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payouts: {
+        Row: {
+          account_name: string | null
+          account_number: string
+          admin_note: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          merchant_id: string
+          method: string
+          processed_at: string | null
+          processed_by: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number: string
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_id: string
+          method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_id?: string
+          method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           allow_signup: boolean
@@ -434,6 +536,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          mfa_enabled: boolean
           phone: string | null
           status: string
           updated_at: string
@@ -445,6 +548,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          mfa_enabled?: boolean
           phone?: string | null
           status?: string
           updated_at?: string
@@ -456,9 +560,43 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          mfa_enabled?: boolean
           phone?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          accepted_at: string | null
+          id: string
+          invited_at: string
+          member_email: string
+          member_id: string | null
+          merchant_id: string
+          role: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          id?: string
+          invited_at?: string
+          member_email: string
+          member_id?: string | null
+          merchant_id: string
+          role?: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          id?: string
+          invited_at?: string
+          member_email?: string
+          member_id?: string | null
+          merchant_id?: string
+          role?: string
+          status?: string
         }
         Relationships: []
       }
