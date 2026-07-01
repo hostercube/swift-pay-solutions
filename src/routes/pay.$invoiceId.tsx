@@ -245,15 +245,45 @@ function CheckoutPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Invoice {inv.invoice_number} · {inv.currency} {Number(inv.amount).toLocaleString()}
           </p>
-          {inv.redirect_url && (
-            <a href={inv.redirect_url} className="mt-6 inline-flex rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground">
-              Continue
-            </a>
-          )}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={() =>
+                downloadReceipt({
+                  invoiceNumber: inv.invoice_number,
+                  amount: Number(inv.amount),
+                  currency: inv.currency,
+                  status: "completed",
+                  customerName: inv.customer_name,
+                  customerEmail: inv.customer_email,
+                  description: inv.description,
+                  methodType: verified.method_type,
+                  paidAt: verified.verified_at,
+                  createdAt: verified.created_at,
+                  businessName: brand?.business_name ?? null,
+                  supportEmail: brand?.support_email ?? null,
+                })
+              }
+              className="inline-flex items-center gap-2 rounded-lg border border-glass-border px-4 py-2 text-sm font-semibold hover:border-brand"
+            >
+              <Download className="h-4 w-4" /> Download PDF receipt
+            </button>
+            {inv.redirect_url && (
+              <a
+                href={inv.redirect_url}
+                className="inline-flex rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+              >
+                Continue
+              </a>
+            )}
+          </div>
         </div>
       </Shell>
     );
   }
+
+  const activeDisplayCur = displayCurrency ?? inv.display_currency ?? null;
+  const converted =
+    fxRate && activeDisplayCur ? Number((Number(inv.amount) * fxRate).toFixed(2)) : null;
 
   return (
     <Shell brand={brand}>
@@ -263,19 +293,59 @@ function CheckoutPage() {
         </div>
       )}
       <div className="mb-6 flex items-baseline justify-between">
-
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Amount due</div>
           <div className="font-display text-3xl font-bold">
             {inv.currency} {Number(inv.amount).toLocaleString()}
           </div>
+          {converted != null && (
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              ≈ {activeDisplayCur} {converted.toLocaleString()} · settled in {inv.currency}
+            </div>
+          )}
+          {(inv.discount_amount ?? 0) > 0 && (
+            <div className="mt-0.5 text-xs text-success">
+              Discount {inv.discount_code}: −{inv.currency}{" "}
+              {Number(inv.discount_amount).toLocaleString()}
+            </div>
+          )}
           {inv.description && <p className="mt-1 text-sm text-muted-foreground">{inv.description}</p>}
         </div>
         <div className="text-right text-xs text-muted-foreground">
           <div>Invoice</div>
           <div className="font-mono">{inv.invoice_number}</div>
+          <select
+            value={activeDisplayCur ?? inv.currency}
+            onChange={(e) =>
+              setDisplayCurrency(e.target.value === inv.currency ? null : e.target.value)
+            }
+            className="mt-2 rounded border border-glass-border bg-background px-2 py-1 text-xs"
+          >
+            <option value={inv.currency}>{inv.currency}</option>
+            {["USD", "EUR", "GBP", "INR", "AED"].filter((c) => c !== inv.currency).map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
       </div>
+
+      {inv.status === "pending" && !pending && (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-glass-border bg-card/40 p-3">
+          <input
+            value={couponInput}
+            onChange={(e) => setCouponInput(e.target.value)}
+            placeholder="Discount code"
+            className="flex-1 rounded-md bg-transparent px-2 py-1 text-sm outline-none"
+          />
+          <button
+            onClick={applyCoupon}
+            disabled={couponBusy}
+            className="rounded-md bg-brand/10 px-3 py-1 text-xs font-semibold text-brand hover:bg-brand/20"
+          >
+            {couponBusy ? "…" : "Apply"}
+          </button>
+        </div>
+      )}
 
       {pending && (
         <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
@@ -285,6 +355,7 @@ function CheckoutPage() {
           </div>
         </div>
       )}
+
 
       {!selected && (
         <div>
