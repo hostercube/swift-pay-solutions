@@ -1,11 +1,13 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft, Wallet, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
 
 const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/merchants", label: "Merchants", icon: Users },
+  { to: "/admin/payouts", label: "Payouts", icon: Wallet },
+  { to: "/admin/fx", label: "FX rates", icon: DollarSign },
   { to: "/admin/settings", label: "Platform", icon: Settings },
   { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
 ];
