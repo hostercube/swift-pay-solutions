@@ -55,6 +55,15 @@ export const verifyTransaction = createServerFn({ method: "POST" })
       data: invoice,
     }).catch(() => undefined);
 
+    notify({
+      merchantId: txn.merchant_id,
+      event: "invoice.completed",
+      title: `Payment received: ${(invoice as { invoice_number?: string }).invoice_number ?? invoice.id}`,
+      body: `Amount ${(invoice as { currency?: string }).currency ?? ""} ${(invoice as { amount?: number }).amount ?? ""} from ${(invoice as { customer_name?: string }).customer_name ?? "customer"}.`,
+      metadata: { invoiceId: invoice.id },
+    }).catch(() => undefined);
+
+
     return { ok: true };
   });
 
