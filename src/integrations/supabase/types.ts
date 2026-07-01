@@ -92,6 +92,39 @@ export type Database = {
         }
         Relationships: []
       }
+      byo_gateways: {
+        Row: {
+          created_at: string
+          credentials: Json
+          id: string
+          is_active: boolean
+          merchant_id: string
+          mode: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          mode?: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          mode?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fraud_blocklist: {
         Row: {
           block_type: string
@@ -567,6 +600,35 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_buckets: {
+        Row: {
+          count: number
+          key_id: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key_id: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          key_id?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_buckets_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: true
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           accepted_at: string | null
@@ -953,6 +1015,10 @@ export type Database = {
           _phone: string
         }
         Returns: boolean
+      }
+      consume_rate_limit: {
+        Args: { _key_id: string; _limit: number; _window_seconds: number }
+        Returns: number
       }
       has_role: {
         Args: {
