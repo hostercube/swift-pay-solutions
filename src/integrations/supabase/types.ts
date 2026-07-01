@@ -1114,6 +1114,83 @@ export type Database = {
         Args: { _merchant_id: string; _user_id: string }
         Returns: string
       }
+      get_checkout_brand: {
+        Args: { _merchant_id: string }
+        Returns: {
+          brand_color: string
+          business_name: string
+          checkout_footer: string
+          logo_url: string
+          merchant_id: string
+          support_email: string
+        }[]
+      }
+      get_checkout_invoice: {
+        Args: { _id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          description: string
+          expires_at: string
+          id: string
+          invoice_number: string
+          merchant_id: string
+          metadata: Json
+          method_id: string
+          method_type: string
+          mode: string
+          paid_at: string
+          redirect_url: string
+          status: Database["public"]["Enums"]["invoice_status"]
+        }[]
+      }
+      get_checkout_methods: {
+        Args: { _merchant_id: string }
+        Returns: {
+          account_name: string | null
+          account_number: string | null
+          created_at: string
+          credentials: Json
+          fee_flat: number
+          fee_percent: number
+          id: string
+          instructions: string | null
+          is_active: boolean
+          label: string
+          logo_url: string | null
+          max_amount: number | null
+          merchant_id: string
+          min_amount: number | null
+          mode: Database["public"]["Enums"]["payment_method_mode"]
+          sort_order: number
+          type: Database["public"]["Enums"]["payment_method_type"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payment_methods"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_checkout_transactions: {
+        Args: { _invoice_id: string }
+        Returns: {
+          created_at: string
+          gross_amount: number
+          id: string
+          method_type: string
+          note: string
+          provider_txn_id: string
+          reference: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          verified_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
