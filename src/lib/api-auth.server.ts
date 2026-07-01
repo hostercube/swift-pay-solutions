@@ -54,11 +54,17 @@ export async function authenticateApiKey(request: Request): Promise<
     if (!allowed) return { error: "IP not whitelisted", status: 403 };
   }
 
-  // Rate limit per key
-  const rl = rateLimit(data.id);
-  if (!rl.ok) {
-    return { error: `Rate limit exceeded, retry in ${rl.retryAfter}s`, status: 429 };
+  // Persistent per-key rate limit (Postgres-backed, atomic)
+  const { data: remaining, error: rlErr } = await supabaseAdmin.rpc("consume_rate_limit", {
+    _key_id: data.id,
+    _limit: RATE_LIMIT,
+    _window_seconds: WINDOW_SECONDS,
+  });
+  if (rlErr) return { error: "Rate limiter unavailable", status: 500 };
+  if ((remaining as number) < 0) {
+    return { error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`, status: 429 };
   }
+
 
   // Fire-and-forget last_used_at + audit
   supabaseAdmin
