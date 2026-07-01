@@ -74,19 +74,23 @@ function CheckoutPage() {
   const [form, setForm] = useState({ sender_number: "", sender_name: "", provider_txn_id: "" });
 
   const load = useCallback(async () => {
-    const { data: i } = await supabase
-      .from("checkout_invoices").select("*").eq("id", invoiceId).maybeSingle();
+    const rpc = supabase.rpc as unknown as (
+      fn: string, args: Record<string, unknown>,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    const { data: invRows } = await rpc("get_checkout_invoice", { _id: invoiceId });
+    const i = Array.isArray(invRows) ? (invRows[0] ?? null) : null;
     setInv((i ?? null) as Invoice | null);
     if (i) {
       const merchantId = (i as Invoice).merchant_id;
       const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
-        supabase.from("checkout_methods").select("*").eq("merchant_id", merchantId).order("sort_order", { ascending: true }),
-        supabase.from("transactions").select("id, status, method_type, gross_amount, provider_txn_id, reference, created_at, verified_at, note").eq("invoice_id", invoiceId).order("created_at", { ascending: false }),
-        supabase.from("checkout_brand").select("business_name, brand_color, logo_url, support_email, checkout_footer").eq("merchant_id", merchantId).maybeSingle(),
+        rpc("get_checkout_methods", { _merchant_id: merchantId }),
+        rpc("get_checkout_transactions", { _invoice_id: invoiceId }),
+        rpc("get_checkout_brand", { _merchant_id: merchantId }),
       ]);
-      setMethods((m ?? []) as Method[]);
-      setTxns((t ?? []) as Txn[]);
-      setBrand((b ?? null) as Brand | null);
+      setMethods(((m as Method[]) ?? []));
+      setTxns(((t as Txn[]) ?? []));
+      const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
+      setBrand((brandRow ?? null) as Brand | null);
     }
     setLoading(false);
   }, [invoiceId]);
