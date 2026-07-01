@@ -73,6 +73,7 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           ? new Date(Date.now() + expiresInHours * 3_600_000).toISOString()
           : null;
 
+        const mode = auth.environment === "live" ? "live" : "test";
         const { data, error } = await supabaseAdmin
           .from("invoices")
           .insert({
@@ -89,9 +90,11 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
             metadata: (body.metadata ?? {}) as never,
             expires_at,
             status: "pending",
+            mode,
           })
           .select("*")
           .single();
+
 
         if (error || !data) return jsonResponse({ error: error?.message ?? "Insert failed" }, 500);
 
