@@ -83,6 +83,7 @@ export function MerchantShell({
           <nav className="flex-1 space-y-1 p-3">
             {nav.map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+              const showBadge = item.to === "/notifications" && unread > 0;
               return (
                 <Link
                   key={item.to}
@@ -94,7 +95,12 @@ export function MerchantShell({
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {showBadge && (
+                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
+                      {unread}
+                    </span>
+                  )}
                 </Link>
               );
             })}
