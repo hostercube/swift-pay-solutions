@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Plus, ExternalLink, Copy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Plus, ExternalLink, Copy, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +44,8 @@ function InvoicesPage() {
     });
   }, [user, modeFilter]);
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
 
   function copyLink(id: string) {
     const url = `${window.location.origin}/pay/${id}`;
@@ -51,17 +53,119 @@ function InvoicesPage() {
     toast.success("Checkout link copied");
   }
 
+  function exportCsv() {
+    if (rows.length === 0) { toast.error("Nothing to export"); return; }
+    const header = ["invoice_number","amount","currency","customer_name","customer_email","status","mode","created_at"];
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [header.join(","), ...rows.map((r) => header.map((h) => esc((r as Record<string, unknown>)[h])).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `invoices-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function parseCsv(text: string): Record<string, string>[] {
+    const lines = text.replace(/\r\n/g, "\n").split("\n").filter((l) => l.trim().length > 0);
+    if (lines.length < 2) return [];
+    const parseLine = (line: string) => {
+      const out: string[] = []; let cur = ""; let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (q) {
+          if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (c === '"') { q = false; }
+          else cur += c;
+        } else {
+          if (c === '"') q = true;
+          else if (c === ",") { out.push(cur); cur = ""; }
+          else cur += c;
+        }
+      }
+      out.push(cur);
+      return out;
+    };
+    const headers = parseLine(lines[0]).map((h) => h.trim());
+    return lines.slice(1).map((l) => {
+      const cells = parseLine(l);
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = (cells[i] ?? "").trim(); });
+      return row;
+    });
+  }
+
+  async function importCsv(file: File) {
+    if (!user) return;
+    setBusy(true);
+    try {
+      const text = await file.text();
+      const parsed = parseCsv(text);
+      if (parsed.length === 0) { toast.error("CSV is empty"); return; }
+      const payload = parsed.map((r) => ({
+        merchant_id: user.id,
+        amount: Number(r.amount || 0),
+        currency: r.currency || "BDT",
+        customer_name: r.customer_name || null,
+        customer_email: r.customer_email || null,
+        customer_phone: r.customer_phone || null,
+        description: r.description || null,
+        redirect_url: r.redirect_url || null,
+        mode: (r.mode === "test" ? "test" : "live") as "test" | "live",
+        status: "pending" as const,
+        invoice_number: r.invoice_number || `INV-${Date.now()}-${Math.floor(Math.random() * 9999)}`,
+      }));
+      const invalid = payload.filter((p) => !p.amount || p.amount <= 0);
+      if (invalid.length) { toast.error(`${invalid.length} row(s) missing amount`); return; }
+      const { error } = await supabase.from("invoices").insert(payload);
+      if (error) { toast.error(error.message); return; }
+      toast.success(`Imported ${payload.length} invoice(s)`);
+      setModeFilter((m) => m);
+      const { data } = await supabase.from("invoices")
+        .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at, mode")
+        .eq("merchant_id", user.id).order("created_at", { ascending: false }).limit(100);
+      setRows((data ?? []) as Row[]);
+    } finally {
+      setBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   return (
     <MerchantShell
       title="Invoices"
       subtitle="Create payment requests and share checkout links with your customers."
       actions={
-        <Link
-          to="/invoices/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
-        >
-          <Plus className="h-4 w-4" /> New invoice
-        </Link>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) importCsv(f); }}
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60 disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" /> {busy ? "Importing…" : "Import CSV"}
+          </button>
+          <button
+            onClick={exportCsv}
+            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+          <Link
+            to="/invoices/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+          >
+            <Plus className="h-4 w-4" /> New invoice
+          </Link>
+        </div>
       }
     >
       <div className="mb-4 inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
