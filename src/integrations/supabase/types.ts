@@ -636,6 +636,7 @@ export type Database = {
           invited_at: string
           member_email: string
           member_id: string | null
+          member_user_id: string | null
           merchant_id: string
           role: string
           status: string
@@ -646,6 +647,7 @@ export type Database = {
           invited_at?: string
           member_email: string
           member_id?: string | null
+          member_user_id?: string | null
           merchant_id: string
           role?: string
           status?: string
@@ -656,6 +658,7 @@ export type Database = {
           invited_at?: string
           member_email?: string
           member_id?: string | null
+          member_user_id?: string | null
           merchant_id?: string
           role?: string
           status?: string
