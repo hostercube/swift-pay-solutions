@@ -12,9 +12,9 @@ type Row = {
   id: string;
   actor_id: string | null;
   action: string;
-  entity: string | null;
-  entity_id: string | null;
-  ip: string | null;
+  resource: string | null;
+  resource_id: string | null;
+  ip_address: string | null;
   created_at: string;
 };
 
@@ -25,7 +25,7 @@ function AuditPage() {
   useEffect(() => {
     supabase
       .from("audit_logs")
-      .select("id, actor_id, action, entity, entity_id, ip, created_at")
+      .select("id, actor_id, action, resource, resource_id, ip_address, created_at")
       .order("created_at", { ascending: false })
       .limit(200)
       .then(({ data }) => {
@@ -42,7 +42,7 @@ function AuditPage() {
             <tr>
               <th className="px-4 py-3">Time</th>
               <th className="px-4 py-3">Action</th>
-              <th className="px-4 py-3">Entity</th>
+              <th className="px-4 py-3">Resource</th>
               <th className="px-4 py-3">Actor</th>
               <th className="px-4 py-3">IP</th>
             </tr>
@@ -59,10 +59,10 @@ function AuditPage() {
                 <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
                 <td className="px-4 py-3 font-medium">{r.action}</td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {r.entity ? `${r.entity}${r.entity_id ? `:${r.entity_id.slice(0, 8)}` : ""}` : "—"}
+                  {r.resource ? `${r.resource}${r.resource_id ? `:${r.resource_id.slice(0, 8)}` : ""}` : "—"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{r.actor_id?.slice(0, 8) ?? "system"}</td>
-                <td className="px-4 py-3 text-muted-foreground">{r.ip ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{r.ip_address ?? "—"}</td>
               </tr>
             ))}
           </tbody>
