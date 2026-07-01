@@ -74,6 +74,14 @@ function InvoiceDetailPage() {
 
   const verifyFn = useServerFn(verifyTransaction);
   const rejectFn = useServerFn(rejectTransaction);
+  const autoVerifyFn = useServerFn(byoVerifyTransaction);
+  async function autoVerify(t: { id: string }) {
+    try {
+      const r = await autoVerifyFn({ data: { transactionId: t.id } }) as { ok: boolean };
+      if (r.ok) { toast.success("Auto-verified via gateway"); load(); }
+      else toast.error("Gateway says: not completed");
+    } catch (e) { toast.error((e as Error).message); }
+  }
   const { can } = useMerchantRole(inv?.merchant_id as string | undefined);
 
 
