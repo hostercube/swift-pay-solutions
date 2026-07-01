@@ -160,12 +160,12 @@ function CheckoutPage() {
 
   if (loading) {
     return (
-      <Shell><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
+      <Shell brand={brand}><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
     );
   }
   if (!inv) {
     return (
-      <Shell>
+      <Shell brand={brand}>
         <div className="glass rounded-2xl border border-glass-border p-8 text-center">
           <XCircle className="mx-auto h-10 w-10 text-destructive" />
           <h1 className="mt-3 font-display text-xl font-bold">Invoice unavailable</h1>
@@ -182,7 +182,7 @@ function CheckoutPage() {
 
   if (verified) {
     return (
-      <Shell>
+      <Shell brand={brand}>
         <div className="glass rounded-2xl border border-glass-border p-8 text-center">
           <CheckCircle2 className="mx-auto h-12 w-12 text-brand" />
           <h1 className="mt-3 font-display text-2xl font-bold">Payment confirmed</h1>
@@ -200,7 +200,7 @@ function CheckoutPage() {
   }
 
   return (
-    <Shell>
+    <Shell brand={brand}>
       <div className="mb-6 flex items-baseline justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Amount due</div>
