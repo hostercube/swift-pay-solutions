@@ -36,9 +36,9 @@ const COLOR: Record<string, string> = {
 };
 
 function AdminPayoutsPage() {
-  const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const updateFn = useServerFn(updatePayoutStatus);
 
   const load = async () => {
     const { data } = await supabase
@@ -51,19 +51,14 @@ function AdminPayoutsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const update = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from("payouts")
-      .update({
-        status,
-        admin_note: notes[id] ?? null,
-        processed_at: status === "processed" ? new Date().toISOString() : null,
-        processed_by: status === "processed" ? user?.id ?? null : null,
-      })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success(`Payout ${status}`);
-    load();
+  const update = async (id: string, status: "approved" | "processed" | "rejected") => {
+    try {
+      await updateFn({ data: { payoutId: id, status, note: notes[id] } });
+      toast.success(`Payout ${status}`);
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed");
+    }
   };
 
   return (
