@@ -20,26 +20,30 @@ type Row = {
   customer_email: string | null;
   status: string;
   created_at: string;
+  mode: string;
 };
 
 function InvoicesPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modeFilter, setModeFilter] = useState<"all" | "live" | "test">("all");
 
   useEffect(() => {
     if (!user) return;
-    supabase
+    let q = supabase
       .from("invoices")
-      .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at")
+      .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at, mode")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(100)
-      .then(({ data }) => {
-        setRows((data ?? []) as Row[]);
-        setLoading(false);
-      });
-  }, [user]);
+      .limit(100);
+    if (modeFilter !== "all") q = q.eq("mode", modeFilter);
+    q.then(({ data }) => {
+      setRows((data ?? []) as Row[]);
+      setLoading(false);
+    });
+  }, [user, modeFilter]);
+
 
   function copyLink(id: string) {
     const url = `${window.location.origin}/pay/${id}`;
