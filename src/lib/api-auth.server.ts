@@ -1,21 +1,8 @@
 import { createHash } from "crypto";
 
-// In-memory rate limit (per-worker). Best-effort: not a distributed limiter.
-const RATE_LIMIT = 120; // requests per window
-const WINDOW_MS = 60_000;
-const buckets = new Map<string, { count: number; reset: number }>();
+const RATE_LIMIT = 120;
+const WINDOW_SECONDS = 60;
 
-function rateLimit(keyId: string) {
-  const now = Date.now();
-  const b = buckets.get(keyId);
-  if (!b || b.reset < now) {
-    buckets.set(keyId, { count: 1, reset: now + WINDOW_MS });
-    return { ok: true, remaining: RATE_LIMIT - 1 };
-  }
-  b.count += 1;
-  if (b.count > RATE_LIMIT) return { ok: false, remaining: 0, retryAfter: Math.ceil((b.reset - now) / 1000) };
-  return { ok: true, remaining: RATE_LIMIT - b.count };
-}
 
 function clientIp(request: Request) {
   return (
