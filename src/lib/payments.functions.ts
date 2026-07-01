@@ -147,7 +147,9 @@ export const createRefund = createServerFn({ method: "POST" })
       throw new Error("Invalid refund amount");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("refunds").insert({
+    const { error } = await (supabaseAdmin.from as unknown as (t: string) => {
+      insert: (row: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
+    })("refunds").insert({
       merchant_id: userId,
       invoice_id: inv.id,
       amount: data.amount,
