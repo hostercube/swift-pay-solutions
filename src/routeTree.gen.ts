@@ -15,6 +15,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PayInvoiceIdRouteImport } from './routes/pay.$invoiceId'
 import { Route as AuthenticatedWebhooksRouteImport } from './routes/_authenticated/webhooks'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -24,6 +25,8 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
+import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
@@ -55,6 +58,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayInvoiceIdRoute = PayInvoiceIdRouteImport.update({
+  id: '/pay/$invoiceId',
+  path: '/pay/$invoiceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedWebhooksRoute = AuthenticatedWebhooksRouteImport.update({
@@ -103,6 +111,17 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedInvoicesNewRoute =
+  AuthenticatedInvoicesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedInvoicesRoute,
+  } as any)
+const AuthenticatedInvoicesIdRoute = AuthenticatedInvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedInvoicesRoute,
+} as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -130,14 +149,17 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/invoices': typeof AuthenticatedInvoicesRoute
+  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/methods': typeof AuthenticatedMethodsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
+  '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
+  '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -148,14 +170,17 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/invoices': typeof AuthenticatedInvoicesRoute
+  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/methods': typeof AuthenticatedMethodsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
+  '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
+  '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -169,14 +194,17 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/invoices': typeof AuthenticatedInvoicesRoute
+  '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/webhooks': typeof AuthenticatedWebhooksRoute
+  '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
+  '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -195,9 +223,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/transactions'
     | '/webhooks'
+    | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/merchants'
     | '/admin/settings'
+    | '/invoices/$id'
+    | '/invoices/new'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -213,9 +244,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/transactions'
     | '/webhooks'
+    | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/merchants'
     | '/admin/settings'
+    | '/invoices/$id'
+    | '/invoices/new'
     | '/admin'
   id:
     | '__root__'
@@ -233,9 +267,12 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/transactions'
     | '/_authenticated/webhooks'
+    | '/pay/$invoiceId'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/invoices/$id'
+    | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -246,6 +283,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
   PricingRoute: typeof PricingRoute
+  PayInvoiceIdRoute: typeof PayInvoiceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -290,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$invoiceId': {
+      id: '/pay/$invoiceId'
+      path: '/pay/$invoiceId'
+      fullPath: '/pay/$invoiceId'
+      preLoaderRoute: typeof PayInvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/webhooks': {
@@ -355,6 +400,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/invoices/new': {
+      id: '/_authenticated/invoices/new'
+      path: '/new'
+      fullPath: '/invoices/new'
+      preLoaderRoute: typeof AuthenticatedInvoicesNewRouteImport
+      parentRoute: typeof AuthenticatedInvoicesRoute
+    }
+    '/_authenticated/invoices/$id': {
+      id: '/_authenticated/invoices/$id'
+      path: '/$id'
+      fullPath: '/invoices/$id'
+      preLoaderRoute: typeof AuthenticatedInvoicesIdRouteImport
+      parentRoute: typeof AuthenticatedInvoicesRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -399,11 +458,26 @@ const AuthenticatedAdminRouteRouteWithChildren =
     AuthenticatedAdminRouteRouteChildren,
   )
 
+interface AuthenticatedInvoicesRouteChildren {
+  AuthenticatedInvoicesIdRoute: typeof AuthenticatedInvoicesIdRoute
+  AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
+}
+
+const AuthenticatedInvoicesRouteChildren: AuthenticatedInvoicesRouteChildren = {
+  AuthenticatedInvoicesIdRoute: AuthenticatedInvoicesIdRoute,
+  AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
+}
+
+const AuthenticatedInvoicesRouteWithChildren =
+  AuthenticatedInvoicesRoute._addFileChildren(
+    AuthenticatedInvoicesRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRoute
+  AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
@@ -414,7 +488,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedInvoicesRoute: AuthenticatedInvoicesRoute,
+  AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
@@ -431,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
   PricingRoute: PricingRoute,
+  PayInvoiceIdRoute: PayInvoiceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

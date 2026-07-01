@@ -80,7 +80,7 @@ function InvoiceDetailPage() {
         paid_at: new Date().toISOString(),
         fee_amount: t.fee_amount,
         net_amount: t.net_amount,
-        method_type: t.method_type as Invoice["method_type"],
+        method_type: t.method_type as never,
       })
       .eq("id", inv.id);
     if (e2) return toast.error(e2.message);

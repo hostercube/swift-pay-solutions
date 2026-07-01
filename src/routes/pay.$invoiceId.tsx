@@ -105,13 +105,13 @@ function CheckoutPage() {
     // Attach method + move to processing (best effort)
     await supabase
       .from("invoices")
-      .update({ method_id: selected.id, method_type: selected.type as Invoice["method_type"], status: "processing" })
+      .update({ method_id: selected.id, method_type: selected.type as never, status: "processing" })
       .eq("id", inv.id);
 
     const { error } = await supabase.from("transactions").insert({
       invoice_id: inv.id,
       merchant_id: inv.merchant_id,
-      method_type: selected.type as Txn["method_type"],
+      method_type: selected.type as never,
       status: "pending",
       gross_amount: Number(inv.amount),
       fee_amount: fee,
