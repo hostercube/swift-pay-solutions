@@ -20,6 +20,7 @@ type Row = {
   signing_secret: string;
   is_active: boolean;
   created_at: string;
+  mode: string;
 };
 
 function randomSecret() {
@@ -32,7 +33,9 @@ function WebhooksPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [url, setUrl] = useState("");
+  const [mode, setMode] = useState<"live" | "test">("live");
   const [selected, setSelected] = useState<string[]>(["invoice.paid", "invoice.failed"]);
+
 
   async function load() {
     if (!user) return;
