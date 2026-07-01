@@ -1,110 +1,70 @@
-# PayNOC — Self-hosted Database Setup (Coolify / Self-hosted Supabase)
+# PayNOC — Self-hosted deploy (Coolify + GitHub auto-deploy)
 
-All SQL you need to run PayNOC on your own infrastructure lives in this folder.
-No Lovable Cloud, no managed Supabase — just Postgres + (optionally) the
-self-hosted Supabase stack.
+Everything you need to run PayNOC on your own Coolify server.
 
-```
-db/
-├── install.sql          # ← run ONCE on a fresh Postgres. Full schema + RLS + functions.
-├── storage.sql          # ← run on self-hosted Supabase for KYC + dispute buckets.
-├── cron/schedule.sql    # ← run on the primary DB to enable pg_cron jobs.
-└── migrations/          # Individual migration files in chronological order.
-```
+## 0. GitHub ↔ Lovable ↔ Coolify flow
 
-## 1. Prerequisites
+1. In Lovable: **+ menu → GitHub → Connect project**. Every Lovable edit auto-pushes to GitHub.
+2. In Coolify: **New Resource → Application → From GitHub**, pick this repo, branch `main`, build pack **Dockerfile**.
+3. Coolify's "Auto Deploy on push" is on by default. Push (or Lovable edit) → GitHub → Coolify rebuilds → live.
 
-- Postgres 15+ (comes with self-hosted Supabase / Coolify's Supabase template)
-- Extensions: `pgcrypto` (required), `pg_cron` + `pg_net` (only if you want
-  scheduled jobs — expiry, webhook retry, recurring, digest, auto payout)
-- If you use Supabase Auth / Storage / PostgREST: the standard self-hosted
-  Supabase stack (Coolify has a one-click template)
+## 1. Database (Postgres + optional Supabase stack)
 
-## 2. Install the schema
+Coolify → Databases → Postgres 15+ (or the one-click **Supabase** template if you want Auth/Storage/PostgREST).
 
-Option A — one shot:
+Then from your laptop:
 
 ```bash
-psql "$DATABASE_URL" -f db/install.sql
+export DATABASE_URL="postgres://postgres:PASS@db.yourdomain.com:5432/postgres"
+
+psql "$DATABASE_URL" -f db/install.sql        # full schema, RLS, RPCs
+psql "$DATABASE_URL" -f db/storage.sql        # Supabase Storage buckets (skip if no Supabase)
+# edit {{APP_URL}} + {{ANON_KEY}} first:
+psql "$DATABASE_URL" -f db/cron/schedule.sql  # scheduled jobs
+# after your first sign-up, edit the email inside then run:
+psql "$DATABASE_URL" -f db/seed-admin.sql
 ```
 
-Option B — apply migrations one by one (recommended if you plan to keep
-evolving the schema):
+All 30+ tables, roles (`super_admin` / `admin` / `merchant`), RLS policies, and every RPC (`has_role`, `apply_discount_code`, `consume_rate_limit`, `effective_merchant_role`, …) are created here. No further schema setup required.
 
-```bash
-for f in db/migrations/*.sql; do
-  echo ">>> $f"
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
-done
+## 2. App service on Coolify
+
+- **Build pack:** Dockerfile (repo root `Dockerfile`)
+- **Port:** `3000`
+- **Env vars** (see `.env.example`):
+  - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID` — also add as **Build Args** so the client bundle bakes them in
+  - `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - `RESEND_API_KEY`, `GATEWAYAPI_TOKEN` (optional)
+  - `NITRO_PRESET=node-server`
+
+Attach your domain (e.g. `pay.yourdomain.com`) in Coolify. HTTPS is automatic.
+
+## 3. First-user promotion
+
+1. Open the deployed site, sign up (email/password) as yourself.
+2. Edit `db/seed-admin.sql`, set your email, `psql -f db/seed-admin.sql`.
+3. Refresh — you now see the `/admin` panel.
+
+## 4. Files map
+
+```
+Dockerfile              Node server build for Coolify
+.env.example            All required environment variables
+db/install.sql          One-shot full schema
+db/migrations/          24 individual migration files (in order)
+db/storage.sql          KYC + disputes buckets + RLS
+db/cron/schedule.sql    pg_cron jobs (expire, retry, recurring, digest, payouts)
+db/seed-admin.sql       Promote first user to super_admin
 ```
 
-## 3. Storage buckets (Supabase only)
+## 5. What ships out of the box
 
-If you're running the full self-hosted Supabase stack:
+Tables (30+): profiles, user_roles, team_members, api_keys, api_request_logs, invoices, transactions, payment_methods, byo_gateways, webhook_endpoints, webhook_deliveries, notifications, notification_settings, notification_log, digest_settings, payouts, payout_schedules, discount_codes, disputes, recurring_schedules, fraud_blocklist, fx_rates, ip_whitelist, idempotency_keys, rate_limit_buckets, incidents, platform_settings, audit_logs …
 
-```bash
-psql "$DATABASE_URL" -f db/storage.sql
-```
+Features: merchant + admin dashboards, hosted checkout `/pay/:id`, public tip-jar `/m/:slug`, customer portal `/portal`, status page `/status`, API reference `/api-reference`, Postman export, bKash/Nagad BYO verifiers, MFA login, RBAC, HMAC webhooks with exponential retry, refunds, disputes with evidence, discounts, multi-currency, recurring invoices, email/SMS/Slack/Discord notifications, invoice PDF, CSV import/export.
 
-Buckets created: `kyc` (private), `disputes` (private).
+## 6. Ongoing edits
 
-If you're on plain Postgres without Supabase Storage, plug in your own
-S3/MinIO and update the upload code in
-`src/routes/_authenticated/disputes.tsx` and the KYC uploader.
-
-## 4. Scheduled jobs
-
-Edit `db/cron/schedule.sql` and replace the two placeholders:
-
-- `{{APP_URL}}` — your deployed PayNOC URL (e.g. `https://pay.yourdomain.com`)
-- `{{ANON_KEY}}` — your self-hosted Supabase anon / publishable key
-
-Then:
-
-```bash
-psql "$DATABASE_URL" -f db/cron/schedule.sql
-```
-
-Verify:
-
-```sql
-SELECT jobname, schedule FROM cron.job;
-```
-
-## 5. App environment variables (Coolify service)
-
-The Node/Vite app needs these env vars in Coolify:
-
-| Variable                       | Purpose                                       |
-|--------------------------------|-----------------------------------------------|
-| `VITE_SUPABASE_URL`            | Public URL of your self-hosted Supabase       |
-| `VITE_SUPABASE_PUBLISHABLE_KEY`| Anon / publishable key                        |
-| `SUPABASE_URL`                 | Same URL (server-side)                        |
-| `SUPABASE_PUBLISHABLE_KEY`     | Same anon key (server-side)                   |
-| `SUPABASE_SERVICE_ROLE_KEY`    | Service-role key (server-only, never expose)  |
-| `RESEND_API_KEY`               | For email notifications & digest (optional)   |
-| `GATEWAYAPI_TOKEN`             | For SMS notifications (optional)              |
-
-## 6. Fresh install checklist
-
-1. Spin up Postgres (Coolify → Databases → Postgres, or the Supabase template).
-2. `psql -f db/install.sql`
-3. `psql -f db/storage.sql` *(Supabase only)*
-4. Edit + `psql -f db/cron/schedule.sql` *(optional but recommended)*
-5. Deploy the app in Coolify with the env vars above.
-6. Sign up the first user → then promote to super_admin:
-
-   ```sql
-   INSERT INTO public.user_roles (user_id, role)
-   SELECT id, 'super_admin' FROM auth.users WHERE email = 'you@example.com'
-   ON CONFLICT DO NOTHING;
-   ```
-
-Done. All 30+ tables, RLS policies, RPCs, and cron jobs are ready.
-
-## Re-running
-
-`install.sql` is chronological migrations concatenated. It is NOT fully
-idempotent — run it once on a fresh DB. For upgrades, apply only the NEW
-files in `db/migrations/` that you haven't run yet (track them yourself or
-use `supabase db push` against your self-hosted instance).
+- Edit in Lovable → auto-pushes to GitHub → Coolify auto-rebuilds. Nothing manual.
+- For a new DB migration Lovable adds later, apply just the new file:
+  `psql "$DATABASE_URL" -f db/migrations/<new-timestamp>.sql`
