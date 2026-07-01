@@ -39,7 +39,13 @@ export function SiteFooter() {
                 Contact sales
               </Link>
             </li>
+            <li>
+              <Link to="/status" className="text-muted-foreground hover:text-foreground">
+                System status
+              </Link>
+            </li>
           </ul>
+
         </div>
 
         <div>
