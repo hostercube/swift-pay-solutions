@@ -97,6 +97,19 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
 
         const origin = new URL(request.url).origin;
         const checkoutUrl = `${origin}/pay/${data.id}`;
+        const responseBody = { data: { ...data, checkout_url: checkoutUrl } };
+
+        if (idemKey) {
+          await supabaseAdmin.from("idempotency_keys").insert({
+            merchant_id: auth.merchantId,
+            key: idemKey,
+            method: "POST",
+            path: url.pathname,
+            request_hash: requestHash,
+            status_code: 201,
+            response_body: responseBody as never,
+          });
+        }
 
         // Fire invoice.created webhook (non-blocking)
         dispatchWebhooks({
@@ -106,7 +119,7 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           data: { ...data, checkout_url: checkoutUrl },
         }).catch(() => undefined);
 
-        return jsonResponse({ data: { ...data, checkout_url: checkoutUrl } }, 201);
+        return jsonResponse(responseBody, 201);
       },
     },
   },
