@@ -1,182 +1,71 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  LayoutDashboard,
-  CreditCard,
-  Wallet,
-  Settings,
-  Shield,
-  LogOut,
-  Users,
-} from "lucide-react";
+import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({
-    meta: [{ title: "Dashboard · PayNOC" }],
-  }),
+  head: () => ({ meta: [{ title: "Dashboard · PayNOC" }] }),
   component: DashboardPage,
 });
 
-type Profile = {
-  full_name: string | null;
-  business_name: string | null;
-  email: string;
-  status: string;
+type Stats = {
+  volume: number;
+  paid: number;
+  pending: number;
+  invoices: number;
 };
 
 function DashboardPage() {
-  const navigate = useNavigate();
-  const { user, roles, signOut } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<{ business_name: string | null; full_name: string | null } | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("full_name, business_name, email, status")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setProfile(data as Profile | null));
+    (async () => {
+      const [p, inv, tx] = await Promise.all([
+        supabase.from("profiles").select("business_name, full_name").eq("id", user.id).maybeSingle(),
+        supabase.from("invoices").select("id, status", { count: "exact" }).eq("merchant_id", user.id),
+        supabase.from("transactions").select("gross_amount, status").eq("merchant_id", user.id),
+      ]);
+      setProfile(p.data);
+      const txs = tx.data ?? [];
+      const volume = txs.filter((t) => t.status === "verified").reduce((s, t) => s + Number(t.gross_amount ?? 0), 0);
+      const paid = txs.filter((t) => t.status === "verified").length;
+      const pending = (inv.data ?? []).filter((i) => i.status === "pending").length;
+      setStats({ volume, paid, pending, invoices: inv.count ?? 0 });
+    })();
   }, [user]);
 
-  const isSuperAdmin = roles.includes("super_admin");
-
-  async function handleSignOut() {
-    await signOut();
-    navigate({ to: "/auth" });
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="grid-radial absolute inset-0 opacity-30" />
-      <div className="relative flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="hidden w-64 shrink-0 border-r border-glass-border bg-card/40 backdrop-blur md:flex md:flex-col">
-          <div className="flex h-16 items-center gap-2.5 border-b border-glass-border px-6">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
-              <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
-            </span>
-            <span className="font-display text-lg font-bold">PayNOC</span>
-          </div>
-          <nav className="flex-1 space-y-1 p-3">
-            <NavItem icon={LayoutDashboard} label="Overview" active />
-            <NavItem icon={CreditCard} label="Transactions" />
-            <NavItem icon={Wallet} label="Payouts" />
-            <NavItem icon={Settings} label="Settings" />
-            {isSuperAdmin && (
-              <>
-                <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Admin
-                </div>
-                <Link
-                  to="/admin"
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
-                >
-                  <Users className="h-4 w-4" />
-                  Super Admin Panel
-                </Link>
-              </>
-            )}
-          </nav>
-          <button
-            onClick={handleSignOut}
-            className="m-3 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </button>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 px-6 py-10 lg:px-10">
-          <div className="mx-auto max-w-6xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Welcome back
-                </p>
-                <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
-                  {profile?.business_name || profile?.full_name || "Merchant"}
-                </h1>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  {roles.map((r) => (
-                    <span
-                      key={r}
-                      className="rounded-full border border-glass-border bg-card/60 px-2.5 py-1 font-medium uppercase tracking-wider text-muted-foreground"
-                    >
-                      {r.replace("_", " ")}
-                    </span>
-                  ))}
-                  {profile?.status && (
-                    <span className="rounded-full bg-brand/10 px-2.5 py-1 font-medium uppercase tracking-wider text-brand">
-                      {profile.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <Link
-                to="/"
-                className="hidden rounded-lg border border-glass-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground md:inline-flex"
-              >
-                View site
-              </Link>
-            </div>
-
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <StatCard label="Total volume" value="৳ 0" hint="This month" />
-              <StatCard label="Successful payments" value="0" hint="Last 30 days" />
-              <StatCard label="Pending payouts" value="৳ 0" hint="Awaiting settlement" />
-            </div>
-
-            <div className="mt-8 glass rounded-2xl border border-glass-border p-8">
-              <h2 className="font-display text-lg font-semibold">Get started</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your merchant account is ready. Next steps: configure payment methods,
-                generate API keys, and integrate checkout.
-              </p>
-              <p className="mt-4 text-xs text-muted-foreground">
-                Coming next in your dashboard — payment method manager, API keys, and
-                webhook configuration.
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-}
-
-function NavItem({
-  icon: Icon,
-  label,
-  active,
-}: {
-  icon: typeof LayoutDashboard;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-        active
-          ? "bg-brand/10 text-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-      }`}
+    <MerchantShell
+      title={profile?.business_name || profile?.full_name || "Welcome"}
+      subtitle="Real-time snapshot of your PayNOC account."
     >
-      <Icon className="h-4 w-4" />
-      {label}
-    </button>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Gross volume" value={stats ? `৳ ${stats.volume.toLocaleString()}` : "—"} hint="Verified" />
+        <Stat label="Successful payments" value={stats?.paid ?? "—"} hint="All time" />
+        <Stat label="Pending invoices" value={stats?.pending ?? "—"} hint="Awaiting payment" />
+        <Stat label="Total invoices" value={stats?.invoices ?? "—"} hint="All time" />
+      </div>
+
+      <div className="mt-8 glass rounded-2xl border border-glass-border p-8">
+        <h2 className="font-display text-lg font-semibold">Get started</h2>
+        <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
+          <li>1. Configure your payment methods (bKash, Nagad, bank transfer, etc.).</li>
+          <li>2. Generate API keys and integrate PayNOC checkout on your site.</li>
+          <li>3. Add a webhook endpoint to receive payment notifications.</li>
+        </ol>
+      </div>
+    </MerchantShell>
   );
 }
 
-function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+function Stat({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   return (
     <div className="glass rounded-2xl border border-glass-border p-6">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </p>
+      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-2 font-display text-3xl font-bold text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </div>
