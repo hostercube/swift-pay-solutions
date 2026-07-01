@@ -41,8 +41,9 @@ function WebhooksPage() {
     if (!user) return;
     const { data } = await supabase
       .from("webhook_endpoints")
-      .select("id, url, events, signing_secret, is_active, created_at")
+      .select("id, url, events, signing_secret, is_active, created_at, mode")
       .eq("merchant_id", user.id)
+
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
   }
