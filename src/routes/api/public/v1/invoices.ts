@@ -61,7 +61,7 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
             description: (body.description as string) ?? null,
             redirect_url: (body.redirect_url as string) ?? null,
             webhook_url: (body.webhook_url as string) ?? null,
-            metadata: (body.metadata as Record<string, unknown>) ?? {},
+            metadata: (body.metadata ?? {}) as never,
             expires_at,
             status: "pending",
           })
