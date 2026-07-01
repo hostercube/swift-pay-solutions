@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createHash } from "crypto";
 import { authenticateApiKey, jsonResponse, CORS_HEADERS } from "@/lib/api-auth.server";
 import { dispatchWebhooks } from "@/lib/webhooks.server";
 
@@ -30,9 +31,34 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
         const auth = await authenticateApiKey(request);
         if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
 
+        const rawBody = await request.text();
         let body: Record<string, unknown>;
-        try { body = await request.json(); }
+        try { body = rawBody ? JSON.parse(rawBody) : {}; }
         catch { return jsonResponse({ error: "Invalid JSON body" }, 400); }
+
+        const idemKey = request.headers.get("idempotency-key")?.trim() || null;
+        const url = new URL(request.url);
+        const requestHash = createHash("sha256").update(rawBody).digest("hex");
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        if (idemKey) {
+          const { data: existing } = await supabaseAdmin
+            .from("idempotency_keys")
+            .select("request_hash, status_code, response_body")
+            .eq("merchant_id", auth.merchantId)
+            .eq("key", idemKey)
+            .eq("method", "POST")
+            .eq("path", url.pathname)
+            .maybeSingle();
+          if (existing) {
+            if (existing.request_hash !== requestHash) {
+              return jsonResponse({ error: "Idempotency-Key reused with different payload" }, 409);
+            }
+            return jsonResponse(existing.response_body, existing.status_code, {
+              "idempotent-replay": "true",
+            });
+          }
+        }
 
         const amount = Number(body.amount);
         if (!amount || amount <= 0) return jsonResponse({ error: "amount is required and must be > 0" }, 400);
@@ -47,7 +73,6 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           ? new Date(Date.now() + expiresInHours * 3_600_000).toISOString()
           : null;
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin
           .from("invoices")
           .insert({
@@ -72,6 +97,19 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
 
         const origin = new URL(request.url).origin;
         const checkoutUrl = `${origin}/pay/${data.id}`;
+        const responseBody = { data: { ...data, checkout_url: checkoutUrl } };
+
+        if (idemKey) {
+          await supabaseAdmin.from("idempotency_keys").insert({
+            merchant_id: auth.merchantId,
+            key: idemKey,
+            method: "POST",
+            path: url.pathname,
+            request_hash: requestHash,
+            status_code: 201,
+            response_body: responseBody as never,
+          });
+        }
 
         // Fire invoice.created webhook (non-blocking)
         dispatchWebhooks({
@@ -81,7 +119,7 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           data: { ...data, checkout_url: checkoutUrl },
         }).catch(() => undefined);
 
-        return jsonResponse({ data: { ...data, checkout_url: checkoutUrl } }, 201);
+        return jsonResponse(responseBody, 201);
       },
     },
   },

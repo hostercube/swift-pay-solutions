@@ -176,6 +176,42 @@ export type Database = {
         }
         Relationships: []
       }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          merchant_id: string
+          method: string
+          path: string
+          request_hash: string
+          response_body: Json
+          status_code: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          merchant_id: string
+          method: string
+          path: string
+          request_hash: string
+          response_body: Json
+          status_code: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          merchant_id?: string
+          method?: string
+          path?: string
+          request_hash?: string
+          response_body?: Json
+          status_code?: number
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number
