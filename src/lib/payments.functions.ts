@@ -176,8 +176,16 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
       patch.processed_by = userId;
     }
 
-    const { data: row, error } = await supabase
-      .from("refunds")
+    const fromLoose = supabase.from as unknown as (t: string) => {
+      update: (p: Record<string, unknown>) => {
+        eq: (col: string, v: string) => {
+          select: (s: string) => {
+            single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+          };
+        };
+      };
+    };
+    const { data: row, error } = await fromLoose("refunds")
       .update(patch)
       .eq("id", data.refundId)
       .select("*")
