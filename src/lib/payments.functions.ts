@@ -93,14 +93,13 @@ export const updatePayoutStatus = createServerFn({ method: "POST" })
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
     if (!isAdmin) throw new Error("Forbidden");
 
-    const patch: Record<string, unknown> = {
+    const patch = {
       status: data.status,
       admin_note: data.note ?? null,
+      ...(data.status === "processed"
+        ? { processed_at: new Date().toISOString(), processed_by: userId }
+        : { processed_at: null, processed_by: null }),
     };
-    if (data.status === "processed") {
-      patch.processed_at = new Date().toISOString();
-      patch.processed_by = userId;
-    }
 
     const { data: row, error } = await supabase
       .from("payouts")
