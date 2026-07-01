@@ -100,6 +100,27 @@ function CheckoutPage() {
     if (!form.provider_txn_id.trim()) return toast.error("Enter your Transaction ID");
     if (!form.sender_number.trim()) return toast.error("Enter the number you paid from");
     setSubmitting(true);
+
+    // Fraud blocklist screen (email + phone; ip is not visible to browser)
+    try {
+      const rpc = (supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: boolean | null; error: { message: string } | null }>);
+      const { data: blocked } = await rpc("check_fraud_block", {
+        _merchant_id: inv.merchant_id,
+        _email: inv.customer_email ?? "",
+        _phone: form.sender_number,
+        _ip: "",
+      });
+      if (blocked) {
+        setSubmitting(false);
+        return toast.error("Payment blocked by merchant fraud rules");
+      }
+    } catch {
+      // fail-open: don't block a legitimate customer on RPC hiccup
+    }
+
     const { fee, net } = computeFee(selected, Number(inv.amount));
 
     // Attach method + move to processing (best effort)
