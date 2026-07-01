@@ -174,13 +174,17 @@ function RefundsPage() {
                           onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })}
                           className="h-8"
                         />
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           {r.status === "requested" && (
-                            <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
+                            <>
+                              <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
+                              <Button size="sm" variant="default" onClick={() => approveAndProcess(r.id)}>Approve & Process</Button>
+                            </>
                           )}
                           <Button size="sm" variant="secondary" onClick={() => decide(r.id, "processed")}>Processed</Button>
                           <Button size="sm" variant="destructive" onClick={() => decide(r.id, "rejected")}>Reject</Button>
                         </div>
+
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">{r.admin_note ?? "—"}</p>
