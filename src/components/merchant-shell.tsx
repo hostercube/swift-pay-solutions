@@ -39,9 +39,35 @@ export function MerchantShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
-  const { signOut, roles } = useAuth();
+  const { signOut, roles, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSuperAdmin = roles.includes("super_admin");
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const load = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null);
+      if (!cancelled) setUnread(count ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel("notif-unread")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${user.id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
