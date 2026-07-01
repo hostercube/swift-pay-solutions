@@ -66,7 +66,18 @@ function InvoicesPage() {
     >
       <div className="glass overflow-hidden rounded-2xl border border-glass-border">
         <table className="w-full text-sm">
+      <div className="mb-4 inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
+        {(["all","live","test"] as const).map((m) => (
+          <button key={m} onClick={() => setModeFilter(m)}
+            className={`rounded-md px-3 py-1.5 font-semibold uppercase tracking-wider ${modeFilter===m ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            {m}
+          </button>
+        ))}
+      </div>
+      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
+        <table className="w-full text-sm">
           <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
+
             <tr>
               <th className="px-4 py-3">Invoice</th>
               <th className="px-4 py-3">Customer</th>
