@@ -7,6 +7,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { verifyTransaction, rejectTransaction } from "@/lib/payments.functions";
+import { byoVerifyTransaction } from "@/lib/byo-verify.functions";
 import { useMerchantRole } from "@/hooks/use-merchant-role";
 
 
@@ -73,6 +74,14 @@ function InvoiceDetailPage() {
 
   const verifyFn = useServerFn(verifyTransaction);
   const rejectFn = useServerFn(rejectTransaction);
+  const autoVerifyFn = useServerFn(byoVerifyTransaction);
+  async function autoVerify(t: { id: string }) {
+    try {
+      const r = await autoVerifyFn({ data: { transactionId: t.id } }) as { ok: boolean };
+      if (r.ok) { toast.success("Auto-verified via gateway"); load(); }
+      else toast.error("Gateway says: not completed");
+    } catch (e) { toast.error((e as Error).message); }
+  }
   const { can } = useMerchantRole(inv?.merchant_id as string | undefined);
 
 
@@ -211,6 +220,11 @@ function InvoiceDetailPage() {
                         {t.status === "pending" ? (
                           can("operator") ? (
                             <div className="inline-flex gap-2">
+                              {["bkash","nagad"].includes(String(t.method_type).toLowerCase()) && (
+                                <button onClick={() => autoVerify(t)} className="rounded-md border border-brand/30 px-2 py-1 text-xs text-brand">
+                                  Auto-verify
+                                </button>
+                              )}
                               <button onClick={() => verify(t)} className="rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
                                 Verify
                               </button>
