@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Shield,
   LayoutDashboard,
@@ -10,8 +10,10 @@ import {
   Settings,
   LogOut,
   Users,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -20,6 +22,8 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/methods", label: "Payment methods", icon: CreditCard },
   { to: "/api-keys", label: "API keys", icon: KeyRound },
   { to: "/webhooks", label: "Webhooks", icon: Webhook },
+  { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/notification-settings", label: "Notification settings", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -35,9 +39,35 @@ export function MerchantShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
-  const { signOut, roles } = useAuth();
+  const { signOut, roles, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSuperAdmin = roles.includes("super_admin");
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const load = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null);
+      if (!cancelled) setUnread(count ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel("notif-unread")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${user.id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,6 +83,7 @@ export function MerchantShell({
           <nav className="flex-1 space-y-1 p-3">
             {nav.map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+              const showBadge = item.to === "/notifications" && unread > 0;
               return (
                 <Link
                   key={item.to}
@@ -64,7 +95,12 @@ export function MerchantShell({
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {showBadge && (
+                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
+                      {unread}
+                    </span>
+                  )}
                 </Link>
               );
             })}

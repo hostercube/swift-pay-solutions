@@ -207,6 +207,123 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_log: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          error: string | null
+          event: string
+          id: string
+          merchant_id: string
+          provider: string | null
+          provider_response: Json | null
+          recipient: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          created_at?: string
+          error?: string | null
+          event: string
+          id?: string
+          merchant_id: string
+          provider?: string | null
+          provider_response?: Json | null
+          recipient: string
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          error?: string | null
+          event?: string
+          id?: string
+          merchant_id?: string
+          provider?: string | null
+          provider_response?: Json | null
+          recipient?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          events: Json
+          id: string
+          inapp_enabled: boolean
+          merchant_id: string
+          notify_email: string | null
+          notify_phone: string | null
+          sms_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          events?: Json
+          id?: string
+          inapp_enabled?: boolean
+          merchant_id: string
+          notify_email?: string | null
+          notify_phone?: string | null
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          events?: Json
+          id?: string
+          inapp_enabled?: boolean
+          merchant_id?: string
+          notify_email?: string | null
+          notify_phone?: string | null
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          event: string
+          id: string
+          merchant_id: string
+          metadata: Json
+          read_at: string | null
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          event: string
+          id?: string
+          merchant_id: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          event?: string
+          id?: string
+          merchant_id?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           account_name: string | null

@@ -78,6 +78,17 @@ export async function dispatchWebhooks(opts: {
         attempts: 1,
         delivered_at: status === "success" ? new Date().toISOString() : null,
       });
+
+      if (status === "failed") {
+        const { notify } = await import("@/lib/notifications.server");
+        await notify({
+          merchantId: opts.merchantId,
+          event: "webhook.failed",
+          title: `Webhook delivery failed`,
+          body: `${opts.event} → ${ep.url} (HTTP ${httpStatus ?? "network error"})`,
+          metadata: { invoiceId: opts.invoiceId, endpointId: ep.id },
+        });
+      }
     }),
   );
 }
