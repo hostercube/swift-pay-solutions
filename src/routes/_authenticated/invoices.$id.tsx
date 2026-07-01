@@ -2,9 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Copy, ExternalLink } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { verifyTransaction, rejectTransaction } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({
   head: () => ({ meta: [{ title: "Invoice · PayNOC" }] }),
