@@ -171,6 +171,13 @@ export type Database = {
             foreignKeyName: "invoices_method_id_fkey"
             columns: ["method_id"]
             isOneToOne: false
+            referencedRelation: "checkout_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_method_id_fkey"
+            columns: ["method_id"]
+            isOneToOne: false
             referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
@@ -404,6 +411,13 @@ export type Database = {
             foreignKeyName: "transactions_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "checkout_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
@@ -494,6 +508,13 @@ export type Database = {
             foreignKeyName: "webhook_deliveries_invoice_id_fkey"
             columns: ["invoice_id"]
             isOneToOne: false
+            referencedRelation: "checkout_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_deliveries_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
             referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
@@ -534,7 +555,139 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      checkout_invoices: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          description: string | null
+          expires_at: string | null
+          fee_amount: number | null
+          id: string | null
+          invoice_number: string | null
+          merchant_id: string | null
+          method_id: string | null
+          method_type: Database["public"]["Enums"]["payment_method_type"] | null
+          net_amount: number | null
+          redirect_url: string | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          expires_at?: string | null
+          fee_amount?: number | null
+          id?: string | null
+          invoice_number?: string | null
+          merchant_id?: string | null
+          method_id?: string | null
+          method_type?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
+          net_amount?: number | null
+          redirect_url?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          description?: string | null
+          expires_at?: string | null
+          fee_amount?: number | null
+          id?: string | null
+          invoice_number?: string | null
+          merchant_id?: string | null
+          method_id?: string | null
+          method_type?:
+            | Database["public"]["Enums"]["payment_method_type"]
+            | null
+          net_amount?: number | null
+          redirect_url?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_method_id_fkey"
+            columns: ["method_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_method_id_fkey"
+            columns: ["method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_methods: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          fee_flat: number | null
+          fee_percent: number | null
+          id: string | null
+          instructions: string | null
+          is_active: boolean | null
+          label: string | null
+          logo_url: string | null
+          max_amount: number | null
+          merchant_id: string | null
+          min_amount: number | null
+          mode: Database["public"]["Enums"]["payment_method_mode"] | null
+          sort_order: number | null
+          type: Database["public"]["Enums"]["payment_method_type"] | null
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          fee_flat?: number | null
+          fee_percent?: number | null
+          id?: string | null
+          instructions?: string | null
+          is_active?: boolean | null
+          label?: string | null
+          logo_url?: string | null
+          max_amount?: number | null
+          merchant_id?: string | null
+          min_amount?: number | null
+          mode?: Database["public"]["Enums"]["payment_method_mode"] | null
+          sort_order?: number | null
+          type?: Database["public"]["Enums"]["payment_method_type"] | null
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          fee_flat?: number | null
+          fee_percent?: number | null
+          id?: string | null
+          instructions?: string | null
+          is_active?: boolean | null
+          label?: string | null
+          logo_url?: string | null
+          max_amount?: number | null
+          merchant_id?: string | null
+          min_amount?: number | null
+          mode?: Database["public"]["Enums"]["payment_method_mode"] | null
+          sort_order?: number | null
+          type?: Database["public"]["Enums"]["payment_method_type"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
