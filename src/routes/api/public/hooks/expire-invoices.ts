@@ -39,7 +39,9 @@ export const Route = createFileRoute("/api/public/hooks/expire-invoices")({
               invoiceId: inv.id,
               event: "invoice.expired",
               data: { invoice_id: inv.id },
+              mode: (inv.mode as "live" | "test") ?? "live",
             });
+
           }
         } catch (e) {
           console.error("expire webhook error", e);
