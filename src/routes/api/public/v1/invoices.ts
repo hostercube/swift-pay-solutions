@@ -120,7 +120,9 @@ export const Route = createFileRoute("/api/public/v1/invoices")({
           invoiceId: data.id,
           event: "invoice.created",
           data: { ...data, checkout_url: checkoutUrl },
+          mode,
         }).catch(() => undefined);
+
 
         return jsonResponse(responseBody, 201);
       },
