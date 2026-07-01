@@ -61,6 +61,7 @@ function NotifSettingsPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
+          const d = data as unknown as Record<string, unknown>;
           setS({
             id: data.id,
             email_enabled: data.email_enabled,
@@ -68,6 +69,8 @@ function NotifSettingsPage() {
             inapp_enabled: data.inapp_enabled,
             notify_email: data.notify_email,
             notify_phone: data.notify_phone,
+            slack_webhook_url: (d.slack_webhook_url as string) ?? null,
+            discord_webhook_url: (d.discord_webhook_url as string) ?? null,
             events: (data.events as Record<string, boolean>) ?? DEFAULTS.events,
           });
         }
@@ -84,11 +87,13 @@ function NotifSettingsPage() {
       inapp_enabled: s.inapp_enabled,
       notify_email: s.notify_email,
       notify_phone: s.notify_phone,
+      slack_webhook_url: s.slack_webhook_url,
+      discord_webhook_url: s.discord_webhook_url,
       events: s.events,
     };
     const { error } = await supabase
       .from("notification_settings")
-      .upsert(payload, { onConflict: "merchant_id" });
+      .upsert(payload as never, { onConflict: "merchant_id" });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Notification preferences saved");
