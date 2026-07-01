@@ -43,6 +43,7 @@ import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
@@ -224,6 +225,11 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicV1PostmanRoute = ApiPublicV1PostmanRouteImport.update({
+  id: '/api/public/v1/postman',
+  path: '/api/public/v1/postman',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1InvoicesRoute = ApiPublicV1InvoicesRouteImport.update({
   id: '/api/public/v1/invoices',
   path: '/api/public/v1/invoices',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesByTo {
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesById {
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRouteTypes {
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin/'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   id:
     | '__root__'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
 }
@@ -471,6 +483,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
+  ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -713,6 +726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/api/public/v1/postman': {
+      id: '/api/public/v1/postman'
+      path: '/api/public/v1/postman'
+      fullPath: '/api/public/v1/postman'
+      preLoaderRoute: typeof ApiPublicV1PostmanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/invoices': {
       id: '/api/public/v1/invoices'
       path: '/api/public/v1/invoices'
@@ -836,6 +856,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
+  ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
