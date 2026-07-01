@@ -128,7 +128,31 @@ function ApiReferencePage() {
               <li><span className="font-mono">invoice.completed</span> — payment verified</li>
               <li><span className="font-mono">invoice.failed</span> — payment rejected</li>
               <li><span className="font-mono">payout.processed</span> — payout processed by admin</li>
+              <li><span className="font-mono">refund.processed</span> — refund completed by admin</li>
             </ul>
+          </section>
+
+          <section className="mt-12">
+            <h2 className="font-display text-2xl">Error codes</h2>
+            <div className="mt-3 overflow-hidden rounded-lg border border-glass-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/30 text-left text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-2">HTTP</th>
+                    <th className="px-4 py-2">Meaning</th>
+                    <th className="px-4 py-2">Fix</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-glass-border">
+                  <tr><td className="px-4 py-2 font-mono">400</td><td className="px-4 py-2">Invalid JSON / missing field</td><td className="px-4 py-2 text-muted-foreground">Verify request body shape.</td></tr>
+                  <tr><td className="px-4 py-2 font-mono">401</td><td className="px-4 py-2">Missing / invalid API key</td><td className="px-4 py-2 text-muted-foreground">Send <span className="font-mono">Authorization: Bearer sk_…</span>.</td></tr>
+                  <tr><td className="px-4 py-2 font-mono">403</td><td className="px-4 py-2">IP not whitelisted</td><td className="px-4 py-2 text-muted-foreground">Add caller IP under <span className="font-mono">/ip-whitelist</span>.</td></tr>
+                  <tr><td className="px-4 py-2 font-mono">404</td><td className="px-4 py-2">Resource not found</td><td className="px-4 py-2 text-muted-foreground">Check the invoice / resource ID.</td></tr>
+                  <tr><td className="px-4 py-2 font-mono">429</td><td className="px-4 py-2">Rate limit exceeded</td><td className="px-4 py-2 text-muted-foreground">Back off; 120 req/min per key.</td></tr>
+                  <tr><td className="px-4 py-2 font-mono">500</td><td className="px-4 py-2">Internal error</td><td className="px-4 py-2 text-muted-foreground">Retry with exponential backoff.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section className="mt-12">
@@ -137,6 +161,7 @@ function ApiReferencePage() {
               <li>120 requests / minute per API key (HTTP 429 on exceed).</li>
               <li>Optional IP whitelist per merchant — configure in dashboard.</li>
               <li>All calls audit-logged with IP + user agent.</li>
+              <li>Webhook signatures are HMAC-SHA256, timing-safe compare only.</li>
             </ul>
           </section>
         </main>
