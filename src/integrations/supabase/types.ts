@@ -1023,11 +1023,19 @@ export type Database = {
         Args: { _key_id: string; _limit: number; _window_seconds: number }
         Returns: number
       }
+      effective_merchant_role: {
+        Args: { _merchant_id: string; _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      merchant_can: {
+        Args: { _merchant_id: string; _min_role: string; _user_id: string }
         Returns: boolean
       }
     }
