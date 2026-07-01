@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispatchWebhooks } from "@/lib/webhooks.server";
+import { notify } from "@/lib/notifications.server";
+
 
 /**
  * Merchant verifies a pending transaction. Marks the txn verified,
