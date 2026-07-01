@@ -7,6 +7,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { verifyTransaction, rejectTransaction } from "@/lib/payments.functions";
+import { byoVerifyTransaction } from "@/lib/byo-verify.functions";
 import { useMerchantRole } from "@/hooks/use-merchant-role";
 
 
