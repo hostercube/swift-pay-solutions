@@ -7,6 +7,8 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { verifyTransaction, rejectTransaction } from "@/lib/payments.functions";
+import { useMerchantRole } from "@/hooks/use-merchant-role";
+
 
 export const Route = createFileRoute("/_authenticated/invoices/$id")({
   head: () => ({ meta: [{ title: "Invoice · PayNOC" }] }),
@@ -29,6 +31,8 @@ type Invoice = {
   paid_at: string | null;
   expires_at: string | null;
   created_at: string;
+  merchant_id: string;
+
 };
 
 type Txn = {
@@ -69,6 +73,8 @@ function InvoiceDetailPage() {
 
   const verifyFn = useServerFn(verifyTransaction);
   const rejectFn = useServerFn(rejectTransaction);
+  const { can } = useMerchantRole(inv?.merchant_id as string | undefined);
+
 
   async function verify(t: Txn) {
     if (!inv) return;
@@ -203,15 +209,18 @@ function InvoiceDetailPage() {
                       <td className="px-2 py-2 text-muted-foreground">{new Date(t.created_at).toLocaleString()}</td>
                       <td className="px-2 py-2 text-right">
                         {t.status === "pending" ? (
-                          <div className="inline-flex gap-2">
-                            <button onClick={() => verify(t)} className="rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
-                              Verify
-                            </button>
-                            <button onClick={() => reject(t)} className="rounded-md border border-destructive/30 px-2 py-1 text-xs text-destructive">
-                              Reject
-                            </button>
-                          </div>
+                          can("operator") ? (
+                            <div className="inline-flex gap-2">
+                              <button onClick={() => verify(t)} className="rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
+                                Verify
+                              </button>
+                              <button onClick={() => reject(t)} className="rounded-md border border-destructive/30 px-2 py-1 text-xs text-destructive">
+                                Reject
+                              </button>
+                            </div>
+                          ) : <span className="text-xs text-muted-foreground">View only</span>
                         ) : "—"}
+
                       </td>
                     </tr>
                   ))}

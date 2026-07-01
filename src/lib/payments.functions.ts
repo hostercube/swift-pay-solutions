@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispatchWebhooks } from "@/lib/webhooks.server";
 import { notify } from "@/lib/notifications.server";
+import { assertMerchantRole } from "@/lib/rbac.server";
+
 
 
 /**
@@ -24,6 +26,8 @@ export const verifyTransaction = createServerFn({ method: "POST" })
     if (tErr) throw new Error(tErr.message);
     if (!txn) throw new Error("Transaction not found");
     if (txn.status !== "pending") throw new Error("Transaction is not pending");
+    await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
+
 
     const nowIso = new Date().toISOString();
 
@@ -71,13 +75,22 @@ export const rejectTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { transactionId: string; note?: string }) => data)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    const { data: txn, error: tErr } = await supabase
+      .from("transactions")
+      .select("merchant_id")
+      .eq("id", data.transactionId)
+      .maybeSingle();
+    if (tErr) throw new Error(tErr.message);
+    if (!txn) throw new Error("Transaction not found");
+    await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
     const { error } = await supabase
       .from("transactions")
       .update({ status: "rejected", note: data.note || null })
       .eq("id", data.transactionId);
     if (error) throw new Error(error.message);
     return { ok: true };
+
   });
 
 /**
