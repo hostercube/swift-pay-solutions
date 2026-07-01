@@ -77,7 +77,75 @@ function SettingsPage() {
           {saving ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      <KycUploader />
     </MerchantShell>
+  );
+}
+
+function KycUploader() {
+  const { user } = useAuth();
+  const [files, setFiles] = useState<Array<{ name: string; created_at: string }>>([]);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = async () => {
+    if (!user) return;
+    const { data } = await supabase.storage.from("kyc").list(user.id, { limit: 50, sortBy: { column: "created_at", order: "desc" } });
+    setFiles((data ?? []).map((f) => ({ name: f.name, created_at: f.created_at ?? "" })));
+  };
+
+  useEffect(() => { refresh(); }, [user]);
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f || !user) return;
+    setBusy(true);
+    const path = `${user.id}/${Date.now()}-${f.name}`;
+    const { error } = await supabase.storage.from("kyc").upload(path, f, { upsert: false });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Document uploaded");
+    refresh();
+  };
+
+  const view = async (name: string) => {
+    if (!user) return;
+    const { data } = await supabase.storage.from("kyc").createSignedUrl(`${user.id}/${name}`, 300);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+  const remove = async (name: string) => {
+    if (!user) return;
+    await supabase.storage.from("kyc").remove([`${user.id}/${name}`]);
+    refresh();
+  };
+
+  return (
+    <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+      <h2 className="font-display text-lg font-semibold">KYC documents</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Upload business registration, national ID, or address proof. Files are private —
+        only you and platform admins can access them.
+      </p>
+      <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-glass-border bg-card/60 px-4 py-2 text-sm">
+        <input type="file" onChange={onFile} disabled={busy} className="hidden" />
+        {busy ? "Uploading…" : "Choose a file to upload"}
+      </label>
+
+      <ul className="mt-4 space-y-2 text-sm">
+        {files.length === 0 ? (
+          <li className="text-muted-foreground">No documents uploaded yet.</li>
+        ) : files.map((f) => (
+          <li key={f.name} className="flex items-center justify-between rounded-lg border border-glass-border bg-card/40 px-3 py-2">
+            <span className="truncate font-mono text-xs">{f.name}</span>
+            <div className="flex gap-2">
+              <button onClick={() => view(f.name)} className="text-xs text-brand hover:underline">View</button>
+              <button onClick={() => remove(f.name)} className="text-xs text-destructive hover:underline">Delete</button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
