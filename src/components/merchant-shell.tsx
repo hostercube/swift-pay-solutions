@@ -13,6 +13,10 @@ import {
   Bell,
   BarChart3,
   Lock,
+  Wallet,
+  ShieldAlert,
+  ShieldCheck,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,11 +25,16 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/transactions", label: "Transactions", icon: CreditCard },
+  { to: "/payouts", label: "Payouts", icon: Wallet },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/methods", label: "Payment methods", icon: CreditCard },
+  { to: "/team", label: "Team", icon: Users },
   { to: "/api-keys", label: "API keys", icon: KeyRound },
   { to: "/webhooks", label: "Webhooks", icon: Webhook },
+  { to: "/api-reference", label: "API reference", icon: BookOpen },
   { to: "/ip-whitelist", label: "IP whitelist", icon: Lock },
+  { to: "/fraud", label: "Fraud rules", icon: ShieldAlert },
+  { to: "/security", label: "Security (2FA)", icon: ShieldCheck },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/notification-settings", label: "Notification settings", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
