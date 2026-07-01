@@ -90,6 +90,16 @@ function ApiReferencePage() {
             </Card>
           </section>
 
+          <section className="mt-6">
+            <a
+              href="/api/public/v1/postman"
+              className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-4 py-2 text-sm font-medium hover:bg-muted"
+              download
+            >
+              ⬇ Download Postman collection
+            </a>
+          </section>
+
           <section className="mt-12">
             <h2 className="font-display text-2xl">Create an invoice</h2>
             <p className="mt-1 text-sm text-muted-foreground">POST /invoices — returns a hosted checkout URL.</p>

@@ -25,11 +25,44 @@ function AuthPage() {
   const [businessName, setBusinessName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // MFA challenge state
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return;
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
+        // Force challenge before entering app
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const totp = factors?.totp?.[0];
+        if (totp) {
+          const { data: chal } = await supabase.auth.mfa.challenge({ factorId: totp.id });
+          setMfaFactorId(totp.id);
+          setMfaChallengeId(chal?.id ?? null);
+          return;
+        }
+      }
+      navigate({ to: "/dashboard" });
     });
   }, [navigate]);
+
+  async function verifyMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaFactorId || !mfaChallengeId) return;
+    setLoading(true);
+    const { error } = await supabase.auth.mfa.verify({
+      factorId: mfaFactorId,
+      challengeId: mfaChallengeId,
+      code: mfaCode,
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Verified");
+    navigate({ to: "/dashboard" });
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,6 +83,22 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+
+        // AAL2 check — if user has TOTP enrolled, require code before proceeding
+        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
+          const { data: factors } = await supabase.auth.mfa.listFactors();
+          const totp = factors?.totp?.[0];
+          if (totp) {
+            const { data: chal, error: cErr } = await supabase.auth.mfa.challenge({ factorId: totp.id });
+            if (cErr) throw cErr;
+            setMfaFactorId(totp.id);
+            setMfaChallengeId(chal.id);
+            toast.info("Enter your 2FA code");
+            return;
+          }
+        }
+
         toast.success("Welcome back");
         navigate({ to: "/dashboard" });
       }
@@ -60,6 +109,8 @@ function AuthPage() {
       setLoading(false);
     }
   }
+
+  const showMfa = !!mfaChallengeId;
 
   return (
     <div className="relative min-h-screen bg-background">
@@ -73,65 +124,105 @@ function AuthPage() {
         </Link>
 
         <div className="glass rounded-2xl border border-glass-border p-8">
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            {mode === "signin" ? "Sign in" : "Create your merchant account"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin"
-              ? "Access your PayNOC dashboard."
-              : "Start accepting payments in minutes."}
-          </p>
-
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            {mode === "signup" && (
-              <>
-                <Field label="Full name" value={fullName} onChange={setFullName} required />
-                <Field label="Business name" value={businessName} onChange={setBusinessName} required />
-              </>
-            )}
-            <Field label="Email" type="email" value={email} onChange={setEmail} required />
-            <Field
-              label="Password"
-              type="password"
-              value={password}
-              onChange={setPassword}
-              required
-              minLength={8}
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:opacity-60"
-            >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : "Create account"}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? (
-              <>
-                No account?{" "}
+          {showMfa ? (
+            <>
+              <h1 className="font-display text-2xl font-bold text-foreground">Two-factor code</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Open your authenticator app and enter the 6-digit code.
+              </p>
+              <form onSubmit={verifyMfa} className="mt-6 space-y-4">
+                <Field
+                  label="Authentication code"
+                  value={mfaCode}
+                  onChange={setMfaCode}
+                  required
+                  minLength={6}
+                />
                 <button
-                  className="font-semibold text-foreground hover:underline"
-                  onClick={() => setMode("signup")}
+                  type="submit"
+                  disabled={loading || mfaCode.length < 6}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
                 >
-                  Sign up
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Verify
                 </button>
-              </>
-            ) : (
-              <>
-                Already registered?{" "}
                 <button
-                  className="font-semibold text-foreground hover:underline"
-                  onClick={() => setMode("signin")}
+                  type="button"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setMfaChallengeId(null);
+                    setMfaFactorId(null);
+                    setMfaCode("");
+                  }}
+                  className="w-full text-center text-xs text-muted-foreground hover:underline"
                 >
-                  Sign in
+                  Cancel and sign out
                 </button>
-              </>
-            )}
-          </div>
+              </form>
+            </>
+          ) : (
+            <>
+              <h1 className="font-display text-2xl font-bold text-foreground">
+                {mode === "signin" ? "Sign in" : "Create your merchant account"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {mode === "signin"
+                  ? "Access your PayNOC dashboard."
+                  : "Start accepting payments in minutes."}
+              </p>
+
+              <form onSubmit={onSubmit} className="mt-6 space-y-4">
+                {mode === "signup" && (
+                  <>
+                    <Field label="Full name" value={fullName} onChange={setFullName} required />
+                    <Field label="Business name" value={businessName} onChange={setBusinessName} required />
+                  </>
+                )}
+                <Field label="Email" type="email" value={email} onChange={setEmail} required />
+                <Field
+                  label="Password"
+                  type="password"
+                  value={password}
+                  onChange={setPassword}
+                  required
+                  minLength={8}
+                />
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:opacity-60"
+                >
+                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {mode === "signin" ? "Sign in" : "Create account"}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                {mode === "signin" ? (
+                  <>
+                    No account?{" "}
+                    <button
+                      className="font-semibold text-foreground hover:underline"
+                      onClick={() => setMode("signup")}
+                    >
+                      Sign up
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Already registered?{" "}
+                    <button
+                      className="font-semibold text-foreground hover:underline"
+                      onClick={() => setMode("signin")}
+                    >
+                      Sign in
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

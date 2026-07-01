@@ -1,21 +1,8 @@
 import { createHash } from "crypto";
 
-// In-memory rate limit (per-worker). Best-effort: not a distributed limiter.
-const RATE_LIMIT = 120; // requests per window
-const WINDOW_MS = 60_000;
-const buckets = new Map<string, { count: number; reset: number }>();
+const RATE_LIMIT = 120;
+const WINDOW_SECONDS = 60;
 
-function rateLimit(keyId: string) {
-  const now = Date.now();
-  const b = buckets.get(keyId);
-  if (!b || b.reset < now) {
-    buckets.set(keyId, { count: 1, reset: now + WINDOW_MS });
-    return { ok: true, remaining: RATE_LIMIT - 1 };
-  }
-  b.count += 1;
-  if (b.count > RATE_LIMIT) return { ok: false, remaining: 0, retryAfter: Math.ceil((b.reset - now) / 1000) };
-  return { ok: true, remaining: RATE_LIMIT - b.count };
-}
 
 function clientIp(request: Request) {
   return (
@@ -67,11 +54,17 @@ export async function authenticateApiKey(request: Request): Promise<
     if (!allowed) return { error: "IP not whitelisted", status: 403 };
   }
 
-  // Rate limit per key
-  const rl = rateLimit(data.id);
-  if (!rl.ok) {
-    return { error: `Rate limit exceeded, retry in ${rl.retryAfter}s`, status: 429 };
+  // Persistent per-key rate limit (Postgres-backed, atomic)
+  const { data: remaining, error: rlErr } = await supabaseAdmin.rpc("consume_rate_limit", {
+    _key_id: data.id,
+    _limit: RATE_LIMIT,
+    _window_seconds: WINDOW_SECONDS,
+  });
+  if (rlErr) return { error: "Rate limiter unavailable", status: 500 };
+  if ((remaining as number) < 0) {
+    return { error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`, status: 429 };
   }
+
 
   // Fire-and-forget last_used_at + audit
   supabaseAdmin

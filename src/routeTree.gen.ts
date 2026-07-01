@@ -32,6 +32,7 @@ import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedByoGatewaysRouteImport } from './routes/_authenticated/byo-gateways'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -42,6 +43,7 @@ import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
@@ -163,6 +165,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedByoGatewaysRoute =
+  AuthenticatedByoGatewaysRouteImport.update({
+    id: '/byo-gateways',
+    path: '/byo-gateways',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
   id: '/api-keys',
   path: '/api-keys',
@@ -217,6 +225,11 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicV1PostmanRoute = ApiPublicV1PostmanRouteImport.update({
+  id: '/api/public/v1/postman',
+  path: '/api/public/v1/postman',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1InvoicesRoute = ApiPublicV1InvoicesRouteImport.update({
   id: '/api/public/v1/invoices',
   path: '/api/public/v1/invoices',
@@ -237,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
@@ -262,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesByTo {
@@ -272,6 +287,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/pricing': typeof PricingRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
@@ -297,6 +313,7 @@ export interface FileRoutesByTo {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesById {
@@ -310,6 +327,7 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
+  '/_authenticated/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/fraud': typeof AuthenticatedFraudRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
@@ -335,6 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRouteTypes {
@@ -348,6 +367,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/admin'
     | '/api-keys'
+    | '/byo-gateways'
     | '/dashboard'
     | '/fraud'
     | '/invoices'
@@ -373,6 +393,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin/'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -383,6 +404,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/pricing'
     | '/api-keys'
+    | '/byo-gateways'
     | '/dashboard'
     | '/fraud'
     | '/invoices'
@@ -408,6 +430,7 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   id:
     | '__root__'
@@ -420,6 +443,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
+    | '/_authenticated/byo-gateways'
     | '/_authenticated/dashboard'
     | '/_authenticated/fraud'
     | '/_authenticated/invoices'
@@ -445,6 +469,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
     | '/api/public/v1/invoices'
+    | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
 }
@@ -458,6 +483,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
+  ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -623,6 +649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/byo-gateways': {
+      id: '/_authenticated/byo-gateways'
+      path: '/byo-gateways'
+      fullPath: '/byo-gateways'
+      preLoaderRoute: typeof AuthenticatedByoGatewaysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/api-keys': {
       id: '/_authenticated/api-keys'
       path: '/api-keys'
@@ -693,6 +726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/api/public/v1/postman': {
+      id: '/api/public/v1/postman'
+      path: '/api/public/v1/postman'
+      fullPath: '/api/public/v1/postman'
+      preLoaderRoute: typeof ApiPublicV1PostmanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/invoices': {
       id: '/api/public/v1/invoices'
       path: '/api/public/v1/invoices'
@@ -752,6 +792,7 @@ const AuthenticatedInvoicesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
+  AuthenticatedByoGatewaysRoute: typeof AuthenticatedByoGatewaysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
@@ -772,6 +813,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
+  AuthenticatedByoGatewaysRoute: AuthenticatedByoGatewaysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFraudRoute: AuthenticatedFraudRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
@@ -814,6 +856,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
+  ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
