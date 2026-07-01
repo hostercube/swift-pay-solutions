@@ -96,6 +96,18 @@ function RefundsPage() {
     }
   };
 
+  const approveAndProcess = async (id: string) => {
+    try {
+      await updateFn({ data: { refundId: id, status: "approved", note: notes[id] } });
+      await updateFn({ data: { refundId: id, status: "processed", note: notes[id] } });
+      toast.success("Refund approved & processed");
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed");
+    }
+  };
+
+
   return (
     <MerchantShell title="Refunds" subtitle="Request full or partial refunds against completed invoices.">
       <Card className="p-5">
@@ -162,13 +174,17 @@ function RefundsPage() {
                           onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })}
                           className="h-8"
                         />
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1">
                           {r.status === "requested" && (
-                            <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
+                            <>
+                              <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
+                              <Button size="sm" variant="default" onClick={() => approveAndProcess(r.id)}>Approve & Process</Button>
+                            </>
                           )}
                           <Button size="sm" variant="secondary" onClick={() => decide(r.id, "processed")}>Processed</Button>
                           <Button size="sm" variant="destructive" onClick={() => decide(r.id, "rejected")}>Reject</Button>
                         </div>
+
                       </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">{r.admin_note ?? "—"}</p>

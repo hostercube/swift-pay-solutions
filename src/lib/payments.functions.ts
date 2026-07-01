@@ -207,21 +207,43 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
       .single();
     if (error || !row) throw new Error(error?.message ?? "Refund update failed");
 
-    if (data.status === "processed") {
-      dispatchWebhooks({
-        merchantId: (row as { merchant_id: string }).merchant_id,
-        invoiceId: (row as { invoice_id: string }).invoice_id,
-        event: "refund.processed",
-        data: row,
+    const merchantId = (row as { merchant_id: string }).merchant_id;
+    const invoiceId = (row as { invoice_id: string }).invoice_id;
+    const currency = (row as { currency: string }).currency;
+    const amount = (row as { amount: number }).amount;
+    const refundId = (row as { id: string }).id;
+
+    if (data.status === "approved") {
+      dispatchWebhooks({ merchantId, invoiceId, event: "refund.approved", data: row }).catch(() => undefined);
+      notify({
+        merchantId, event: "refund.approved", title: "Refund approved",
+        body: `Refund of ${currency} ${amount} approved and will be processed.`,
+        metadata: { refundId },
       }).catch(() => undefined);
+    }
+
+    if (data.status === "rejected") {
+      dispatchWebhooks({ merchantId, invoiceId, event: "refund.rejected", data: row }).catch(() => undefined);
+      notify({
+        merchantId, event: "refund.rejected", title: "Refund rejected",
+        body: `Refund of ${currency} ${amount} was rejected.`,
+        metadata: { refundId },
+      }).catch(() => undefined);
+    }
+
+    if (data.status === "processed") {
+      // Mark invoice as refunded
+      await supabase.from("invoices").update({ status: "refunded" }).eq("id", invoiceId);
+
+      dispatchWebhooks({ merchantId, invoiceId, event: "refund.processed", data: row }).catch(() => undefined);
+      dispatchWebhooks({ merchantId, invoiceId, event: "invoice.refunded", data: { invoice_id: invoiceId, refund_id: refundId, amount, currency } }).catch(() => undefined);
 
       notify({
-        merchantId: (row as { merchant_id: string }).merchant_id,
-        event: "refund.processed",
-        title: "Refund processed",
-        body: `Refund of ${(row as { currency: string }).currency} ${(row as { amount: number }).amount} completed.`,
-        metadata: { refundId: (row as { id: string }).id },
+        merchantId, event: "refund.processed", title: "Refund processed",
+        body: `Refund of ${currency} ${amount} completed.`,
+        metadata: { refundId },
       }).catch(() => undefined);
     }
     return { ok: true };
   });
+
