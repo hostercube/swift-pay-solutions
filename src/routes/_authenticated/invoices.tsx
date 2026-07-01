@@ -97,10 +97,16 @@ function InvoicesPage() {
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-glass-border">
                 <td className="px-4 py-3">
-                  <Link to="/invoices/$id" params={{ id: r.id }} className="font-mono text-xs hover:text-brand">
-                    {r.invoice_number}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link to="/invoices/$id" params={{ id: r.id }} className="font-mono text-xs hover:text-brand">
+                      {r.invoice_number}
+                    </Link>
+                    {r.mode === "test" && (
+                      <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>
+                    )}
+                  </div>
                 </td>
+
                 <td className="px-4 py-3">
                   <div>{r.customer_name || "—"}</div>
                   <div className="text-xs text-muted-foreground">{r.customer_email || ""}</div>
