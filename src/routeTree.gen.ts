@@ -13,18 +13,23 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ApiReferenceRouteImport } from './routes/api-reference'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PayInvoiceIdRouteImport } from './routes/pay.$invoiceId'
 import { Route as AuthenticatedWebhooksRouteImport } from './routes/_authenticated/webhooks'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticated/security'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedPayoutsRouteImport } from './routes/_authenticated/payouts'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
 import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
 import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
+import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
@@ -32,7 +37,9 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
+import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
@@ -55,6 +62,11 @@ const ContactRoute = ContactRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReferenceRoute = ApiReferenceRouteImport.update({
+  id: '/api-reference',
+  path: '/api-reference',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -82,14 +94,29 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSecurityRoute = AuthenticatedSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPayoutsRoute = AuthenticatedPayoutsRouteImport.update({
+  id: '/payouts',
+  path: '/payouts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -118,6 +145,11 @@ const AuthenticatedIpWhitelistRoute =
 const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFraudRoute = AuthenticatedFraudRouteImport.update({
+  id: '/fraud',
+  path: '/fraud',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -157,12 +189,23 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPayoutsRoute =
+  AuthenticatedAdminPayoutsRouteImport.update({
+    id: '/payouts',
+    path: '/payouts',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminMerchantsRoute =
   AuthenticatedAdminMerchantsRouteImport.update({
     id: '/merchants',
     path: '/merchants',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminFxRoute = AuthenticatedAdminFxRouteImport.update({
+  id: '/fx',
+  path: '/fx',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -181,6 +224,7 @@ const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
@@ -188,18 +232,24 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/payouts': typeof AuthenticatedPayoutsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -209,24 +259,31 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/pricing': typeof PricingRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/payouts': typeof AuthenticatedPayoutsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/security': typeof AuthenticatedSecurityRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -238,6 +295,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
@@ -245,18 +303,24 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/fraud': typeof AuthenticatedFraudRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/payouts': typeof AuthenticatedPayoutsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/webhooks': typeof AuthenticatedWebhooksRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -268,6 +332,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api-reference'
     | '/auth'
     | '/contact'
     | '/docs'
@@ -275,18 +340,24 @@ export interface FileRouteTypes {
     | '/admin'
     | '/api-keys'
     | '/dashboard'
+    | '/fraud'
     | '/invoices'
     | '/ip-whitelist'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
+    | '/payouts'
     | '/reports'
+    | '/security'
     | '/settings'
+    | '/team'
     | '/transactions'
     | '/webhooks'
     | '/pay/$invoiceId'
     | '/admin/audit'
+    | '/admin/fx'
     | '/admin/merchants'
+    | '/admin/payouts'
     | '/admin/settings'
     | '/invoices/$id'
     | '/invoices/new'
@@ -296,24 +367,31 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api-reference'
     | '/auth'
     | '/contact'
     | '/docs'
     | '/pricing'
     | '/api-keys'
     | '/dashboard'
+    | '/fraud'
     | '/invoices'
     | '/ip-whitelist'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
+    | '/payouts'
     | '/reports'
+    | '/security'
     | '/settings'
+    | '/team'
     | '/transactions'
     | '/webhooks'
     | '/pay/$invoiceId'
     | '/admin/audit'
+    | '/admin/fx'
     | '/admin/merchants'
+    | '/admin/payouts'
     | '/admin/settings'
     | '/invoices/$id'
     | '/invoices/new'
@@ -324,6 +402,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/api-reference'
     | '/auth'
     | '/contact'
     | '/docs'
@@ -331,18 +410,24 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
     | '/_authenticated/dashboard'
+    | '/_authenticated/fraud'
     | '/_authenticated/invoices'
     | '/_authenticated/ip-whitelist'
     | '/_authenticated/methods'
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
+    | '/_authenticated/payouts'
     | '/_authenticated/reports'
+    | '/_authenticated/security'
     | '/_authenticated/settings'
+    | '/_authenticated/team'
     | '/_authenticated/transactions'
     | '/_authenticated/webhooks'
     | '/pay/$invoiceId'
     | '/_authenticated/admin/audit'
+    | '/_authenticated/admin/fx'
     | '/_authenticated/admin/merchants'
+    | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/settings'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
@@ -354,6 +439,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ApiReferenceRoute: typeof ApiReferenceRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
@@ -392,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api-reference': {
+      id: '/api-reference'
+      path: '/api-reference'
+      fullPath: '/api-reference'
+      preLoaderRoute: typeof ApiReferenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -427,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -434,11 +534,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/security': {
+      id: '/_authenticated/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof AuthenticatedSecurityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/payouts': {
+      id: '/_authenticated/payouts'
+      path: '/payouts'
+      fullPath: '/payouts'
+      preLoaderRoute: typeof AuthenticatedPayoutsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/notifications': {
@@ -474,6 +588,13 @@ declare module '@tanstack/react-router' {
       path: '/invoices'
       fullPath: '/invoices'
       preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fraud': {
+      id: '/_authenticated/fraud'
+      path: '/fraud'
+      fullPath: '/fraud'
+      preLoaderRoute: typeof AuthenticatedFraudRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -525,11 +646,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/payouts': {
+      id: '/_authenticated/admin/payouts'
+      path: '/payouts'
+      fullPath: '/admin/payouts'
+      preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/merchants': {
       id: '/_authenticated/admin/merchants'
       path: '/merchants'
       fullPath: '/admin/merchants'
       preLoaderRoute: typeof AuthenticatedAdminMerchantsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/fx': {
+      id: '/_authenticated/admin/fx'
+      path: '/fx'
+      fullPath: '/admin/fx'
+      preLoaderRoute: typeof AuthenticatedAdminFxRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/audit': {
@@ -558,7 +693,9 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
+  AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -566,7 +703,9 @@ interface AuthenticatedAdminRouteRouteChildren {
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+    AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
     AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
+    AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
@@ -595,13 +734,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPayoutsRoute: typeof AuthenticatedPayoutsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedWebhooksRoute: typeof AuthenticatedWebhooksRoute
 }
@@ -610,14 +753,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFraudRoute: AuthenticatedFraudRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
   AuthenticatedNotificationSettingsRoute:
     AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPayoutsRoute: AuthenticatedPayoutsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedWebhooksRoute: AuthenticatedWebhooksRoute,
 }
@@ -639,6 +786,7 @@ const ApiPublicV1InvoicesRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ApiReferenceRoute: ApiReferenceRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
