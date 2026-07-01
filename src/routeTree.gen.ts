@@ -45,6 +45,7 @@ import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
+import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
 const PricingRoute = PricingRouteImport.update({
@@ -235,6 +236,12 @@ const ApiPublicV1InvoicesRoute = ApiPublicV1InvoicesRouteImport.update({
   path: '/api/public/v1/invoices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksWebhookRetryRoute =
+  ApiPublicHooksWebhookRetryRouteImport.update({
+    id: '/api/public/hooks/webhook-retry',
+    path: '/api/public/hooks/webhook-retry',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -275,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
@@ -312,6 +320,7 @@ export interface FileRoutesByTo {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
@@ -352,6 +361,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin/'
+    | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin'
+    | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
@@ -468,6 +480,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
+    | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/invoices/$id'
@@ -482,6 +495,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   PricingRoute: typeof PricingRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
+  ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
   ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
 }
@@ -740,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1InvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/webhook-retry': {
+      id: '/api/public/hooks/webhook-retry'
+      path: '/api/public/hooks/webhook-retry'
+      fullPath: '/api/public/hooks/webhook-retry'
+      preLoaderRoute: typeof ApiPublicHooksWebhookRetryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/invoices/$id': {
       id: '/api/public/v1/invoices/$id'
       path: '/$id'
@@ -855,6 +876,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   PricingRoute: PricingRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
+  ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
   ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
 }
