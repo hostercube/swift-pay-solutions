@@ -20,6 +20,7 @@ type Row = {
   signing_secret: string;
   is_active: boolean;
   created_at: string;
+  mode: string;
 };
 
 function randomSecret() {
@@ -32,14 +33,17 @@ function WebhooksPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [url, setUrl] = useState("");
+  const [mode, setMode] = useState<"live" | "test">("live");
   const [selected, setSelected] = useState<string[]>(["invoice.paid", "invoice.failed"]);
+
 
   async function load() {
     if (!user) return;
     const { data } = await supabase
       .from("webhook_endpoints")
-      .select("id, url, events, signing_secret, is_active, created_at")
+      .select("id, url, events, signing_secret, is_active, created_at, mode")
       .eq("merchant_id", user.id)
+
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
   }
@@ -54,7 +58,9 @@ function WebhooksPage() {
       url,
       events: selected,
       signing_secret: randomSecret(),
+      mode,
     });
+
     if (error) return toast.error(error.message);
     setUrl("");
     toast.success("Webhook endpoint added");
@@ -83,7 +89,16 @@ function WebhooksPage() {
             placeholder="https://your-site.com/api/paynoc-webhook"
             className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
           />
+          <div className="inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
+            {(["live","test"] as const).map((m) => (
+              <button key={m} onClick={() => setMode(m)}
+                className={`rounded-md px-3 py-1.5 font-semibold uppercase tracking-wider ${mode===m ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {m}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2">
+
             {ALL_EVENTS.map((ev) => {
               const on = selected.includes(ev);
               return (
@@ -125,8 +140,12 @@ function WebhooksPage() {
             )}
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-mono text-xs">{r.url}</td>
+                <td className="px-4 py-3 font-mono text-xs">
+                  {r.url}
+                  {r.mode === "test" && <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>}
+                </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{r.events.join(", ")}</td>
+
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <code className="font-mono text-xs">{r.signing_secret.slice(0, 14)}…</code>

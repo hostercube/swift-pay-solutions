@@ -229,6 +229,7 @@ export type Database = {
           metadata: Json
           method_id: string | null
           method_type: Database["public"]["Enums"]["payment_method_type"] | null
+          mode: string
           net_amount: number
           paid_at: string | null
           redirect_url: string | null
@@ -254,6 +255,7 @@ export type Database = {
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
+          mode?: string
           net_amount?: number
           paid_at?: string | null
           redirect_url?: string | null
@@ -279,6 +281,7 @@ export type Database = {
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
+          mode?: string
           net_amount?: number
           paid_at?: string | null
           redirect_url?: string | null
@@ -722,6 +725,7 @@ export type Database = {
           invoice_id: string
           merchant_id: string
           method_type: Database["public"]["Enums"]["payment_method_type"]
+          mode: string
           net_amount: number
           note: string | null
           provider_txn_id: string | null
@@ -742,6 +746,7 @@ export type Database = {
           invoice_id: string
           merchant_id: string
           method_type: Database["public"]["Enums"]["payment_method_type"]
+          mode?: string
           net_amount?: number
           note?: string | null
           provider_txn_id?: string | null
@@ -762,6 +767,7 @@ export type Database = {
           invoice_id?: string
           merchant_id?: string
           method_type?: Database["public"]["Enums"]["payment_method_type"]
+          mode?: string
           net_amount?: number
           note?: string | null
           provider_txn_id?: string | null
@@ -895,6 +901,7 @@ export type Database = {
           id: string
           is_active: boolean
           merchant_id: string
+          mode: string
           signing_secret: string
           updated_at: string
           url: string
@@ -905,6 +912,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           merchant_id: string
+          mode?: string
           signing_secret: string
           updated_at?: string
           url: string
@@ -915,6 +923,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           merchant_id?: string
+          mode?: string
           signing_secret?: string
           updated_at?: string
           url?: string
@@ -960,13 +969,14 @@ export type Database = {
           customer_phone: string | null
           description: string | null
           expires_at: string | null
-          fee_amount: number | null
           id: string | null
           invoice_number: string | null
           merchant_id: string | null
+          metadata: Json | null
           method_id: string | null
           method_type: Database["public"]["Enums"]["payment_method_type"] | null
-          net_amount: number | null
+          mode: string | null
+          paid_at: string | null
           redirect_url: string | null
           status: Database["public"]["Enums"]["invoice_status"] | null
         }
@@ -979,15 +989,16 @@ export type Database = {
           customer_phone?: string | null
           description?: string | null
           expires_at?: string | null
-          fee_amount?: number | null
           id?: string | null
           invoice_number?: string | null
           merchant_id?: string | null
+          metadata?: Json | null
           method_id?: string | null
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
-          net_amount?: number | null
+          mode?: string | null
+          paid_at?: string | null
           redirect_url?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
         }
@@ -1000,15 +1011,16 @@ export type Database = {
           customer_phone?: string | null
           description?: string | null
           expires_at?: string | null
-          fee_amount?: number | null
           id?: string | null
           invoice_number?: string | null
           merchant_id?: string | null
+          metadata?: Json | null
           method_id?: string | null
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
-          net_amount?: number | null
+          mode?: string | null
+          paid_at?: string | null
           redirect_url?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
         }

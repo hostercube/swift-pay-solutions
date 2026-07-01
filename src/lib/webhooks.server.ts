@@ -21,18 +21,22 @@ export async function dispatchWebhooks(opts: {
   invoiceId: string;
   event: string;
   data: Record<string, unknown>;
+  mode?: "live" | "test";
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const mode = opts.mode ?? "live";
 
   const { data: endpoints } = await supabaseAdmin
     .from("webhook_endpoints")
-    .select("id, url, signing_secret, events")
+    .select("id, url, signing_secret, events, mode")
     .eq("merchant_id", opts.merchantId)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("mode", mode);
 
   const targets = (endpoints ?? []).filter((e) =>
     !e.events || e.events.length === 0 || e.events.includes(opts.event),
   );
+
 
   const ts = Math.floor(Date.now() / 1000);
   const body = JSON.stringify({

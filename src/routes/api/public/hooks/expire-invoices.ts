@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/hooks/expire-invoices")({
 
         const { data: due, error } = await supabaseAdmin
           .from("invoices")
-          .select("id, merchant_id")
+          .select("id, merchant_id, mode")
           .eq("status", "pending")
           .not("expires_at", "is", null)
           .lte("expires_at", nowIso)
@@ -39,7 +39,9 @@ export const Route = createFileRoute("/api/public/hooks/expire-invoices")({
               invoiceId: inv.id,
               event: "invoice.expired",
               data: { invoice_id: inv.id },
+              mode: (inv.mode as "live" | "test") ?? "live",
             });
+
           }
         } catch (e) {
           console.error("expire webhook error", e);

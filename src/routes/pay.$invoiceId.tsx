@@ -23,7 +23,9 @@ type Invoice = {
   description: string | null;
   redirect_url: string | null;
   expires_at: string | null;
+  mode: string;
 };
+
 
 type Method = {
   id: string;
@@ -201,7 +203,13 @@ function CheckoutPage() {
 
   return (
     <Shell brand={brand}>
+      {inv.mode === "test" && (
+        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-center text-xs font-bold uppercase tracking-widest text-amber-600">
+          Test mode — no real money will be moved
+        </div>
+      )}
       <div className="mb-6 flex items-baseline justify-between">
+
         <div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Amount due</div>
           <div className="font-display text-3xl font-bold">
