@@ -3,12 +3,12 @@ import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
 
-const nav = [
+const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/merchants", label: "Merchants", icon: Users },
   { to: "/admin/settings", label: "Platform", icon: Settings },
   { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
-] as const;
+];
 
 export function AdminShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const navigate = useNavigate();

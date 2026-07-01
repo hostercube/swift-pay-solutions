@@ -24,7 +24,7 @@ function AdminOverview() {
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("invoices").select("*", { count: "exact", head: true }),
         supabase.from("transactions").select("*", { count: "exact", head: true }),
-        supabase.from("transactions").select("gross_amount").eq("status", "success"),
+        supabase.from("transactions").select("gross_amount").eq("status", "verified"),
       ]);
       const volume = (vol.data ?? []).reduce((s, r) => s + Number(r.gross_amount ?? 0), 0);
       setStats({
