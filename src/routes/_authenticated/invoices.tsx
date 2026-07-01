@@ -113,8 +113,8 @@ function InvoicesPage() {
         customer_phone: r.customer_phone || null,
         description: r.description || null,
         redirect_url: r.redirect_url || null,
-        mode: r.mode === "test" ? "test" : "live",
-        status: "pending",
+        mode: (r.mode === "test" ? "test" : "live") as "test" | "live",
+        status: "pending" as const,
         invoice_number: r.invoice_number || `INV-${Date.now()}-${Math.floor(Math.random() * 9999)}`,
       }));
       const invalid = payload.filter((p) => !p.amount || p.amount <= 0);
