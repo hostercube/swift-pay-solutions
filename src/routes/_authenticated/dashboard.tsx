@@ -70,7 +70,13 @@ function DashboardPage() {
                 <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Admin
                 </div>
-                <NavItem icon={Users} label="Merchants" />
+                <Link
+                  to="/admin"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
+                >
+                  <Users className="h-4 w-4" />
+                  Super Admin Panel
+                </Link>
               </>
             )}
           </nav>
