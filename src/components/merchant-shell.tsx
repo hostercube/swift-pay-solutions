@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Shield,
   LayoutDashboard,
@@ -10,8 +10,10 @@ import {
   Settings,
   LogOut,
   Users,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -20,6 +22,8 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/methods", label: "Payment methods", icon: CreditCard },
   { to: "/api-keys", label: "API keys", icon: KeyRound },
   { to: "/webhooks", label: "Webhooks", icon: Webhook },
+  { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/notification-settings", label: "Notification settings", icon: Bell },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
