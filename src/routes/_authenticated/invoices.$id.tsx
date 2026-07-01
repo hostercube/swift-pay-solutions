@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Copy, ExternalLink } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Download } from "lucide-react";
+import { downloadReceipt } from "@/lib/pdf-receipt";
 import { useServerFn } from "@tanstack/react-start";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,14 +155,36 @@ function InvoiceDetailPage() {
               <Info label="Expires">{inv.expires_at ? new Date(inv.expires_at).toLocaleString() : "—"}</Info>
             </div>
 
-            {inv.status !== "completed" && inv.status !== "cancelled" && (
-              <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                onClick={() =>
+                  downloadReceipt({
+                    invoiceNumber: inv.invoice_number,
+                    amount: Number(inv.amount),
+                    currency: inv.currency,
+                    status: inv.status,
+                    customerName: inv.customer_name,
+                    customerEmail: inv.customer_email,
+                    description: inv.description,
+                    methodType: inv.method_type,
+                    paidAt: inv.paid_at,
+                    createdAt: inv.created_at,
+                    feeAmount: inv.fee_amount,
+                    netAmount: inv.net_amount,
+                  })
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg border border-glass-border px-3 py-2 text-sm hover:border-brand"
+              >
+                <Download className="h-4 w-4" /> PDF receipt
+              </button>
+              {inv.status !== "completed" && inv.status !== "cancelled" && (
                 <button onClick={cancel} className="rounded-lg border border-destructive/30 px-3 py-2 text-sm text-destructive">
                   Cancel invoice
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+
 
           <div className="glass rounded-2xl border border-glass-border p-6">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
