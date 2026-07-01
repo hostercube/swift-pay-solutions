@@ -140,8 +140,12 @@ function WebhooksPage() {
             )}
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-mono text-xs">{r.url}</td>
+                <td className="px-4 py-3 font-mono text-xs">
+                  {r.url}
+                  {r.mode === "test" && <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>}
+                </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{r.events.join(", ")}</td>
+
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <code className="font-mono text-xs">{r.signing_secret.slice(0, 14)}…</code>
