@@ -89,7 +89,16 @@ function WebhooksPage() {
             placeholder="https://your-site.com/api/paynoc-webhook"
             className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
           />
+          <div className="inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
+            {(["live","test"] as const).map((m) => (
+              <button key={m} onClick={() => setMode(m)}
+                className={`rounded-md px-3 py-1.5 font-semibold uppercase tracking-wider ${mode===m ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {m}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2">
+
             {ALL_EVENTS.map((ev) => {
               const on = selected.includes(ev);
               return (
