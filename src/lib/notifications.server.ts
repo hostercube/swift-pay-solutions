@@ -106,7 +106,7 @@ export async function notify(input: NotifyInput) {
         event,
         title,
         body,
-        metadata,
+        metadata: metadata as never,
       });
     }
 
