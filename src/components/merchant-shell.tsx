@@ -20,6 +20,10 @@ import {
   Plug,
   Rocket,
   Repeat,
+  Tag,
+  Gavel,
+  Mail,
+  CalendarClock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,9 +33,12 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/invoices", label: "Invoices", icon: Receipt },
   { to: "/recurring", label: "Recurring", icon: Repeat },
+  { to: "/discounts", label: "Discount codes", icon: Tag },
   { to: "/transactions", label: "Transactions", icon: CreditCard },
   { to: "/payouts", label: "Payouts", icon: Wallet },
+  { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock },
   { to: "/refunds", label: "Refunds", icon: Receipt },
+  { to: "/disputes", label: "Disputes", icon: Gavel },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/methods", label: "Payment methods", icon: CreditCard },
   { to: "/team", label: "Team", icon: Users },
@@ -45,6 +52,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/security", label: "Security (2FA)", icon: ShieldCheck },
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/notification-settings", label: "Notification settings", icon: Bell },
+  { to: "/digest", label: "Email digest", icon: Mail },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 

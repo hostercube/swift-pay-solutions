@@ -142,6 +142,27 @@ export async function notify(input: NotifyInput) {
         });
       }
     }
+
+    // Slack / Discord (best-effort, silent)
+    const slackUrl = (settings as { slack_webhook_url?: string } | null)?.slack_webhook_url;
+    const discordUrl = (settings as { discord_webhook_url?: string } | null)?.discord_webhook_url;
+    if (eventOn && (slackUrl || discordUrl)) {
+      const { sendSlack, sendDiscord } = await import("@/lib/webhook-alerts.server");
+      if (slackUrl) {
+        await sendSlack(slackUrl, title, body);
+        await supabaseAdmin.from("notification_log").insert({
+          merchant_id: merchantId, channel: "slack", event, recipient: "slack-webhook",
+          subject: title, body, status: "sent", provider: "slack",
+        } as never);
+      }
+      if (discordUrl) {
+        await sendDiscord(discordUrl, title, body);
+        await supabaseAdmin.from("notification_log").insert({
+          merchant_id: merchantId, channel: "discord", event, recipient: "discord-webhook",
+          subject: title, body, status: "sent", provider: "discord",
+        } as never);
+      }
+    }
   } catch {
     // swallow — notifications must never break the caller
   }

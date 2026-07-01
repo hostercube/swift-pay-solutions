@@ -20,6 +20,10 @@ type Profile = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  slug: string | null;
+  public_bio: string | null;
+  accept_tips: boolean;
+  tip_min_amount: number;
 };
 
 function SettingsPage() {
@@ -31,10 +35,12 @@ function SettingsPage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer")
+      .select(
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, slug, public_bio, accept_tips, tip_min_amount",
+      )
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }) => setP(data as Profile | null));
+      .then(({ data }) => setP(data as unknown as Profile | null));
   }, [user]);
 
   async function save() {
@@ -49,7 +55,11 @@ function SettingsPage() {
       logo_url: p.logo_url,
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
-    }).eq("id", user.id);
+      slug: p.slug,
+      public_bio: p.public_bio,
+      accept_tips: p.accept_tips,
+      tip_min_amount: p.tip_min_amount,
+    } as never).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
@@ -109,6 +119,59 @@ function SettingsPage() {
             <img src={p.logo_url} alt="Logo preview" className="h-10 w-10 rounded object-contain" />
             <span className="text-xs text-muted-foreground">Preview</span>
           </div>
+        )}
+      </div>
+
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Public profile / tip jar</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Share <code className="font-mono text-xs">/m/&lt;slug&gt;</code> so anyone can send
+          you a tip or donation.
+        </p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <Field label="URL slug (letters, numbers, hyphens)">
+            <Input
+              value={p.slug ?? ""}
+              onChange={(v) =>
+                setP({ ...p, slug: v.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40) })
+              }
+            />
+          </Field>
+          <Field label="Minimum tip amount ৳">
+            <Input
+              value={String(p.tip_min_amount ?? 10)}
+              onChange={(v) => setP({ ...p, tip_min_amount: Number(v) || 0 })}
+            />
+          </Field>
+          <label className="flex items-center gap-2 md:col-span-2">
+            <input
+              type="checkbox"
+              checked={p.accept_tips}
+              onChange={(e) => setP({ ...p, accept_tips: e.target.checked })}
+            />
+            <span className="text-sm">Accept public tips</span>
+          </label>
+          <label className="md:col-span-2">
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Public bio
+            </div>
+            <textarea
+              value={p.public_bio ?? ""}
+              onChange={(e) => setP({ ...p, public_bio: e.target.value })}
+              rows={3}
+              className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
+            />
+          </label>
+        </div>
+        {p.slug && (
+          <a
+            href={`/m/${p.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex text-xs text-brand hover:underline"
+          >
+            Preview → /m/{p.slug}
+          </a>
         )}
       </div>
 

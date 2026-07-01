@@ -26,6 +26,8 @@ type Settings = {
   inapp_enabled: boolean;
   notify_email: string | null;
   notify_phone: string | null;
+  slack_webhook_url: string | null;
+  discord_webhook_url: string | null;
   events: Record<string, boolean>;
 };
 
@@ -35,6 +37,8 @@ const DEFAULTS: Settings = {
   inapp_enabled: true,
   notify_email: null,
   notify_phone: null,
+  slack_webhook_url: null,
+  discord_webhook_url: null,
   events: {
     "invoice.completed": true,
     "invoice.failed": true,
@@ -57,6 +61,7 @@ function NotifSettingsPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
+          const d = data as unknown as Record<string, unknown>;
           setS({
             id: data.id,
             email_enabled: data.email_enabled,
@@ -64,6 +69,8 @@ function NotifSettingsPage() {
             inapp_enabled: data.inapp_enabled,
             notify_email: data.notify_email,
             notify_phone: data.notify_phone,
+            slack_webhook_url: (d.slack_webhook_url as string) ?? null,
+            discord_webhook_url: (d.discord_webhook_url as string) ?? null,
             events: (data.events as Record<string, boolean>) ?? DEFAULTS.events,
           });
         }
@@ -80,11 +87,13 @@ function NotifSettingsPage() {
       inapp_enabled: s.inapp_enabled,
       notify_email: s.notify_email,
       notify_phone: s.notify_phone,
+      slack_webhook_url: s.slack_webhook_url,
+      discord_webhook_url: s.discord_webhook_url,
       events: s.events,
     };
     const { error } = await supabase
       .from("notification_settings")
-      .upsert(payload, { onConflict: "merchant_id" });
+      .upsert(payload as never, { onConflict: "merchant_id" });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Notification preferences saved");
@@ -140,6 +149,35 @@ function NotifSettingsPage() {
                 className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
               />
             )}
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-glass-border bg-card/40 p-6 backdrop-blur">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Chat integrations
+          </h2>
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium">Slack incoming webhook URL</div>
+              <input
+                placeholder="https://hooks.slack.com/services/…"
+                value={s.slack_webhook_url ?? ""}
+                onChange={(e) => setS({ ...s, slack_webhook_url: e.target.value || null })}
+                className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm font-mono outline-none focus:border-brand"
+              />
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Discord webhook URL</div>
+              <input
+                placeholder="https://discord.com/api/webhooks/…"
+                value={s.discord_webhook_url ?? ""}
+                onChange={(e) => setS({ ...s, discord_webhook_url: e.target.value || null })}
+                className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm font-mono outline-none focus:border-brand"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paste a webhook URL from either service to receive alerts in your channel.
+            </p>
           </div>
         </section>
 

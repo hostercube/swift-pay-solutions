@@ -19,6 +19,7 @@ import { Route as ApiReferenceRouteImport } from './routes/api-reference'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PayInvoiceIdRouteImport } from './routes/pay.$invoiceId'
+import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as AuthenticatedWebhooksRouteImport } from './routes/_authenticated/webhooks'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedRefundsRouteImport } from './routes/_authenticated/refunds'
 import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
 import { Route as AuthenticatedPayoutsRouteImport } from './routes/_authenticated/payouts'
+import { Route as AuthenticatedPayoutScheduleRouteImport } from './routes/_authenticated/payout-schedule'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
@@ -35,6 +37,9 @@ import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
+import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
+import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
+import { Route as AuthenticatedDigestRouteImport } from './routes/_authenticated/digest'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedByoGatewaysRouteImport } from './routes/_authenticated/byo-gateways'
 import { Route as AuthenticatedApiLogsRouteImport } from './routes/_authenticated/api-logs'
@@ -53,6 +58,8 @@ import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/p
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
 import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/public/hooks/run-recurring'
+import { Route as ApiPublicHooksRunPayoutScheduleRouteImport } from './routes/api/public/hooks/run-payout-schedule'
+import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
@@ -105,6 +112,11 @@ const PayInvoiceIdRoute = PayInvoiceIdRouteImport.update({
   path: '/pay/$invoiceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MSlugRoute = MSlugRouteImport.update({
+  id: '/m/$slug',
+  path: '/m/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWebhooksRoute = AuthenticatedWebhooksRouteImport.update({
   id: '/webhooks',
   path: '/webhooks',
@@ -151,6 +163,12 @@ const AuthenticatedPayoutsRoute = AuthenticatedPayoutsRouteImport.update({
   path: '/payouts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPayoutScheduleRoute =
+  AuthenticatedPayoutScheduleRouteImport.update({
+    id: '/payout-schedule',
+    path: '/payout-schedule',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -187,6 +205,21 @@ const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
 const AuthenticatedFraudRoute = AuthenticatedFraudRouteImport.update({
   id: '/fraud',
   path: '/fraud',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDiscountsRoute = AuthenticatedDiscountsRouteImport.update({
+  id: '/discounts',
+  path: '/discounts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDigestRoute = AuthenticatedDigestRouteImport.update({
+  id: '/digest',
+  path: '/digest',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -287,6 +320,17 @@ const ApiPublicHooksRunRecurringRoute =
     path: '/api/public/hooks/run-recurring',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRunPayoutScheduleRoute =
+  ApiPublicHooksRunPayoutScheduleRouteImport.update({
+    id: '/api/public/hooks/run-payout-schedule',
+    path: '/api/public/hooks/run-payout-schedule',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRunDigestRoute = ApiPublicHooksRunDigestRouteImport.update({
+  id: '/api/public/hooks/run-digest',
+  path: '/api/public/hooks/run-digest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksExpireInvoicesRoute =
   ApiPublicHooksExpireInvoicesRouteImport.update({
     id: '/api/public/hooks/expire-invoices',
@@ -313,6 +357,9 @@ export interface FileRoutesByFullPath {
   '/api-logs': typeof AuthenticatedApiLogsRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/digest': typeof AuthenticatedDigestRoute
+  '/discounts': typeof AuthenticatedDiscountsRoute
+  '/disputes': typeof AuthenticatedDisputesRoute
   '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
@@ -320,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
@@ -329,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
+  '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
@@ -340,6 +389,8 @@ export interface FileRoutesByFullPath {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
+  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
@@ -359,6 +410,9 @@ export interface FileRoutesByTo {
   '/api-logs': typeof AuthenticatedApiLogsRoute
   '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/digest': typeof AuthenticatedDigestRoute
+  '/discounts': typeof AuthenticatedDiscountsRoute
+  '/disputes': typeof AuthenticatedDisputesRoute
   '/fraud': typeof AuthenticatedFraudRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
@@ -366,6 +420,7 @@ export interface FileRoutesByTo {
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
@@ -375,6 +430,7 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
   '/webhooks': typeof AuthenticatedWebhooksRoute
+  '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
@@ -386,6 +442,8 @@ export interface FileRoutesByTo {
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
+  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
@@ -408,6 +466,9 @@ export interface FileRoutesById {
   '/_authenticated/api-logs': typeof AuthenticatedApiLogsRoute
   '/_authenticated/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/digest': typeof AuthenticatedDigestRoute
+  '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
+  '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/fraud': typeof AuthenticatedFraudRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
@@ -415,6 +476,7 @@ export interface FileRoutesById {
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/_authenticated/payouts': typeof AuthenticatedPayoutsRoute
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/refunds': typeof AuthenticatedRefundsRoute
@@ -424,6 +486,7 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
   '/_authenticated/webhooks': typeof AuthenticatedWebhooksRoute
+  '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
@@ -435,6 +498,8 @@ export interface FileRoutesById {
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
+  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
@@ -457,6 +522,9 @@ export interface FileRouteTypes {
     | '/api-logs'
     | '/byo-gateways'
     | '/dashboard'
+    | '/digest'
+    | '/discounts'
+    | '/disputes'
     | '/fraud'
     | '/invoices'
     | '/ip-whitelist'
@@ -464,6 +532,7 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/onboarding'
+    | '/payout-schedule'
     | '/payouts'
     | '/recurring'
     | '/refunds'
@@ -473,6 +542,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/transactions'
     | '/webhooks'
+    | '/m/$slug'
     | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/fx'
@@ -484,6 +554,8 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin/'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/run-digest'
+    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
@@ -503,6 +575,9 @@ export interface FileRouteTypes {
     | '/api-logs'
     | '/byo-gateways'
     | '/dashboard'
+    | '/digest'
+    | '/discounts'
+    | '/disputes'
     | '/fraud'
     | '/invoices'
     | '/ip-whitelist'
@@ -510,6 +585,7 @@ export interface FileRouteTypes {
     | '/notification-settings'
     | '/notifications'
     | '/onboarding'
+    | '/payout-schedule'
     | '/payouts'
     | '/recurring'
     | '/refunds'
@@ -519,6 +595,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/transactions'
     | '/webhooks'
+    | '/m/$slug'
     | '/pay/$invoiceId'
     | '/admin/audit'
     | '/admin/fx'
@@ -530,6 +607,8 @@ export interface FileRouteTypes {
     | '/invoices/new'
     | '/admin'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/run-digest'
+    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
@@ -551,6 +630,9 @@ export interface FileRouteTypes {
     | '/_authenticated/api-logs'
     | '/_authenticated/byo-gateways'
     | '/_authenticated/dashboard'
+    | '/_authenticated/digest'
+    | '/_authenticated/discounts'
+    | '/_authenticated/disputes'
     | '/_authenticated/fraud'
     | '/_authenticated/invoices'
     | '/_authenticated/ip-whitelist'
@@ -558,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
+    | '/_authenticated/payout-schedule'
     | '/_authenticated/payouts'
     | '/_authenticated/recurring'
     | '/_authenticated/refunds'
@@ -567,6 +650,7 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/_authenticated/transactions'
     | '/_authenticated/webhooks'
+    | '/m/$slug'
     | '/pay/$invoiceId'
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/fx'
@@ -578,6 +662,8 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/run-digest'
+    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
@@ -595,8 +681,11 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
   StatusRoute: typeof StatusRoute
+  MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
+  ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
+  ApiPublicHooksRunPayoutScheduleRoute: typeof ApiPublicHooksRunPayoutScheduleRoute
   ApiPublicHooksRunRecurringRoute: typeof ApiPublicHooksRunRecurringRoute
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
@@ -675,6 +764,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayInvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$slug': {
+      id: '/m/$slug'
+      path: '/m/$slug'
+      fullPath: '/m/$slug'
+      preLoaderRoute: typeof MSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/webhooks': {
       id: '/_authenticated/webhooks'
       path: '/webhooks'
@@ -738,6 +834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPayoutsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payout-schedule': {
+      id: '/_authenticated/payout-schedule'
+      path: '/payout-schedule'
+      fullPath: '/payout-schedule'
+      preLoaderRoute: typeof AuthenticatedPayoutScheduleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -785,6 +888,27 @@ declare module '@tanstack/react-router' {
       path: '/fraud'
       fullPath: '/fraud'
       preLoaderRoute: typeof AuthenticatedFraudRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/disputes': {
+      id: '/_authenticated/disputes'
+      path: '/disputes'
+      fullPath: '/disputes'
+      preLoaderRoute: typeof AuthenticatedDisputesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/discounts': {
+      id: '/_authenticated/discounts'
+      path: '/discounts'
+      fullPath: '/discounts'
+      preLoaderRoute: typeof AuthenticatedDiscountsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/digest': {
+      id: '/_authenticated/digest'
+      path: '/digest'
+      fullPath: '/digest'
+      preLoaderRoute: typeof AuthenticatedDigestRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -913,6 +1037,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunRecurringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/run-payout-schedule': {
+      id: '/api/public/hooks/run-payout-schedule'
+      path: '/api/public/hooks/run-payout-schedule'
+      fullPath: '/api/public/hooks/run-payout-schedule'
+      preLoaderRoute: typeof ApiPublicHooksRunPayoutScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/run-digest': {
+      id: '/api/public/hooks/run-digest'
+      path: '/api/public/hooks/run-digest'
+      fullPath: '/api/public/hooks/run-digest'
+      preLoaderRoute: typeof ApiPublicHooksRunDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/expire-invoices': {
       id: '/api/public/hooks/expire-invoices'
       path: '/api/public/hooks/expire-invoices'
@@ -977,6 +1115,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedApiLogsRoute: typeof AuthenticatedApiLogsRoute
   AuthenticatedByoGatewaysRoute: typeof AuthenticatedByoGatewaysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDigestRoute: typeof AuthenticatedDigestRoute
+  AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
+  AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
   AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
@@ -984,6 +1125,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPayoutScheduleRoute: typeof AuthenticatedPayoutScheduleRoute
   AuthenticatedPayoutsRoute: typeof AuthenticatedPayoutsRoute
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedRefundsRoute: typeof AuthenticatedRefundsRoute
@@ -1001,6 +1143,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApiLogsRoute: AuthenticatedApiLogsRoute,
   AuthenticatedByoGatewaysRoute: AuthenticatedByoGatewaysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDigestRoute: AuthenticatedDigestRoute,
+  AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
+  AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
   AuthenticatedFraudRoute: AuthenticatedFraudRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
@@ -1009,6 +1154,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPayoutScheduleRoute: AuthenticatedPayoutScheduleRoute,
   AuthenticatedPayoutsRoute: AuthenticatedPayoutsRoute,
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedRefundsRoute: AuthenticatedRefundsRoute,
@@ -1044,8 +1190,11 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,
   StatusRoute: StatusRoute,
+  MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
+  ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,
+  ApiPublicHooksRunPayoutScheduleRoute: ApiPublicHooksRunPayoutScheduleRoute,
   ApiPublicHooksRunRecurringRoute: ApiPublicHooksRunRecurringRoute,
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
