@@ -20,6 +20,10 @@ type Profile = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  slug: string | null;
+  public_bio: string | null;
+  accept_tips: boolean;
+  tip_min_amount: number;
 };
 
 function SettingsPage() {
@@ -31,10 +35,12 @@ function SettingsPage() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer")
+      .select(
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, slug, public_bio, accept_tips, tip_min_amount",
+      )
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }) => setP(data as Profile | null));
+      .then(({ data }) => setP(data as unknown as Profile | null));
   }, [user]);
 
   async function save() {
@@ -49,7 +55,11 @@ function SettingsPage() {
       logo_url: p.logo_url,
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
-    }).eq("id", user.id);
+      slug: p.slug,
+      public_bio: p.public_bio,
+      accept_tips: p.accept_tips,
+      tip_min_amount: p.tip_min_amount,
+    } as never).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile saved");
