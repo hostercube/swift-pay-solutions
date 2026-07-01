@@ -30,6 +30,8 @@ import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
+import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
@@ -139,6 +141,16 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicV1InvoicesRoute = ApiPublicV1InvoicesRouteImport.update({
+  id: '/api/public/v1/invoices',
+  path: '/api/public/v1/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPublicV1InvoicesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -161,6 +173,8 @@ export interface FileRoutesByFullPath {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +196,8 @@ export interface FileRoutesByTo {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +222,8 @@ export interface FileRoutesById {
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
+  '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +248,8 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin/'
+    | '/api/public/v1/invoices'
+    | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -251,6 +271,8 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin'
+    | '/api/public/v1/invoices'
+    | '/api/public/v1/invoices/$id'
   id:
     | '__root__'
     | '/'
@@ -274,6 +296,8 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
+    | '/api/public/v1/invoices'
+    | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -284,6 +308,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   PricingRoute: typeof PricingRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
+  ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -435,6 +460,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/api/public/v1/invoices': {
+      id: '/api/public/v1/invoices'
+      path: '/api/public/v1/invoices'
+      fullPath: '/api/public/v1/invoices'
+      preLoaderRoute: typeof ApiPublicV1InvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/invoices/$id': {
+      id: '/api/public/v1/invoices/$id'
+      path: '/$id'
+      fullPath: '/api/public/v1/invoices/$id'
+      preLoaderRoute: typeof ApiPublicV1InvoicesIdRouteImport
+      parentRoute: typeof ApiPublicV1InvoicesRoute
+    }
   }
 }
 
@@ -498,6 +537,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiPublicV1InvoicesRouteChildren {
+  ApiPublicV1InvoicesIdRoute: typeof ApiPublicV1InvoicesIdRoute
+}
+
+const ApiPublicV1InvoicesRouteChildren: ApiPublicV1InvoicesRouteChildren = {
+  ApiPublicV1InvoicesIdRoute: ApiPublicV1InvoicesIdRoute,
+}
+
+const ApiPublicV1InvoicesRouteWithChildren =
+  ApiPublicV1InvoicesRoute._addFileChildren(ApiPublicV1InvoicesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -506,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   PricingRoute: PricingRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
+  ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
