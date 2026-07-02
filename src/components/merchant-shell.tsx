@@ -41,6 +41,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/disputes", label: "Disputes", icon: Gavel },
   { to: "/reports", label: "Reports", icon: BarChart3 },
   { to: "/methods", label: "Payment methods", icon: CreditCard },
+  { to: "/fx", label: "Currency rates", icon: BarChart3 },
   { to: "/team", label: "Team", icon: Users },
   { to: "/api-keys", label: "API keys", icon: KeyRound },
   { to: "/api-logs", label: "API logs", icon: BookOpen },
