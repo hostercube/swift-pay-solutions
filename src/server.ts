@@ -37,11 +37,72 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+// -------------------------------------------------------------------
+// Subdomain routing — one deploy serves multiple subdomains:
+//   paynoc.bd / www.paynoc.bd  → main site (marketing, auth, dashboards)
+//   pay.paynoc.bd/<invoiceId>  → hosted checkout (/pay/<invoiceId>)
+//   docs.paynoc.bd             → documentation   (/docs)
+//   api.paynoc.bd/*            → REST API        (/api/*)
+// Rewrites happen BEFORE TanStack Start sees the request, so route
+// files stay unchanged. Override APEX_DOMAIN via env for other domains.
+// -------------------------------------------------------------------
+const APEX_DOMAIN =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
+    ?.APEX_DOMAIN ?? "paynoc.bd";
+
+function rewriteForSubdomain(request: Request): Request {
+  const url = new URL(request.url);
+  const host = url.hostname.toLowerCase();
+
+  if (!host.endsWith("." + APEX_DOMAIN) && host !== APEX_DOMAIN) return request;
+
+  const sub =
+    host === APEX_DOMAIN || host === "www." + APEX_DOMAIN
+      ? ""
+      : host.slice(0, host.length - APEX_DOMAIN.length - 1);
+
+  const p = url.pathname;
+  const isAsset =
+    p.startsWith("/_build") ||
+    p.startsWith("/assets") ||
+    p.startsWith("/@") ||
+    p.startsWith("/__") ||
+    p === "/favicon.ico" ||
+    p === "/robots.txt" ||
+    p === "/sitemap.xml";
+  if (isAsset) return request;
+
+  let newPath = p;
+  if (sub === "pay") {
+    if (
+      !p.startsWith("/pay") &&
+      !p.startsWith("/m/") &&
+      !p.startsWith("/portal") &&
+      !p.startsWith("/status")
+    ) {
+      newPath = p === "/" ? "/pay" : "/pay" + p;
+    }
+  } else if (sub === "docs") {
+    if (!p.startsWith("/docs") && !p.startsWith("/api-reference")) {
+      newPath = p === "/" ? "/docs" : "/docs" + p;
+    }
+  } else if (sub === "api") {
+    if (!p.startsWith("/api/")) {
+      newPath = "/api" + (p === "/" ? "" : p);
+    }
+  }
+
+  if (newPath === p) return request;
+  url.pathname = newPath;
+  return new Request(url.toString(), request);
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const rewritten = rewriteForSubdomain(request);
       const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
+      const response = await handler.fetch(rewritten, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
@@ -52,3 +113,4 @@ export default {
     }
   },
 };
+
