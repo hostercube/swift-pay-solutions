@@ -76,8 +76,10 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Verified");
-    navigate({ to: "/dashboard" });
+    const { data: u } = await supabase.auth.getUser();
+    navigate({ to: u.user ? await landingFor(u.user.id) : "/dashboard" });
   }
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
