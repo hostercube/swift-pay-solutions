@@ -24,6 +24,7 @@ import {
   Gavel,
   Mail,
   CalendarClock,
+  Code2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
