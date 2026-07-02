@@ -543,6 +543,51 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_fx_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          id: string
+          merchant_id: string
+          quote_currency: string
+          rate: number
+          updated_at: string
+        }
+        Insert: {
+          base_currency: string
+          created_at?: string
+          id?: string
+          merchant_id: string
+          quote_currency: string
+          rate: number
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          quote_currency?: string
+          rate?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_fx_rates_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_brand"
+            referencedColumns: ["merchant_id"]
+          },
+          {
+            foreignKeyName: "merchant_fx_rates_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           body: string | null
@@ -1559,6 +1604,10 @@ export type Database = {
           paid_at: string
           status: Database["public"]["Enums"]["invoice_status"]
         }[]
+      }
+      get_effective_fx_rate: {
+        Args: { _base: string; _merchant_id: string; _quote: string }
+        Returns: number
       }
       get_public_merchant: {
         Args: { _slug: string }
