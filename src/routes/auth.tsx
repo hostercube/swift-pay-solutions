@@ -14,6 +14,16 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+async function isAdminUser(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["super_admin", "admin"]);
+  return !!data && data.length > 0;
+}
+
+
 type Mode = "signin" | "signup";
 
 function AuthPage() {
