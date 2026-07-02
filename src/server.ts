@@ -68,6 +68,7 @@ function rewriteForSubdomain(request: Request): Request {
     p.startsWith("/@") ||
     p.startsWith("/__") ||
     p === "/favicon.ico" ||
+    p === "/embed.js" ||
     p === "/robots.txt" ||
     p === "/sitemap.xml";
   if (isAsset) return request;
