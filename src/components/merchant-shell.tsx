@@ -48,6 +48,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/webhooks", label: "Webhooks", icon: Webhook },
   { to: "/byo-gateways", label: "BYO Gateways", icon: Plug },
   { to: "/api-reference", label: "API reference", icon: BookOpen },
+  { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2 },
   { to: "/ip-whitelist", label: "IP whitelist", icon: Lock },
   { to: "/fraud", label: "Fraud rules", icon: ShieldAlert },
   { to: "/security", label: "Security (2FA)", icon: ShieldCheck },
