@@ -158,6 +158,36 @@ function CheckoutPage() {
     return () => clearInterval(id);
   }, [txns, load]);
 
+  // Iframe embed integration: notify parent window on status changes,
+  // and support ?auto_redirect=1 to auto-forward after success.
+  useEffect(() => {
+    if (typeof window === "undefined" || !inv) return;
+    const verified = txns.find((t) => t.status === "verified");
+    const pending = txns.find((t) => t.status === "pending");
+    const status = verified ? "completed" : pending ? "pending" : inv.status;
+    try {
+      window.parent?.postMessage(
+        {
+          source: "paynoc",
+          type: "paynoc:status",
+          invoiceId: inv.id,
+          invoiceNumber: inv.invoice_number,
+          status,
+          amount: Number(inv.amount),
+          currency: inv.currency,
+        },
+        "*",
+      );
+    } catch { /* ignore */ }
+    if (verified) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto_redirect") === "1" && inv.redirect_url) {
+        const t = setTimeout(() => { window.top!.location.href = inv.redirect_url!; }, 1500);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [txns, inv]);
+
   function computeFee(m: Method, amount: number) {
     const fee = (amount * Number(m.fee_percent || 0)) / 100 + Number(m.fee_flat || 0);
     return { fee: Number(fee.toFixed(2)), net: Number((amount - fee).toFixed(2)) };
