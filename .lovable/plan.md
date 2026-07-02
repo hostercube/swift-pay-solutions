@@ -1,55 +1,67 @@
-## Ha, sob thik ache — tobe 2 ta jaygay bhag korte hobe
+## Ki korbo
 
-Tumi je block ta paste korecho, oita 2 ta alada resource er env — ekshathe eki jaygay dile kaj korbe na.
+Ekta notun single file banabo: **`DEPLOY_NOW_BANGLA.md`** — ei ta hobe tomar "ekhon theke ki ki korte hobe" er complete Bengali checklist. Purano guide gulo (DEPLOY_FINAL.md, DEPLOY_BANGLA.md, etc.) delete korbo na, kintu ei notun ta hobe **single source of truth** — ekta file dekhlei sob steps ache.
 
-### Resource 1: `supabase` service (already exists, ei ta chalais na)
-Upor er portion (`SERVICE_PASSWORD_JWT` theke `SERVICE_FQDN_SUPABASEKONG_8000` porjonto) — eta **Coolify → Supabase service → Environment Variables** e already ache. Kichu korte hobe na, hath dio na.
+## Content structure
 
-### Resource 2: `paynoc` app (ekhane ei 4 ta section only)
-Coolify → **notun Application resource banao** (Docker / Nixpacks, GitHub repo connected) → **Environment Variables** tab e SHUDHU nicher ta paste koro:
+Ei file ta e thakbe (Bengali te, screenshot-friendly step numbering):
 
-```env
-# Build-time (browser)
-VITE_SUPABASE_URL=https://supabase.paynoc.bd
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY
-VITE_SUPABASE_PROJECT_ID=self-hosted
+**Part 1 — Verify (5 min)**
+- Coolify → Supabase service running ase kina check
+- Supabase Studio (`https://supabase.paynoc.bd`) khule login test
+- DB terminal e `\dt public.*` diye tables count check (31 ta thaka uchit)
 
-# Runtime (SSR)
-SUPABASE_URL=https://supabase.paynoc.bd
-SUPABASE_PUBLISHABLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY
-SUPABASE_SERVICE_ROLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.ujCJ7YPn79Iq7d9GE-u6HGvFOpUBvwXzc7h3TRskjig
+**Part 2 — Storage buckets fix (jodi baki thake)**
+- `db/storage.sql` er content DB terminal e paste (SET ROLE included)
 
-# App runtime
-NITRO_PRESET=node-server
-PORT=3000
-NODE_ENV=production
-APP_URL=https://pay.paynoc.bd
-```
+**Part 3 — paynoc app resource banano**
+- Coolify → New Resource → Public Repository
+- GitHub repo URL
+- Build Pack: Dockerfile
+- Port: 3000
 
-Notifications er 4 ta (RESEND, GATEWAYAPI, SLACK, DISCORD) — jodi chao pore add korte parbe, ekhon skip.
+**Part 4 — Environment Variables**
+- Ready-to-paste block (VITE_*, SUPABASE_*, NITRO_PRESET, APP_URL)
 
-### Ki ki baki
+**Part 5 — Domains add**
+- paynoc.bd, pay.paynoc.bd, docs.paynoc.bd, api.paynoc.bd
+- Cloudflare A record verification
 
-1. **paynoc app resource banano** (Coolify → New Resource → Public Repository → tomar GitHub repo → Dockerfile detect korbe).
-2. Upor er env block ta oi app-er Environment Variables e paste.
-3. App resource → **Domains** tab:
-   - `https://paynoc.bd`
-   - `https://pay.paynoc.bd`
-   - `https://docs.paynoc.bd`
-   - `https://api.paynoc.bd`
-4. **Deploy** button click.
-5. Deploy sesh hole `https://paynoc.bd/auth` e sign up koro.
-6. Supabase DB terminal e ei SQL run kore nijeke super_admin banao:
-   ```sql
-   INSERT INTO public.user_roles (user_id, role)
-   SELECT id, 'super_admin' FROM auth.users WHERE email='tomar@email.com'
-   ON CONFLICT DO NOTHING;
-   ```
-7. Sob sesh hole `db/cron/schedule.sql` er `{{APP_URL}}` → `https://pay.paynoc.bd` and `{{ANON_KEY}}` → upor er anon key diye replace kore Supabase DB terminal e run.
+**Part 6 — Deploy**
+- Deploy button click
+- Logs check
 
-### ⚠️ Security warning (important)
-Tumi public chat e JWT secret, service_role key, postgres/MinIO password sob paste korecho. Ei keys gulo ekhon **compromised**. Deploy verify howar por Coolify → Supabase service → env vars regenerate (notun random password) → restart → tarpor notun anon/service key gulo paynoc app er env e update kore redeploy.
+**Part 7 — First sign up + admin promote**
+- `https://paynoc.bd/auth` e sign up
+- DB terminal e `db/seed-admin.sql` (email replace kore)
 
-### Confirm
+**Part 8 — Cron jobs schedule**
+- `db/cron/schedule.sql` er `{{APP_URL}}` and `{{ANON_KEY}}` replace kore run
+- `SELECT jobname FROM cron.job;` diye verify (5 ta job thaka uchit)
 
-Bolo: **"paynoc app resource banano ache Coolify te?"** — na thakle ami step-by-step wizard er screenshot-guide banai dibo.
+**Part 9 — Smoke test**
+- Merchant sign up test
+- Invoice create test
+- Checkout page (`/pay/:id`) test
+- API key generate + curl test
+
+**Part 10 — Security cleanup (⚠️ important)**
+- Compromised keys (JWT/service_role/postgres/MinIO) rotate karar steps
+- Regenerate → restart → paynoc env update → redeploy
+
+**Part 11 — Optional add-ons**
+- RESEND_API_KEY (email notifications)
+- GATEWAYAPI_TOKEN (SMS)
+- SLACK/DISCORD webhooks
+
+Prottek step er sathe:
+- ✅ Success ki dekhbe
+- ❌ Fail hole ki korbe (common errors)
+- Copy-paste ready command/SQL
+
+## Ki file touch korbo
+
+- ✏️ Create: `DEPLOY_NOW_BANGLA.md`
+- Baki kono file change hobe na
+
+Approve korle likhe felbo.
