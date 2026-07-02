@@ -98,10 +98,9 @@ function AuthPage() {
         toast.success("Account created! You're signed in.");
         navigate({ to: "/dashboard" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
 
-        // AAL2 check — if user has TOTP enrolled, require code before proceeding
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
           const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -117,9 +116,10 @@ function AuthPage() {
         }
 
         toast.success("Welcome back");
-        navigate({ to: "/dashboard" });
+        navigate({ to: sd.user ? await landingFor(sd.user.id) : "/dashboard" });
       }
     } catch (err) {
+
       const msg = err instanceof Error ? err.message : "Authentication failed";
       toast.error(msg);
     } finally {
