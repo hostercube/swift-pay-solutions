@@ -35,7 +35,6 @@ function AuthPage() {
       if (!data.session) return;
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
-        // Force challenge before entering app
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const totp = factors?.totp?.[0];
         if (totp) {
@@ -45,9 +44,15 @@ function AuthPage() {
           return;
         }
       }
-      navigate({ to: "/dashboard" });
+      const dest = (await isAdminUser(data.session.user.id)) ? "/admin" : "/dashboard";
+      navigate({ to: dest });
     });
   }, [navigate]);
+
+  async function landingFor(userId: string): Promise<"/admin" | "/dashboard"> {
+    return (await isAdminUser(userId)) ? "/admin" : "/dashboard";
+  }
+
 
   async function verifyMfa(e: React.FormEvent) {
     e.preventDefault();
