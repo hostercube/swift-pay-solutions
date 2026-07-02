@@ -14,6 +14,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AymanLoginRouteImport } from './routes/ayman-login'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApiReferenceRouteImport } from './routes/api-reference'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -86,6 +87,11 @@ const DocsRoute = DocsRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AymanLoginRoute = AymanLoginRouteImport.update({
+  id: '/ayman-login',
+  path: '/ayman-login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -347,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
+  '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/portal': typeof PortalRoute
@@ -401,6 +408,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
+  '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/portal': typeof PortalRoute
@@ -456,6 +464,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
+  '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
   '/portal': typeof PortalRoute
@@ -512,6 +521,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api-reference'
     | '/auth'
+    | '/ayman-login'
     | '/contact'
     | '/docs'
     | '/portal'
@@ -566,6 +576,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api-reference'
     | '/auth'
+    | '/ayman-login'
     | '/contact'
     | '/docs'
     | '/portal'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/api-reference'
     | '/auth'
+    | '/ayman-login'
     | '/contact'
     | '/docs'
     | '/portal'
@@ -676,6 +688,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApiReferenceRoute: typeof ApiReferenceRoute
   AuthRoute: typeof AuthRoute
+  AymanLoginRoute: typeof AymanLoginRoute
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
   PortalRoute: typeof PortalRoute
@@ -727,6 +740,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ayman-login': {
+      id: '/ayman-login'
+      path: '/ayman-login'
+      fullPath: '/ayman-login'
+      preLoaderRoute: typeof AymanLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1185,6 +1205,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ApiReferenceRoute: ApiReferenceRoute,
   AuthRoute: AuthRoute,
+  AymanLoginRoute: AymanLoginRoute,
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
   PortalRoute: PortalRoute,

@@ -1,20 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Shield, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/ayman-login")({
   head: () => ({
     meta: [
-      { title: "Sign in · PayNOC" },
-      { name: "description", content: "Sign in or create your PayNOC merchant account." },
+      { title: "Admin Access · PayNOC" },
+      { name: "description", content: "Restricted admin console access." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  component: AuthPage,
+  component: AdminLoginPage,
 });
 
-async function isAdminUser(userId: string): Promise<boolean> {
+async function isAdmin(userId: string): Promise<boolean> {
   const { data } = await supabase
     .from("user_roles")
     .select("role")
@@ -23,19 +24,12 @@ async function isAdminUser(userId: string): Promise<boolean> {
   return !!data && data.length > 0;
 }
 
-
-type Mode = "signin" | "signup";
-
-function AuthPage() {
+function AdminLoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [businessName, setBusinessName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // MFA challenge state
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
@@ -43,6 +37,11 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
+      const admin = await isAdmin(data.session.user.id);
+      if (!admin) {
+        await supabase.auth.signOut();
+        return;
+      }
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
         const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -54,15 +53,9 @@ function AuthPage() {
           return;
         }
       }
-      const dest = (await isAdminUser(data.session.user.id)) ? "/admin" : "/dashboard";
-      navigate({ to: dest });
+      navigate({ to: "/admin" });
     });
   }, [navigate]);
-
-  async function landingFor(userId: string): Promise<"/admin" | "/dashboard"> {
-    return (await isAdminUser(userId)) ? "/admin" : "/dashboard";
-  }
-
 
   async function verifyMfa(e: React.FormEvent) {
     e.preventDefault();
@@ -75,52 +68,43 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Verified");
-    const { data: u } = await supabase.auth.getUser();
-    navigate({ to: u.user ? await landingFor(u.user.id) : "/dashboard" });
+    navigate({ to: "/admin" });
   }
-
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName, business_name: businessName },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created! You're signed in.");
-        navigate({ to: "/dashboard" });
-      } else {
-        const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      if (!data.user) throw new Error("Sign-in failed");
 
-        const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
-          const { data: factors } = await supabase.auth.mfa.listFactors();
-          const totp = factors?.totp?.[0];
-          if (totp) {
-            const { data: chal, error: cErr } = await supabase.auth.mfa.challenge({ factorId: totp.id });
-            if (cErr) throw cErr;
-            setMfaFactorId(totp.id);
-            setMfaChallengeId(chal.id);
-            toast.info("Enter your 2FA code");
-            return;
-          }
-        }
-
-        toast.success("Welcome back");
-        navigate({ to: sd.user ? await landingFor(sd.user.id) : "/dashboard" });
+      const admin = await isAdmin(data.user.id);
+      if (!admin) {
+        await supabase.auth.signOut();
+        throw new Error("This account is not authorized for admin access.");
       }
-    } catch (err) {
 
-      const msg = err instanceof Error ? err.message : "Authentication failed";
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const totp = factors?.totp?.[0];
+        if (totp) {
+          const { data: chal, error: cErr } = await supabase.auth.mfa.challenge({
+            factorId: totp.id,
+          });
+          if (cErr) throw cErr;
+          setMfaFactorId(totp.id);
+          setMfaChallengeId(chal.id);
+          toast.info("Enter your 2FA code");
+          return;
+        }
+      }
+
+      toast.success("Welcome, admin");
+      navigate({ to: "/admin" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Access denied";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -135,9 +119,9 @@ function AuthPage() {
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
         <Link to="/" className="mb-8 flex items-center gap-2.5">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow">
-            <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
+            <ShieldCheck className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
           </span>
-          <span className="font-display text-xl font-bold">PayNOC</span>
+          <span className="font-display text-xl font-bold">PayNOC Admin</span>
         </Link>
 
         <div className="glass rounded-2xl border border-glass-border p-8">
@@ -145,7 +129,7 @@ function AuthPage() {
             <>
               <h1 className="font-display text-2xl font-bold text-foreground">Two-factor code</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Open your authenticator app and enter the 6-digit code.
+                Enter the 6-digit code from your authenticator.
               </p>
               <form onSubmit={verifyMfa} className="mt-6 space-y-4">
                 <Field
@@ -179,23 +163,28 @@ function AuthPage() {
             </>
           ) : (
             <>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-glass-border bg-background/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+                <ShieldCheck className="h-3.5 w-3.5" /> Restricted area
+              </div>
               <h1 className="font-display text-2xl font-bold text-foreground">
-                {mode === "signin" ? "Sign in" : "Create your merchant account"}
+                Admin console access
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {mode === "signin"
-                  ? "Access your PayNOC dashboard."
-                  : "Start accepting payments in minutes."}
+                Merchants — please use the{" "}
+                <Link to="/auth" className="underline hover:text-foreground">
+                  merchant sign-in
+                </Link>{" "}
+                page.
               </p>
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
-                {mode === "signup" && (
-                  <>
-                    <Field label="Full name" value={fullName} onChange={setFullName} required />
-                    <Field label="Business name" value={businessName} onChange={setBusinessName} required />
-                  </>
-                )}
-                <Field label="Email" type="email" value={email} onChange={setEmail} required />
+                <Field
+                  label="Admin email"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  required
+                />
                 <Field
                   label="Password"
                   type="password"
@@ -204,40 +193,15 @@ function AuthPage() {
                   required
                   minLength={8}
                 />
-
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {mode === "signin" ? "Sign in" : "Create account"}
+                  Sign in to admin
                 </button>
               </form>
-
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                {mode === "signin" ? (
-                  <>
-                    No account?{" "}
-                    <button
-                      className="font-semibold text-foreground hover:underline"
-                      onClick={() => setMode("signup")}
-                    >
-                      Sign up
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Already registered?{" "}
-                    <button
-                      className="font-semibold text-foreground hover:underline"
-                      onClick={() => setMode("signin")}
-                    >
-                      Sign in
-                    </button>
-                  </>
-                )}
-              </div>
             </>
           )}
         </div>
