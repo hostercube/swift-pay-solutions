@@ -113,15 +113,18 @@ function CheckoutPage() {
       return;
     }
     (async () => {
-      const { data } = await supabase
-        .from("fx_rates")
-        .select("rate")
-        .eq("base_currency", inv?.currency ?? "BDT")
-        .eq("quote_currency", cur)
-        .maybeSingle();
-      setFxRate(data ? Number((data as { rate: number }).rate) : null);
+      const rpc = supabase.rpc as unknown as (
+        fn: string, args: Record<string, unknown>,
+      ) => Promise<{ data: unknown }>;
+      const { data } = await rpc("get_effective_fx_rate", {
+        _merchant_id: inv?.merchant_id,
+        _base: inv?.currency ?? "BDT",
+        _quote: cur,
+      });
+      const rate = typeof data === "number" ? data : data ? Number(data) : null;
+      setFxRate(rate && !Number.isNaN(rate) ? rate : null);
     })();
-  }, [displayCurrency, inv?.display_currency, inv?.currency]);
+  }, [displayCurrency, inv?.display_currency, inv?.currency, inv?.merchant_id]);
 
   async function applyCoupon() {
     if (!inv || !couponInput.trim()) return;

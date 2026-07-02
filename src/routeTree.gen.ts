@@ -37,6 +37,7 @@ import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/
 import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
 import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
+import { Route as AuthenticatedFxRouteImport } from './routes/_authenticated/fx'
 import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
@@ -208,6 +209,11 @@ const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
   path: '/invoices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFxRoute = AuthenticatedFxRouteImport.update({
+  id: '/fx',
+  path: '/fx',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFraudRoute = AuthenticatedFraudRouteImport.update({
   id: '/fraud',
   path: '/fraud',
@@ -368,6 +374,7 @@ export interface FileRoutesByFullPath {
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
   '/fraud': typeof AuthenticatedFraudRoute
+  '/fx': typeof AuthenticatedFxRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
   '/fraud': typeof AuthenticatedFraudRoute
+  '/fx': typeof AuthenticatedFxRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/methods': typeof AuthenticatedMethodsRoute
@@ -479,6 +487,7 @@ export interface FileRoutesById {
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/fraud': typeof AuthenticatedFraudRoute
+  '/_authenticated/fx': typeof AuthenticatedFxRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
@@ -536,6 +545,7 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/disputes'
     | '/fraud'
+    | '/fx'
     | '/invoices'
     | '/ip-whitelist'
     | '/methods'
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/disputes'
     | '/fraud'
+    | '/fx'
     | '/invoices'
     | '/ip-whitelist'
     | '/methods'
@@ -646,6 +657,7 @@ export interface FileRouteTypes {
     | '/_authenticated/discounts'
     | '/_authenticated/disputes'
     | '/_authenticated/fraud'
+    | '/_authenticated/fx'
     | '/_authenticated/invoices'
     | '/_authenticated/ip-whitelist'
     | '/_authenticated/methods'
@@ -903,6 +915,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/fx': {
+      id: '/_authenticated/fx'
+      path: '/fx'
+      fullPath: '/fx'
+      preLoaderRoute: typeof AuthenticatedFxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fraud': {
       id: '/_authenticated/fraud'
       path: '/fraud'
@@ -1139,6 +1158,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
   AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
+  AuthenticatedFxRoute: typeof AuthenticatedFxRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
@@ -1167,6 +1187,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
   AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
   AuthenticatedFraudRoute: AuthenticatedFraudRoute,
+  AuthenticatedFxRoute: AuthenticatedFxRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
