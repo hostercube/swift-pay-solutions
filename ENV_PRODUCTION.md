@@ -6,6 +6,67 @@
 
 ---
 
+## 0) তোমার screenshot-এর exact fix
+
+Screenshot-এ তুমি **PayNOC app resource**-এ Supabase service block paste করেছো। তাই `SERVICE_PASSWORD_JWT`, `SERVICE_SUPABASEANON_KEY` ইত্যাদি app env-এ ঢুকে গেছে। এগুলো PayNOC app resource থেকে remove/replace করতে হবে।
+
+আর `OPENAI_API_KEY` delete করতে গেলে Coolify error দিচ্ছে:
+
+> Cannot delete environment variable `OPENAI_API_KEY`
+
+এটার fix: delete করবে না, app env block-এ `OPENAI_API_KEY=` empty line রেখে save করবে।
+
+### ✅ এখন screenshot-এর page-এ এটা paste করো
+
+Path: Coolify → **paynoc app** → Environment Variables → **Developer View** → সব select → replace → নিচের block paste → Save.
+
+```env
+# =========================================================
+# PayNOC App ONLY — paste this in paynoc app resource
+# =========================================================
+
+# Buildtime variables — Coolify Buildtime checkbox ON
+VITE_SUPABASE_URL=https://supabase.paynoc.bd
+VITE_SUPABASE_PUBLISHABLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>
+VITE_SUPABASE_PROJECT_ID=self-hosted
+
+# Runtime variables — Coolify Buildtime checkbox OFF
+SUPABASE_URL=https://supabase.paynoc.bd
+SUPABASE_PUBLISHABLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>
+SUPABASE_SERVICE_ROLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASESERVICE_KEY>
+NITRO_PRESET=node-server
+PORT=3000
+NODE_ENV=production
+APP_URL=https://pay.paynoc.bd
+
+# Optional integrations — delete korbe na, empty rakhle deploy fail korbe na
+RESEND_API_KEY=
+GATEWAYAPI_API_KEY=
+GATEWAYAPI_TOKEN=
+SLACK_WEBHOOK_URL=
+DISCORD_WEBHOOK_URL=
+OPENAI_API_KEY=
+LOVABLE_API_KEY=
+```
+
+✅ Important:
+
+- `SERVICE_PASSWORD_JWT`, `SERVICE_PASSWORD_POSTGRES`, `POSTGRES_PASSWORD`, `MINIO_*`, `KONG_*`, `MAILER_*` — এগুলো **PayNOC app resource**-এ থাকবে না।
+- `OPENAI_API_KEY` delete করবে না; value empty রাখবে: `OPENAI_API_KEY=`
+- `<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>` = Supabase service env-এর `SERVICE_SUPABASEANON_KEY` value।
+- `<PASTE_CURRENT_SERVICE_SUPABASESERVICE_KEY>` = Supabase service env-এর `SERVICE_SUPABASESERVICE_KEY` value।
+
+### Buildtime checkbox screenshot page-এ ঠিক করো
+
+| Variable | Buildtime |
+| --- | --- |
+| `VITE_SUPABASE_URL` | ✅ ON |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | ✅ ON |
+| `VITE_SUPABASE_PROJECT_ID` | ✅ ON |
+| সব বাকি variable | ❌ OFF |
+
+---
+
 ## A) Supabase service — Developer View FULL REPLACE
 
 Path: Coolify → **Supabase** resource/service → Environment Variables → **Developer View** → সব select → replace → save.
