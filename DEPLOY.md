@@ -34,8 +34,8 @@ STUDIO_DEFAULT_ORGANIZATION=PayNOC
 STUDIO_DEFAULT_PROJECT=paynoc
 
 # --- Studio Lock (MUST — না হলে dashboard public হয়ে যাবে) ---
-DASHBOARD_USERNAME=ayman
-DASHBOARD_PASSWORD=<STRONG_PASSWORD_HERE>
+SERVICE_USER_ADMIN=ayman
+SERVICE_PASSWORD_ADMIN=<STRONG_PASSWORD_HERE>
 
 # --- Auth ---
 DISABLE_SIGNUP=false
@@ -50,9 +50,30 @@ ADDITIONAL_REDIRECT_URLS=https://paynoc.bd,https://pay.paynoc.bd,https://docs.pa
 
 > Auto-generated রাখবে: `POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `SECRET_KEY_BASE`, `VAULT_ENC_KEY`, `LOGFLARE_*` — এগুলো Coolify manage করে।
 
-4. **Domains tab** → `kong` (বা যে service Studio serve করে) → `https://db.paynoc.bd` set করো।
+4. **Domains tab** → `supabase-kong` service / port `8000`-এ **শুধু** `https://db.paynoc.bd` set করো।
+   - `supabase-studio` / port `3000`-এ public domain দেবে না — দিলে password ছাড়া dashboard খুলে যাবে।
+   - `supabase-meta`, `supabase-db`, `supabase-auth`, `supabase-rest`, `supabase-storage`, `analytics`—কোনোটায় domain দেবে না।
 5. Save → **Redeploy**।
-6. `https://db.paynoc.bd` visit → basic-auth prompt আসতে হবে (username: `ayman`, password: উপরেরটা)।
+6. Browser incognito/private window থেকে `https://db.paynoc.bd` visit → basic-auth prompt আসতে হবে (username: `ayman`, password: উপরেরটা)।
+
+### 1.1 যদি `https://db.paynoc.bd` password ছাড়া direct dashboard খুলে যায়
+
+এটা app-code/database error না; Coolify routing/variable issue। এই order-এ fix করো:
+
+1. Coolify → Supabase resource → **Domains** tab।
+2. `https://db.paynoc.bd` যদি `supabase-studio` / port `3000`-এ থাকে, **remove** করো।
+3. `https://db.paynoc.bd` শুধু `supabase-kong` / port `8000`-এ add করো।
+4. Developer View env-এ নিচের দুটা exact variable আছে কিনা দেখো — পুরনো `DASHBOARD_USERNAME`/`DASHBOARD_PASSWORD` নয়:
+
+```env
+SERVICE_USER_ADMIN=ayman
+SERVICE_PASSWORD_ADMIN=<STRONG_PASSWORD_HERE>
+```
+
+5. Save → Redeploy/Restart পুরো Supabase stack।
+6. Browser cache/basic-auth session clear করতে incognito/private window দিয়ে আবার test করো।
+
+> তোমার দেওয়া `auth`, `storage`, `analytics` logs healthy/normal দেখাচ্ছে; এই direct-access problem সাধারণত domain ভুল service-এ point করা বা `SERVICE_USER_ADMIN`/`SERVICE_PASSWORD_ADMIN` missing থাকার কারণে হয়।
 
 ---
 
@@ -158,7 +179,7 @@ ON CONFLICT DO NOTHING;
 
 ## Part 5 — Verification Checklist
 
-- [ ] `https://db.paynoc.bd` → basic-auth prompt আসে
+- [ ] `https://db.paynoc.bd` → basic-auth prompt আসে; direct dashboard খোলে না
 - [ ] `https://paynoc.bd` → landing page load হয়
 - [ ] `/auth` → signup / login কাজ করে
 - [ ] `/ayman-login` → super admin login হয়
@@ -186,7 +207,7 @@ ON CONFLICT DO NOTHING;
 | `Cannot delete environment variable` | Delete না, empty রেখে save |
 | Build fail: Node syntax error | Dockerfile ইতিমধ্যে `oven/bun:1.2-alpine` ব্যবহার করে — rebuild |
 | `https//pay.paynoc.bd: No such file` | Domains tab-এ প্রতিটা domain আলাদা entry হিসেবে দাও |
-| Studio public accessible | `DASHBOARD_USERNAME` + `DASHBOARD_PASSWORD` set করে redeploy |
+| Studio public accessible | Domain শুধু `supabase-kong:8000`-এ দাও, `supabase-studio:3000` থেকে remove করো; env-এ `SERVICE_USER_ADMIN` + `SERVICE_PASSWORD_ADMIN` set করে redeploy |
 
 ---
 
