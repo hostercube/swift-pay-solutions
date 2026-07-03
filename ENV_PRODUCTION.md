@@ -287,12 +287,14 @@ PORT=3000
 NODE_ENV=production
 APP_URL=https://pay.paynoc.bd
 
-# Optional integrations — empty thakle deploy fail korbe na
+# Optional integrations — delete korbe na, empty thakle deploy fail korbe na
 RESEND_API_KEY=
+GATEWAYAPI_API_KEY=
 GATEWAYAPI_TOKEN=
 SLACK_WEBHOOK_URL=
 DISCORD_WEBHOOK_URL=
 OPENAI_API_KEY=
+LOVABLE_API_KEY=
 ```
 
 ### PayNOC app Buildtime checkbox
