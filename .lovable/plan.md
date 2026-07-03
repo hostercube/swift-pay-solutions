@@ -1,67 +1,39 @@
-## Ki korbo
+## Somossha ki
 
-Ekta notun single file banabo: **`DEPLOY_NOW_BANGLA.md`** — ei ta hobe tomar "ekhon theke ki ki korte hobe" er complete Bengali checklist. Purano guide gulo (DEPLOY_FINAL.md, DEPLOY_BANGLA.md, etc.) delete korbo na, kintu ei notun ta hobe **single source of truth** — ekta file dekhlei sob steps ache.
+Duita alada issue:
 
-## Content structure
+**1. Supabase Studio public** — `https://supabase.paynoc.bd/` khullei password chara Studio dashboard chole aschhe. Ei ta code er bug NA — Coolify Supabase service er Kong dashboard e basic-auth enable kora nai. Fix Coolify env var e (code change nai).
 
-Ei file ta e thakbe (Bengali te, screenshot-friendly step numbering):
+**2. Docker build fail** — 3ta chain problem Dockerfile e:
+- `oven/bun:1.1` image e Bun 1.1.45 ache, kintu `bun.lock` file "lockfileVersion 1" (new text format, Bun 1.2+ only) → `InvalidLockfileVersion`, lockfile ignore hoyeche
+- Same image e bundled Node 22.6.0, Vite 8 requires Node 20.19+ or 22.12+ → warning
+- Build fail: `SyntaxError: Export named 'parseEnv' not found in module 'util'` — ei Node 22.6-e `util.parseEnv` nai, Vite 8 dependency chain ei API expect kore → hard crash
+- Dockerfile warnings: Supabase keys `ARG`/`ENV` diye pass hocche (publishable anon key ok public, tobe Docker BuildKit warning die)
 
-**Part 1 — Verify (5 min)**
-- Coolify → Supabase service running ase kina check
-- Supabase Studio (`https://supabase.paynoc.bd`) khule login test
-- DB terminal e `\dt public.*` diye tables count check (31 ta thaka uchit)
+## Ki fix korbo
 
-**Part 2 — Storage buckets fix (jodi baki thake)**
-- `db/storage.sql` er content DB terminal e paste (SET ROLE included)
+### A) Dockerfile rewrite
+- Build stage: `oven/bun:1.1` → **`oven/bun:1.2-alpine`** (Bun 1.2+ new lockfile bujhbe, bundled Node 22.13+ Vite compatible)
+- Runtime stage same rakhbo: `node:20-alpine` (chhoto image, prod e Nitro node-server chalabe)
+- Publishable/anon keys `ARG` hisebe rakhbo (public keys, safe) tobe SERVICE_ROLE_KEY `ARG` theke bad — ota runtime-only, build e lagena
+- `bun install --frozen-lockfile || bun install` rakhbo (fallback)
 
-**Part 3 — paynoc app resource banano**
-- Coolify → New Resource → Public Repository
-- GitHub repo URL
-- Build Pack: Dockerfile
-- Port: 3000
+### B) Supabase Studio lock (chat-only guidance, code na)
+Coolify → Supabase service → Environment Variables e ei duita set/verify koro (already ache mostly, kintu Kong e effect nite service restart lage):
+```
+DASHBOARD_USERNAME=<strong-username>
+DASHBOARD_PASSWORD=<strong-password>
+```
+Save → Supabase service **Restart**. Er por `https://supabase.paynoc.bd` visit korle browser basic-auth prompt dibe. Ei duita set thakleo restart chara Kong reload hoy na — sei jonno public access dekhchile.
 
-**Part 4 — Environment Variables**
-- Ready-to-paste block (VITE_*, SUPABASE_*, NITRO_PRESET, APP_URL)
+Additional hardening (optional): Cloudflare-e `supabase.paynoc.bd` subdomain e Cloudflare Access (Zero Trust) rule diye email-only allow, ba IP whitelist.
 
-**Part 5 — Domains add**
-- paynoc.bd, pay.paynoc.bd, docs.paynoc.bd, api.paynoc.bd
-- Cloudflare A record verification
+### C) `DEPLOY_NOW_BANGLA.md` update
+Notun Part 0 (Security first — Studio lock) + Part 11 e Docker build error troubleshooting section add korbo, jate future e same error hole solve kora jay.
 
-**Part 6 — Deploy**
-- Deploy button click
-- Logs check
+## Files change
 
-**Part 7 — First sign up + admin promote**
-- `https://paynoc.bd/auth` e sign up
-- DB terminal e `db/seed-admin.sql` (email replace kore)
+- ✏️ Edit: `Dockerfile` (bun image bump, service role arg remove)
+- ✏️ Edit: `DEPLOY_NOW_BANGLA.md` (Studio lock steps + build error notes)
 
-**Part 8 — Cron jobs schedule**
-- `db/cron/schedule.sql` er `{{APP_URL}}` and `{{ANON_KEY}}` replace kore run
-- `SELECT jobname FROM cron.job;` diye verify (5 ta job thaka uchit)
-
-**Part 9 — Smoke test**
-- Merchant sign up test
-- Invoice create test
-- Checkout page (`/pay/:id`) test
-- API key generate + curl test
-
-**Part 10 — Security cleanup (⚠️ important)**
-- Compromised keys (JWT/service_role/postgres/MinIO) rotate karar steps
-- Regenerate → restart → paynoc env update → redeploy
-
-**Part 11 — Optional add-ons**
-- RESEND_API_KEY (email notifications)
-- GATEWAYAPI_TOKEN (SMS)
-- SLACK/DISCORD webhooks
-
-Prottek step er sathe:
-- ✅ Success ki dekhbe
-- ❌ Fail hole ki korbe (common errors)
-- Copy-paste ready command/SQL
-
-## Ki file touch korbo
-
-- ✏️ Create: `DEPLOY_NOW_BANGLA.md`
-- Baki kono file change hobe na
-
-Approve korle likhe felbo.
+Kono database/app logic change nai. Approve korle apply korbo, tumi GitHub e push kore Coolify redeploy diyo.

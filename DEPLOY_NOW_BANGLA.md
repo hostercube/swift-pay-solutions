@@ -4,6 +4,41 @@ Ei ekta file dekhle sob steps peye jabe. Upor theke niche order maintain koro. P
 
 ---
 
+## Part 0 — ⚠️ Supabase Studio LOCK koro (SECURITY, age koro)
+
+Ekhon `https://supabase.paynoc.bd/` browser e khullei password chara Studio dashboard chole aschhe — ei ta **critical security hole**. Je keu database access peye jabe. Fix:
+
+### 0.1 Coolify e basic-auth env set
+- Coolify → tomar project → **Supabase** service → **Environment Variables** tab
+- Developer view ON kore ei duita variable **thakle value check koro, na thakle add koro**:
+
+```env
+DASHBOARD_USERNAME=paynoc_admin
+DASHBOARD_PASSWORD=<32-char strong random password>
+```
+
+- Strong password banate: `openssl rand -base64 32` (server terminal e)
+- **Save** click
+
+### 0.2 Supabase service restart
+- Same service page e **Restart** button click (upor-dan e)
+- 30-60 second wait
+
+### 0.3 Verify
+- Notun incognito window e `https://supabase.paynoc.bd/` kholo
+- ✅ Browser basic-auth prompt ashbe (username/password chaibe) — tarpor Studio
+- ❌ Ekhono direct dashboard dekhale: env save hoyni ba service restart hoyni. 0.1 → 0.2 abar koro.
+
+### 0.4 (Optional but recommended) Cloudflare Access layer
+- Cloudflare dashboard → Zero Trust → Access → Applications → **Add application** → Self-hosted
+- Application domain: `supabase.paynoc.bd`
+- Policy: shudhu tomar email allow (ba team emails)
+- Ei ta basic-auth er upore extra layer — public internet theke keu URL e pouchatei parbe na
+
+---
+
+
+
 ## Part 1 — Verify (5 minute)
 
 Kaj: Ekhon porjonto ki ki setup ase check kora.
@@ -128,7 +163,13 @@ NODE_ENV=production
 APP_URL=https://pay.paynoc.bd
 ```
 
+⚠️ **IMPORTANT — Build-time vs Runtime toggle:**
+- `VITE_*` teenta variable: **"Available at Buildtime"** ON kore rakho (checkbox tick) — Vite build ei value gulo browser bundle e bake kore
+- `NODE_ENV`: **"Available at Buildtime" OFF** rakho (Runtime only). Build time e `NODE_ENV=production` thakle Coolify warning die + devDependencies (vite, typescript, tanstack plugins) install hoy na, build fail hoy
+- Baki sob (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NITRO_PRESET`, `PORT`, `APP_URL`): **Runtime only** (Buildtime OFF)
+
 **Save**. ✅
+
 
 ---
 
@@ -166,11 +207,17 @@ paynoc app → **Deploy** button (top-right) click.
 - Domain e green checkmark
 
 ❌ Fail hole common issues:
-- **"VITE_SUPABASE_URL is undefined"** → env var save hoyni, Part 5 abar check
-- **"Cannot find module"** → `bun.lockb` missing, GitHub e push korte hobe
+- **"VITE_SUPABASE_URL is undefined"** → env var save hoyni ba Buildtime OFF, Part 5 abar check
+- **"Cannot find module"** → `bun.lockb`/`bun.lock` missing, GitHub e push korte hobe
 - **"Port already in use"** → other app 3000 port dhorche, restart Coolify
+- **`InvalidLockfileVersion: failed to parse lockfile: 'bun.lock'`** → purano Bun image. `Dockerfile` e `FROM oven/bun:1.2-alpine AS build` ache kina check koro (1.1 hole 1.2 koro, push, redeploy)
+- **`SyntaxError: Export named 'parseEnv' not found in module 'util'`** → same cause: Bun 1.1 image e Node 22.6 ashe, Vite 8 er dorkar Node 22.13+. Fix same — `oven/bun:1.2-alpine` use koro
+- **`You are using Node.js 22.6.0. Vite requires Node.js version 20.19+ or 22.12+`** → same fix
+- **"Skips devDependencies installation"** warning + build fail → `NODE_ENV=production` Buildtime ON ache. Off koro (Runtime only rakho), redeploy
+- **`SecretsUsedInArgOrEnv`** warnings (Docker BuildKit) → warning matro, build fail na. Publishable/anon key public safe. Service role key ta Dockerfile e ARG hisebe nai (runtime only), tai worry nai
 
 Deploy sesh: `https://paynoc.bd` browser e kholo. Landing page dekha jabe ✅.
+
 
 ---
 
