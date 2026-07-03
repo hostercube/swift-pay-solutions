@@ -49,9 +49,9 @@ Kaj: Ekhon porjonto ki ki setup ase check kora.
 
 ### 1.2 Supabase Studio khulcho?
 - Browser e: `https://supabase.paynoc.bd`
-- Login credentials (env theke):
-  - Username: `yhM1V0E9xrb3Iq0e`
-  - Password: `pIcz0BaKyYkIx6grvQxDTOiD7y9Z6XAE`
+- Login credentials (Supabase service env theke):
+  - Username: `SERVICE_USER_ADMIN` er value
+  - Password: `SERVICE_PASSWORD_ADMIN` er value
 - ✅ Studio dashboard dekha jabe.
 - ❌ 502/404 hole: `SERVICE_URL_SUPABASEKONG` env check, Cloudflare A record → server IP point ase kina verify.
 
@@ -148,19 +148,28 @@ paynoc app → **Environment Variables** tab → **Developer view** on → ei bl
 ```env
 # Build-time (browser bundle)
 VITE_SUPABASE_URL=https://supabase.paynoc.bd
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY
+VITE_SUPABASE_PUBLISHABLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>
 VITE_SUPABASE_PROJECT_ID=self-hosted
 
 # Runtime (SSR / server functions)
 SUPABASE_URL=https://supabase.paynoc.bd
-SUPABASE_PUBLISHABLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY
-SUPABASE_SERVICE_ROLE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.ujCJ7YPn79Iq7d9GE-u6HGvFOpUBvwXzc7h3TRskjig
+SUPABASE_PUBLISHABLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>
+SUPABASE_SERVICE_ROLE_KEY=<PASTE_CURRENT_SERVICE_SUPABASESERVICE_KEY>
 
 # App runtime
 NITRO_PRESET=node-server
 PORT=3000
 NODE_ENV=production
 APP_URL=https://pay.paynoc.bd
+
+# Optional integrations — delete korbe na, empty thakle deploy fail korbe na
+RESEND_API_KEY=
+GATEWAYAPI_API_KEY=
+GATEWAYAPI_TOKEN=
+SLACK_WEBHOOK_URL=
+DISCORD_WEBHOOK_URL=
+OPENAI_API_KEY=
+LOVABLE_API_KEY=
 ```
 
 ⚠️ **IMPORTANT — Build-time vs Runtime toggle:**
@@ -270,35 +279,35 @@ EXCEPTION WHEN OTHERS THEN NULL; END $$;
 SELECT cron.schedule('paynoc-expire-invoices', '*/5 * * * *', $c$
   SELECT net.http_post(
     url:='https://pay.paynoc.bd/api/public/hooks/expire-invoices',
-    headers:='{"Content-Type":"application/json","apikey":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>"}'::jsonb,
     body:='{}'::jsonb);
 $c$);
 
 SELECT cron.schedule('paynoc-webhook-retry', '*/2 * * * *', $c$
   SELECT net.http_post(
     url:='https://pay.paynoc.bd/api/public/hooks/webhook-retry',
-    headers:='{"Content-Type":"application/json","apikey":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>"}'::jsonb,
     body:='{}'::jsonb);
 $c$);
 
 SELECT cron.schedule('paynoc-run-recurring', '*/15 * * * *', $c$
   SELECT net.http_post(
     url:='https://pay.paynoc.bd/api/public/hooks/run-recurring',
-    headers:='{"Content-Type":"application/json","apikey":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>"}'::jsonb,
     body:='{}'::jsonb);
 $c$);
 
 SELECT cron.schedule('paynoc-run-digest', '0 * * * *', $c$
   SELECT net.http_post(
     url:='https://pay.paynoc.bd/api/public/hooks/run-digest',
-    headers:='{"Content-Type":"application/json","apikey":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>"}'::jsonb,
     body:='{}'::jsonb);
 $c$);
 
 SELECT cron.schedule('paynoc-run-payout-schedule', '*/30 * * * *', $c$
   SELECT net.http_post(
     url:='https://pay.paynoc.bd/api/public/hooks/run-payout-schedule',
-    headers:='{"Content-Type":"application/json","apikey":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4Mjk3MTIyMCwiZXhwIjo0OTM4NjQ0ODIwLCJyb2xlIjoiYW5vbiJ9.VMNUv0Jw8D0VJlL4SlOcF8vwa67BgKrqvNiXN1OXYtY"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"<PASTE_CURRENT_SERVICE_SUPABASEANON_KEY>"}'::jsonb,
     body:='{}'::jsonb);
 $c$);
 EOF
