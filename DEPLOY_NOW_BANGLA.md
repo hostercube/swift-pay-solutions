@@ -163,7 +163,13 @@ NODE_ENV=production
 APP_URL=https://pay.paynoc.bd
 ```
 
+⚠️ **IMPORTANT — Build-time vs Runtime toggle:**
+- `VITE_*` teenta variable: **"Available at Buildtime"** ON kore rakho (checkbox tick) — Vite build ei value gulo browser bundle e bake kore
+- `NODE_ENV`: **"Available at Buildtime" OFF** rakho (Runtime only). Build time e `NODE_ENV=production` thakle Coolify warning die + devDependencies (vite, typescript, tanstack plugins) install hoy na, build fail hoy
+- Baki sob (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NITRO_PRESET`, `PORT`, `APP_URL`): **Runtime only** (Buildtime OFF)
+
 **Save**. ✅
+
 
 ---
 
