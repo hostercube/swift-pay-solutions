@@ -4,6 +4,41 @@ Ei ekta file dekhle sob steps peye jabe. Upor theke niche order maintain koro. P
 
 ---
 
+## Part 0 — ⚠️ Supabase Studio LOCK koro (SECURITY, age koro)
+
+Ekhon `https://supabase.paynoc.bd/` browser e khullei password chara Studio dashboard chole aschhe — ei ta **critical security hole**. Je keu database access peye jabe. Fix:
+
+### 0.1 Coolify e basic-auth env set
+- Coolify → tomar project → **Supabase** service → **Environment Variables** tab
+- Developer view ON kore ei duita variable **thakle value check koro, na thakle add koro**:
+
+```env
+DASHBOARD_USERNAME=paynoc_admin
+DASHBOARD_PASSWORD=<32-char strong random password>
+```
+
+- Strong password banate: `openssl rand -base64 32` (server terminal e)
+- **Save** click
+
+### 0.2 Supabase service restart
+- Same service page e **Restart** button click (upor-dan e)
+- 30-60 second wait
+
+### 0.3 Verify
+- Notun incognito window e `https://supabase.paynoc.bd/` kholo
+- ✅ Browser basic-auth prompt ashbe (username/password chaibe) — tarpor Studio
+- ❌ Ekhono direct dashboard dekhale: env save hoyni ba service restart hoyni. 0.1 → 0.2 abar koro.
+
+### 0.4 (Optional but recommended) Cloudflare Access layer
+- Cloudflare dashboard → Zero Trust → Access → Applications → **Add application** → Self-hosted
+- Application domain: `supabase.paynoc.bd`
+- Policy: shudhu tomar email allow (ba team emails)
+- Ei ta basic-auth er upore extra layer — public internet theke keu URL e pouchatei parbe na
+
+---
+
+
+
 ## Part 1 — Verify (5 minute)
 
 Kaj: Ekhon porjonto ki ki setup ase check kora.
