@@ -207,11 +207,17 @@ paynoc app → **Deploy** button (top-right) click.
 - Domain e green checkmark
 
 ❌ Fail hole common issues:
-- **"VITE_SUPABASE_URL is undefined"** → env var save hoyni, Part 5 abar check
-- **"Cannot find module"** → `bun.lockb` missing, GitHub e push korte hobe
+- **"VITE_SUPABASE_URL is undefined"** → env var save hoyni ba Buildtime OFF, Part 5 abar check
+- **"Cannot find module"** → `bun.lockb`/`bun.lock` missing, GitHub e push korte hobe
 - **"Port already in use"** → other app 3000 port dhorche, restart Coolify
+- **`InvalidLockfileVersion: failed to parse lockfile: 'bun.lock'`** → purano Bun image. `Dockerfile` e `FROM oven/bun:1.2-alpine AS build` ache kina check koro (1.1 hole 1.2 koro, push, redeploy)
+- **`SyntaxError: Export named 'parseEnv' not found in module 'util'`** → same cause: Bun 1.1 image e Node 22.6 ashe, Vite 8 er dorkar Node 22.13+. Fix same — `oven/bun:1.2-alpine` use koro
+- **`You are using Node.js 22.6.0. Vite requires Node.js version 20.19+ or 22.12+`** → same fix
+- **"Skips devDependencies installation"** warning + build fail → `NODE_ENV=production` Buildtime ON ache. Off koro (Runtime only rakho), redeploy
+- **`SecretsUsedInArgOrEnv`** warnings (Docker BuildKit) → warning matro, build fail na. Publishable/anon key public safe. Service role key ta Dockerfile e ARG hisebe nai (runtime only), tai worry nai
 
 Deploy sesh: `https://paynoc.bd` browser e kholo. Landing page dekha jabe ✅.
+
 
 ---
 
