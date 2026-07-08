@@ -28,35 +28,39 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useMerchantPerms } from "@/hooks/use-merchant-perms";
+import type { MerchantPerm } from "@/lib/permissions";
 
-const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm?: MerchantPerm };
+
+const nav: NavItem[] = [
   { to: "/onboarding", label: "Get started", icon: Rocket },
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/invoices", label: "Invoices", icon: Receipt },
-  { to: "/recurring", label: "Recurring", icon: Repeat },
-  { to: "/discounts", label: "Discount codes", icon: Tag },
-  { to: "/transactions", label: "Transactions", icon: CreditCard },
-  { to: "/payouts", label: "Payouts", icon: Wallet },
-  { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock },
-  { to: "/refunds", label: "Refunds", icon: Receipt },
-  { to: "/disputes", label: "Disputes", icon: Gavel },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/methods", label: "Payment methods", icon: CreditCard },
-  { to: "/fx", label: "Currency rates", icon: BarChart3 },
-  { to: "/team", label: "Team", icon: Users },
-  { to: "/api-keys", label: "API keys", icon: KeyRound },
-  { to: "/api-logs", label: "API logs", icon: BookOpen },
-  { to: "/webhooks", label: "Webhooks", icon: Webhook },
-  { to: "/byo-gateways", label: "BYO Gateways", icon: Plug },
+  { to: "/invoices", label: "Invoices", icon: Receipt, perm: "invoices" },
+  { to: "/recurring", label: "Recurring", icon: Repeat, perm: "invoices" },
+  { to: "/discounts", label: "Discount codes", icon: Tag, perm: "invoices" },
+  { to: "/transactions", label: "Transactions", icon: CreditCard, perm: "transactions" },
+  { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
+  { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
+  { to: "/refunds", label: "Refunds", icon: Receipt, perm: "refunds" },
+  { to: "/disputes", label: "Disputes", icon: Gavel, perm: "disputes" },
+  { to: "/reports", label: "Reports", icon: BarChart3, perm: "reports" },
+  { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
+  { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
+  { to: "/team", label: "Team", icon: Users, perm: "team" },
+  { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
+  { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
+  { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
+  { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
   { to: "/api-reference", label: "API reference", icon: BookOpen },
-  { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2 },
-  { to: "/ip-whitelist", label: "IP whitelist", icon: Lock },
-  { to: "/fraud", label: "Fraud rules", icon: ShieldAlert },
-  { to: "/security", label: "Security (2FA)", icon: ShieldCheck },
+  { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
+  { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
+  { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
+  { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
   { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/notification-settings", label: "Notification settings", icon: Bell },
-  { to: "/digest", label: "Email digest", icon: Mail },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
+  { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+  { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
 ];
 
 export function MerchantShell({
@@ -74,7 +78,16 @@ export function MerchantShell({
   const { signOut, roles, user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSuperAdmin = roles.includes("super_admin");
+  const perms = useMerchantPerms();
+  const [isAdminOffice, setIsAdminOffice] = useState(false);
   const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!user) { setIsAdminOffice(false); return; }
+    supabase.rpc("is_admin_office", { _user_id: user.id }).then(({ data }) => {
+      setIsAdminOffice(!!data);
+    });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -113,7 +126,7 @@ export function MerchantShell({
             <span className="font-display text-lg font-bold">PayNOC</span>
           </div>
           <nav className="flex-1 space-y-1 p-3">
-            {nav.map((item) => {
+            {nav.filter((item) => !item.perm || perms.has(item.perm)).map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
               const showBadge = item.to === "/notifications" && unread > 0;
               return (
@@ -136,7 +149,7 @@ export function MerchantShell({
                 </Link>
               );
             })}
-            {isSuperAdmin && (
+            {(isSuperAdmin || isAdminOffice) && (
               <>
                 <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Admin
@@ -146,7 +159,7 @@ export function MerchantShell({
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
                 >
                   <Users className="h-4 w-4" />
-                  Super Admin Panel
+                  {isSuperAdmin ? "Super Admin Panel" : "Admin Panel"}
                 </Link>
               </>
             )}
