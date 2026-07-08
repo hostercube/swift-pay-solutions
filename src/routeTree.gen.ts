@@ -52,6 +52,8 @@ import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
+import { Route as AuthenticatedAdminWebhooksHealthRouteImport } from './routes/_authenticated/admin/webhooks-health'
+import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPluginsRouteImport } from './routes/_authenticated/admin/plugins'
@@ -59,8 +61,10 @@ import { Route as AuthenticatedAdminPlatformGatewaysRouteImport } from './routes
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
+import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
 import { Route as AuthenticatedAdminIncidentsRouteImport } from './routes/_authenticated/admin/incidents'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
+import { Route as AuthenticatedAdminBroadcastRouteImport } from './routes/_authenticated/admin/broadcast'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/public/webhooks.$provider'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
@@ -294,6 +298,18 @@ const AuthenticatedInvoicesIdRoute = AuthenticatedInvoicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedInvoicesRoute,
 } as any)
+const AuthenticatedAdminWebhooksHealthRoute =
+  AuthenticatedAdminWebhooksHealthRouteImport.update({
+    id: '/webhooks-health',
+    path: '/webhooks-health',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminTransactionsRoute =
+  AuthenticatedAdminTransactionsRouteImport.update({
+    id: '/transactions',
+    path: '/transactions',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
@@ -334,6 +350,12 @@ const AuthenticatedAdminKycRoute = AuthenticatedAdminKycRouteImport.update({
   path: '/kyc',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminInvoicesRoute =
+  AuthenticatedAdminInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminIncidentsRoute =
   AuthenticatedAdminIncidentsRouteImport.update({
     id: '/incidents',
@@ -345,6 +367,12 @@ const AuthenticatedAdminFxRoute = AuthenticatedAdminFxRouteImport.update({
   path: '/fx',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminBroadcastRoute =
+  AuthenticatedAdminBroadcastRouteImport.update({
+    id: '/broadcast',
+    path: '/broadcast',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   id: '/audit',
   path: '/audit',
@@ -448,8 +476,10 @@ export interface FileRoutesByFullPath {
   '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
@@ -457,6 +487,8 @@ export interface FileRoutesByFullPath {
   '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
+  '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
+  '/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -511,8 +543,10 @@ export interface FileRoutesByTo {
   '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
@@ -520,6 +554,8 @@ export interface FileRoutesByTo {
   '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
+  '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
+  '/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -577,8 +613,10 @@ export interface FileRoutesById {
   '/m/$slug': typeof MSlugRoute
   '/pay/$invoiceId': typeof PayInvoiceIdRoute
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
   '/_authenticated/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
@@ -586,6 +624,8 @@ export interface FileRoutesById {
   '/_authenticated/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
+  '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
+  '/_authenticated/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -643,8 +683,10 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/pay/$invoiceId'
     | '/admin/audit'
+    | '/admin/broadcast'
     | '/admin/fx'
     | '/admin/incidents'
+    | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
@@ -652,6 +694,8 @@ export interface FileRouteTypes {
     | '/admin/plugins'
     | '/admin/settings'
     | '/admin/staff'
+    | '/admin/transactions'
+    | '/admin/webhooks-health'
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin/'
@@ -706,8 +750,10 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/pay/$invoiceId'
     | '/admin/audit'
+    | '/admin/broadcast'
     | '/admin/fx'
     | '/admin/incidents'
+    | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
@@ -715,6 +761,8 @@ export interface FileRouteTypes {
     | '/admin/plugins'
     | '/admin/settings'
     | '/admin/staff'
+    | '/admin/transactions'
+    | '/admin/webhooks-health'
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin'
@@ -771,8 +819,10 @@ export interface FileRouteTypes {
     | '/m/$slug'
     | '/pay/$invoiceId'
     | '/_authenticated/admin/audit'
+    | '/_authenticated/admin/broadcast'
     | '/_authenticated/admin/fx'
     | '/_authenticated/admin/incidents'
+    | '/_authenticated/admin/invoices'
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
@@ -780,6 +830,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/plugins'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/staff'
+    | '/_authenticated/admin/transactions'
+    | '/_authenticated/admin/webhooks-health'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
@@ -1121,6 +1173,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvoicesIdRouteImport
       parentRoute: typeof AuthenticatedInvoicesRoute
     }
+    '/_authenticated/admin/webhooks-health': {
+      id: '/_authenticated/admin/webhooks-health'
+      path: '/webhooks-health'
+      fullPath: '/admin/webhooks-health'
+      preLoaderRoute: typeof AuthenticatedAdminWebhooksHealthRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/transactions': {
+      id: '/_authenticated/admin/transactions'
+      path: '/transactions'
+      fullPath: '/admin/transactions'
+      preLoaderRoute: typeof AuthenticatedAdminTransactionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/staff': {
       id: '/_authenticated/admin/staff'
       path: '/staff'
@@ -1170,6 +1236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminKycRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/invoices': {
+      id: '/_authenticated/admin/invoices'
+      path: '/invoices'
+      fullPath: '/admin/invoices'
+      preLoaderRoute: typeof AuthenticatedAdminInvoicesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/incidents': {
       id: '/_authenticated/admin/incidents'
       path: '/incidents'
@@ -1182,6 +1255,13 @@ declare module '@tanstack/react-router' {
       path: '/fx'
       fullPath: '/admin/fx'
       preLoaderRoute: typeof AuthenticatedAdminFxRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/broadcast': {
+      id: '/_authenticated/admin/broadcast'
+      path: '/broadcast'
+      fullPath: '/admin/broadcast'
+      preLoaderRoute: typeof AuthenticatedAdminBroadcastRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/audit': {
@@ -1280,8 +1360,10 @@ const AuthenticatedAdminMerchantsRouteWithChildren =
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminBroadcastRoute: typeof AuthenticatedAdminBroadcastRoute
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
   AuthenticatedAdminIncidentsRoute: typeof AuthenticatedAdminIncidentsRoute
+  AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRouteWithChildren
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
@@ -1289,14 +1371,18 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPluginsRoute: typeof AuthenticatedAdminPluginsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
+  AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
+  AuthenticatedAdminWebhooksHealthRoute: typeof AuthenticatedAdminWebhooksHealthRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+    AuthenticatedAdminBroadcastRoute: AuthenticatedAdminBroadcastRoute,
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
     AuthenticatedAdminIncidentsRoute: AuthenticatedAdminIncidentsRoute,
+    AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute:
       AuthenticatedAdminMerchantsRouteWithChildren,
@@ -1306,6 +1392,9 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPluginsRoute: AuthenticatedAdminPluginsRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
+    AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
+    AuthenticatedAdminWebhooksHealthRoute:
+      AuthenticatedAdminWebhooksHealthRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
 

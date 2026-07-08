@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useServerFn } from "@tanstack/react-start";
 import { adminCreateMerchant, adminImpersonate } from "@/lib/admin.functions";
-import { UserPlus, LogIn } from "lucide-react";
+import { UserPlus, LogIn, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/merchants")({
   head: () => ({ meta: [{ title: "Merchants · Admin" }] }),
@@ -163,10 +163,15 @@ function MerchantsPage() {
               <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No merchants found.</td></tr>
             )}
             {filtered.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
+              <tr key={r.id} className="border-t border-glass-border hover:bg-muted/30">
                 <td className="px-4 py-3">
-                  <div className="font-medium">{r.business_name || "—"}</div>
-                  <div className="text-xs text-muted-foreground">{r.full_name || ""}</div>
+                  <Link to="/admin/merchants/$id" params={{ id: r.id }} className="group inline-flex items-center gap-1.5">
+                    <div>
+                      <div className="font-medium group-hover:text-brand">{r.business_name || "—"}</div>
+                      <div className="text-xs text-muted-foreground">{r.full_name || ""}</div>
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{r.email}</td>
                 <td className="px-4 py-3">
@@ -177,6 +182,13 @@ function MerchantsPage() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex flex-wrap justify-end gap-2">
+                    <Link
+                      to="/admin/merchants/$id"
+                      params={{ id: r.id }}
+                      className="rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand"
+                    >
+                      Open
+                    </Link>
                     {r.status !== "active" && (
                       <button onClick={() => setStatus(r.id, "active")} className="rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand">
                         Activate
