@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { Download, BookOpen, Github, Package } from "lucide-react";
 
 export const Route = createFileRoute("/api-reference")({
   head: () => ({
@@ -314,8 +317,90 @@ const nav = [
     { id: "refunds", label: "Refunds & payouts" },
     { id: "testing", label: "Testing" },
     { id: "sdks", label: "SDKs & Postman" },
+    { id: "plugins", label: "Plugins & integrations" },
   ]},
 ];
+
+/* ---------------------- plugins ---------------------- */
+
+type PublicPlugin = {
+  id: string;
+  name: string;
+  slug: string;
+  platform: string;
+  description: string | null;
+  version: string | null;
+  icon_url: string | null;
+  download_url: string | null;
+  docs_url: string | null;
+  repo_url: string | null;
+};
+
+function PluginsGrid() {
+  const [rows, setRows] = useState<PublicPlugin[] | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("platform_plugins" as never) as any)
+        .select("id,name,slug,platform,description,version,icon_url,download_url,docs_url,repo_url")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      setRows((data ?? []) as PublicPlugin[]);
+    })();
+  }, []);
+
+  if (rows === null) return <p className="text-sm text-muted-foreground">Loading plugins…</p>;
+  if (rows.length === 0)
+    return (
+      <p className="rounded-lg border border-glass-border bg-card/40 p-4 text-sm text-muted-foreground">
+        No plugins published yet. Check back soon — WordPress, WHMCS and Shopify integrations are on the way.
+      </p>
+    );
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {rows.map((p) => (
+        <div key={p.id} className="group rounded-2xl border border-glass-border bg-card/40 p-5 transition hover:-translate-y-0.5 hover:border-brand/40">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+              {p.icon_url ? (
+                <img src={p.icon_url} alt="" className="h-6 w-6" />
+              ) : (
+                <Package className="h-5 w-5" strokeWidth={2.25} />
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand">
+                  {p.platform}
+                </span>
+                {p.version && <span className="text-xs text-muted-foreground">v{p.version}</span>}
+              </div>
+              <h3 className="mt-1 font-display text-base font-semibold text-foreground">{p.name}</h3>
+              {p.description && <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {p.download_url && (
+                  <a href={p.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-background px-2.5 py-1 text-xs font-medium hover:bg-muted">
+                    <Download className="h-3.5 w-3.5" /> Download
+                  </a>
+                )}
+                {p.docs_url && (
+                  <a href={p.docs_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-background px-2.5 py-1 text-xs font-medium hover:bg-muted">
+                    <BookOpen className="h-3.5 w-3.5" /> Docs
+                  </a>
+                )}
+                {p.repo_url && (
+                  <a href={p.repo_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-glass-border bg-background px-2.5 py-1 text-xs font-medium hover:bg-muted">
+                    <Github className="h-3.5 w-3.5" /> Source
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 /* ---------------------- page ---------------------- */
 
@@ -650,6 +735,17 @@ function ApiReferencePage() {
                 ⬇ Download Postman collection
               </a>
             </Section>
+
+            {/* Plugins */}
+            <Section id="plugins" eyebrow="Integrations" title="Plugins & platform integrations">
+              <p className="text-sm text-muted-foreground">
+                Drop-in modules for the platforms you already run. Every listing here is published live by the
+                PayNOC team — download the archive, install it in your platform, paste your API key, and you're
+                accepting payments in minutes.
+              </p>
+              <PluginsGrid />
+            </Section>
+
 
             <div className="mt-16 rounded-lg border border-glass-border bg-card/40 p-6 text-sm text-muted-foreground">
               Need help? Email <span className="font-mono text-foreground">developers@paynoc.example</span> or

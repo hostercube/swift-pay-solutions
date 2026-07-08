@@ -987,6 +987,57 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_plugins: {
+        Row: {
+          created_at: string
+          description: string | null
+          docs_url: string | null
+          download_url: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean
+          name: string
+          platform: string
+          repo_url: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          docs_url?: string | null
+          download_url?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          platform: string
+          repo_url?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          docs_url?: string | null
+          download_url?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          platform?: string
+          repo_url?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           allow_signup: boolean

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft, Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug } from "lucide-react";
+import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft, Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug, Package } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
 
@@ -9,6 +9,7 @@ const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exac
   { to: "/admin/kyc", label: "KYC review", icon: ShieldCheck },
   { to: "/admin/staff", label: "Staff", icon: UserCog },
   { to: "/admin/platform-gateways", label: "Platform gateways", icon: Plug },
+  { to: "/admin/plugins", label: "Plugins & SDKs", icon: Package },
   { to: "/admin/payouts", label: "Payouts", icon: Wallet },
   { to: "/admin/fx", label: "FX rates", icon: DollarSign },
   { to: "/admin/incidents", label: "Incidents", icon: Activity },
