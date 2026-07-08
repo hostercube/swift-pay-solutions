@@ -9,7 +9,7 @@ const TABS = [
   { to: "/integrations", label: "Payment methods", icon: CreditCard, exact: true },
   { to: "/integrations/byo", label: "BYO Gateways", icon: Plug },
   { to: "/integrations/api", label: "API / Embed", icon: Code2 },
-] as const;
+];
 
 function IntegrationsLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -18,7 +18,7 @@ function IntegrationsLayout() {
       <h1 className="font-display text-2xl font-bold mb-4">Payment integrations</h1>
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
-          const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+          const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
             <Link
               key={t.to}

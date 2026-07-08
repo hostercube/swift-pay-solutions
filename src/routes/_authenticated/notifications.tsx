@@ -9,7 +9,7 @@ const TABS = [
   { to: "/notifications", label: "Inbox", icon: Bell, exact: true },
   { to: "/notifications/settings", label: "Settings", icon: Settings2 },
   { to: "/notifications/digest", label: "Email digest", icon: Mail },
-] as const;
+];
 
 function NotificationsLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -18,7 +18,7 @@ function NotificationsLayout() {
       <h1 className="font-display text-2xl font-bold mb-4">Notifications</h1>
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
-          const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+          const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
             <Link
               key={t.to}

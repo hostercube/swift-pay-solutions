@@ -10,7 +10,7 @@ const TABS = [
   { to: "/admin/platform/plugins", label: "Plugins & SDKs", icon: Package },
   { to: "/admin/platform/webhooks", label: "Webhook health", icon: Webhook },
   { to: "/admin/platform/incidents", label: "Incidents", icon: Activity },
-] as const;
+];
 
 function PlatformLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -19,7 +19,7 @@ function PlatformLayout() {
       <h1 className="font-display text-2xl font-bold mb-4">Platform Ops</h1>
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
-          const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
+          const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
             <Link
               key={t.to}
