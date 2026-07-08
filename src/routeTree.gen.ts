@@ -63,6 +63,7 @@ import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
+import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin/packages'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
@@ -373,6 +374,12 @@ const AuthenticatedAdminPayoutsRoute =
     path: '/payouts',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPackagesRoute =
+  AuthenticatedAdminPackagesRouteImport.update({
+    id: '/packages',
+    path: '/packages',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminMerchantsRoute =
   AuthenticatedAdminMerchantsRouteImport.update({
     id: '/merchants',
@@ -528,6 +535,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
+  '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -599,6 +607,7 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
+  '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
@@ -675,6 +684,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
+  '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -752,6 +762,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
+    | '/admin/packages'
     | '/admin/payouts'
     | '/admin/platform'
     | '/admin/settings'
@@ -823,6 +834,7 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
+    | '/admin/packages'
     | '/admin/payouts'
     | '/admin/settings'
     | '/admin/staff'
@@ -898,6 +910,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/invoices'
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
+    | '/_authenticated/admin/packages'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
@@ -1338,6 +1351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/packages': {
+      id: '/_authenticated/admin/packages'
+      path: '/packages'
+      fullPath: '/admin/packages'
+      preLoaderRoute: typeof AuthenticatedAdminPackagesRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/merchants': {
       id: '/_authenticated/admin/merchants'
       path: '/merchants'
@@ -1525,6 +1545,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRouteWithChildren
+  AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -1542,6 +1563,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute:
       AuthenticatedAdminMerchantsRouteWithChildren,
+    AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
