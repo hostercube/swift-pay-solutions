@@ -65,6 +65,14 @@ type Brand = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  ga4_measurement_id?: string | null;
+  gtm_container_id?: string | null;
+  meta_pixel_id?: string | null;
+  tiktok_pixel_id?: string | null;
+  google_ads_conversion_id?: string | null;
+  google_ads_conversion_label?: string | null;
+  custom_head_html?: string | null;
+  custom_footer_html?: string | null;
 };
 
 function CheckoutPage() {
