@@ -9,6 +9,8 @@ export const Route = createFileRoute("/_authenticated/admin/settings")({
   component: SettingsPage,
 });
 
+type TurnstileCfg = { enabled: boolean; site_key: string; secret_key: string };
+
 type Settings = {
   id: number;
   brand_name: string;
@@ -18,7 +20,11 @@ type Settings = {
   support_email: string | null;
   logo_url: string | null;
   allow_signup: boolean;
+  settings: Record<string, unknown> | null;
+  turnstile: TurnstileCfg;
 };
+
+const DEFAULT_TS: TurnstileCfg = { enabled: false, site_key: "", secret_key: "" };
 
 function SettingsPage() {
   const [s, setS] = useState<Settings | null>(null);
@@ -27,19 +33,26 @@ function SettingsPage() {
   useEffect(() => {
     supabase
       .from("platform_settings")
-      .select("id, brand_name, default_currency, default_fee_percent, default_fee_flat, support_email, logo_url, allow_signup")
+      .select("id, brand_name, default_currency, default_fee_percent, default_fee_flat, support_email, logo_url, allow_signup, settings")
       .order("id")
       .limit(1)
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) toast.error(error.message);
-        setS(data as Settings | null);
+        if (!data) return setS(null);
+        const raw = (data.settings ?? {}) as { turnstile?: Partial<TurnstileCfg> };
+        setS({
+          ...(data as unknown as Omit<Settings, "turnstile">),
+          settings: (data.settings ?? {}) as Record<string, unknown>,
+          turnstile: { ...DEFAULT_TS, ...(raw.turnstile ?? {}) },
+        });
       });
   }, []);
 
   async function save() {
     if (!s) return;
     setSaving(true);
+    const nextSettings = { ...(s.settings ?? {}), turnstile: s.turnstile };
     const { error } = await supabase
       .from("platform_settings")
       .update({
@@ -50,6 +63,7 @@ function SettingsPage() {
         support_email: s.support_email,
         logo_url: s.logo_url,
         allow_signup: s.allow_signup,
+        settings: nextSettings,
       })
       .eq("id", s.id);
     setSaving(false);
