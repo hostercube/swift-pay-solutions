@@ -195,6 +195,12 @@ function MerchantsPage() {
                     >
                       {r.is_super_admin ? "Revoke super admin" : "Make super admin"}
                     </button>
+                    <button
+                      onClick={() => impersonate(r.id, r.email)}
+                      className="inline-flex items-center gap-1 rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand"
+                    >
+                      <LogIn className="h-3 w-3" /> Login as
+                    </button>
                   </div>
                 </td>
               </tr>
