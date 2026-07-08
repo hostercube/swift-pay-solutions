@@ -75,6 +75,7 @@ import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/publ
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
+import { Route as ApiPublicHooksRunSubscriptionsRouteImport } from './routes/api/public/hooks/run-subscriptions'
 import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/public/hooks/run-recurring'
 import { Route as ApiPublicHooksRunPayoutScheduleRouteImport } from './routes/api/public/hooks/run-payout-schedule'
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
@@ -441,6 +442,12 @@ const ApiPublicHooksWebhookRetryRoute =
     path: '/api/public/hooks/webhook-retry',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRunSubscriptionsRoute =
+  ApiPublicHooksRunSubscriptionsRouteImport.update({
+    id: '/api/public/hooks/run-subscriptions',
+    path: '/api/public/hooks/run-subscriptions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRunRecurringRoute =
   ApiPublicHooksRunRecurringRouteImport.update({
     id: '/api/public/hooks/run-recurring',
@@ -563,6 +570,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
+  '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
+  '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
@@ -712,6 +721,7 @@ export interface FileRoutesById {
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
+  '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
@@ -790,6 +800,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
+    | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
@@ -861,6 +872,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
+    | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
@@ -938,6 +950,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
+    | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
@@ -965,6 +978,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
   ApiPublicHooksRunPayoutScheduleRoute: typeof ApiPublicHooksRunPayoutScheduleRoute
   ApiPublicHooksRunRecurringRoute: typeof ApiPublicHooksRunRecurringRoute
+  ApiPublicHooksRunSubscriptionsRoute: typeof ApiPublicHooksRunSubscriptionsRoute
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
   ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
@@ -1435,6 +1449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWebhookRetryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/run-subscriptions': {
+      id: '/api/public/hooks/run-subscriptions'
+      path: '/api/public/hooks/run-subscriptions'
+      fullPath: '/api/public/hooks/run-subscriptions'
+      preLoaderRoute: typeof ApiPublicHooksRunSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/run-recurring': {
       id: '/api/public/hooks/run-recurring'
       path: '/api/public/hooks/run-recurring'
@@ -1722,6 +1743,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,
   ApiPublicHooksRunPayoutScheduleRoute: ApiPublicHooksRunPayoutScheduleRoute,
   ApiPublicHooksRunRecurringRoute: ApiPublicHooksRunRecurringRoute,
+  ApiPublicHooksRunSubscriptionsRoute: ApiPublicHooksRunSubscriptionsRoute,
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
   ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
