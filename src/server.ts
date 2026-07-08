@@ -4,6 +4,29 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
+function applyPaynocBackendEnv() {
+  const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+    ?.env;
+  if (!env) return;
+
+  const paynocUrl = env.PAYNOC_SUPABASE_URL || env.SERVICE_URL_SUPABASEKONG;
+  const paynocAnonKey = env.PAYNOC_SUPABASE_ANON_KEY || env.SERVICE_SUPABASEANON_KEY;
+  const paynocServiceKey = env.PAYNOC_SUPABASE_SERVICE_ROLE_KEY || env.SERVICE_SUPABASESERVICE_KEY;
+  const paynocJwtSecret = env.PAYNOC_SUPABASE_JWT_SECRET || env.SERVICE_PASSWORD_JWT;
+  const paynocProjectId = env.PAYNOC_SUPABASE_PROJECT_ID || "paynoc";
+
+  if (paynocUrl) env.SUPABASE_URL = paynocUrl;
+  if (paynocAnonKey) {
+    env.SUPABASE_PUBLISHABLE_KEY = paynocAnonKey;
+    env.SUPABASE_ANON_KEY = paynocAnonKey;
+  }
+  if (paynocServiceKey) env.SUPABASE_SERVICE_ROLE_KEY = paynocServiceKey;
+  if (paynocJwtSecret) env.SUPABASE_JWT_SECRET = paynocJwtSecret;
+  env.SUPABASE_PROJECT_ID = paynocProjectId;
+}
+
+applyPaynocBackendEnv();
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -102,6 +125,7 @@ function rewriteForSubdomain(request: Request): Request {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      applyPaynocBackendEnv();
       const rewritten = rewriteForSubdomain(request);
       const handler = await getServerEntry();
       const response = await handler.fetch(rewritten, env, ctx);

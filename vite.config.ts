@@ -6,10 +6,23 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const PAYNOC_SUPABASE_URL = "https://db.paynoc.bd";
+const PAYNOC_SUPABASE_ANON_KEY =
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4MzQ5NzU0MCwiZXhwIjo0OTM5MTcxMTQwLCJyb2xlIjoiYW5vbiJ9.yLlo7Ol38TufIT2ptVNz27dTI8ot9K_dzGwVTQR6QXE";
+const PAYNOC_SUPABASE_PROJECT_ID = "paynoc";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(PAYNOC_SUPABASE_URL),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PAYNOC_SUPABASE_ANON_KEY),
+      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(PAYNOC_SUPABASE_ANON_KEY),
+      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(PAYNOC_SUPABASE_PROJECT_ID),
+    },
   },
 });
