@@ -3,6 +3,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { useServerFn } from "@tanstack/react-start";
+import { adminCreateMerchant, adminImpersonate } from "@/lib/admin.functions";
+import { UserPlus, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/merchants")({
   head: () => ({ meta: [{ title: "Merchants · Admin" }] }),
