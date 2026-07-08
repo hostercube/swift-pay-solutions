@@ -6,7 +6,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/invoices")({
+export const Route = createFileRoute("/_authenticated/invoices/")({
   head: () => ({ meta: [{ title: "Invoices · PayNOC" }] }),
   component: InvoicesPage,
 });
