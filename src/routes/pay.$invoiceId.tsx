@@ -291,15 +291,22 @@ function CheckoutPage() {
           <XCircle className="mx-auto h-10 w-10 text-destructive" />
           <h1 className="mt-3 font-display text-xl font-bold">Invoice unavailable</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            This invoice does not exist, has expired, or has already been settled.
+            {loadError
+              ? `Couldn't reach payments backend: ${loadError}`
+              : "This invoice does not exist, has expired, or has already been settled."}
           </p>
+          {loadError && (
+            <button
+              onClick={() => { setLoading(true); load(); }}
+              className="mt-4 inline-flex rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </Shell>
     );
   }
-
-  const verified = txns.find((t) => t.status === "verified");
-  const pending = txns.find((t) => t.status === "pending");
 
   if (verified) {
     return (
