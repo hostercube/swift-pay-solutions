@@ -25,14 +25,26 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
     if (invErr || !inv) throw new Error("Invoice not found");
     if (inv.status !== "pending") throw new Error(`Invoice is ${inv.status}`);
 
-    const table = data.source === "platform" ? "platform_gateways" : "byo_gateways";
-    const query = supabaseAdmin.from(table).select("credentials, mode, is_active");
-    const { data: gw, error: gwErr } = data.source === "platform"
-      ? await query.eq("provider", data.provider).maybeSingle()
-      : await query.eq("merchant_id", inv.merchant_id).eq("provider", data.provider).maybeSingle();
-    if (gwErr || !gw || !gw.is_active) {
-      throw new Error(`${data.provider} is not connected for this merchant`);
-    }
+    const admin = supabaseAdmin as unknown as {
+      from: (t: string) => {
+        select: (s: string) => {
+          eq: (c: string, v: string) => {
+            eq?: (c: string, v: string) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }> };
+            maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+          };
+        };
+        insert: (v: object) => Promise<{ error: unknown }>;
+        update: (v: object) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+      };
+    };
+
+    const q1 = admin.from(data.source === "platform" ? "platform_gateways" : "byo_gateways")
+      .select("credentials, mode, is_active, merchant_id, provider").eq("provider", data.provider);
+    const gwRes = data.source === "platform"
+      ? await q1.maybeSingle()
+      : await q1.eq!("merchant_id", inv.merchant_id).maybeSingle();
+    const gw = gwRes.data as { credentials?: Record<string, string>; mode?: string; is_active?: boolean } | null;
+    if (!gw || !gw.is_active) throw new Error(`${data.provider} is not connected for this merchant`);
 
     const origin = new URL(data.successUrl).origin;
     const webhookUrl = `${origin}/api/public/webhooks/${data.provider}`;
@@ -46,26 +58,30 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
       successUrl: data.successUrl,
       cancelUrl: data.cancelUrl,
       webhookUrl,
-      creds: (gw.credentials ?? {}) as Record<string, string>,
-      mode: gw.mode as "sandbox" | "live",
+      creds: gw.credentials ?? {},
+      mode: (gw.mode as "sandbox" | "live") ?? "sandbox",
     });
 
     // Record a pending transaction pointer so webhook can reconcile.
-    await supabaseAdmin.from("transactions").insert({
+    // method_type is a constrained enum — fall back to "other" for gateways
+    // that aren't part of the historical enum (paypal, razorpay, stripe, …).
+    const enumTypes = ["bkash","nagad","rocket","upay","tap","mcash","sure_cash","card","bank_transfer","crypto","other"];
+    const methodType = enumTypes.includes(data.provider) ? data.provider : "other";
+    await admin.from("transactions").insert({
       invoice_id: inv.id,
       merchant_id: inv.merchant_id,
       status: "pending",
-      method_type: data.provider,
+      method_type: methodType,
       gross_amount: inv.amount,
       provider_txn_id: result.providerRef,
-      note: `Gateway checkout initiated (${data.source})`,
+      note: `Gateway checkout initiated (${data.provider}, ${data.source})`,
     });
-    await supabaseAdmin.from("invoices").update({ status: "processing" }).eq("id", inv.id);
+    await admin.from("invoices").update({ status: "processing" }).eq("id", inv.id);
 
     return {
-      redirectUrl: result.redirectUrl,
+      redirectUrl: result.redirectUrl ?? null,
       providerRef: result.providerRef,
-      clientSecret: result.clientSecret,
-      extra: result.extra,
+      clientSecret: result.clientSecret ?? null,
     };
   });
+
