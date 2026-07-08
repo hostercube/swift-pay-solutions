@@ -448,14 +448,16 @@ CREATE TRIGGER trg_platform_settings_upd BEFORE UPDATE ON public.platform_settin
 
 -- >>> 20260701095601_f9913049-313e-4888-b30b-d162cdb644fb.sql
 
-CREATE OR REPLACE VIEW public.checkout_methods AS
+DROP VIEW IF EXISTS public.checkout_methods CASCADE;
+CREATE VIEW public.checkout_methods AS
 SELECT id, merchant_id, type, label, mode, account_number, account_name,
        instructions, logo_url, fee_percent, fee_flat, min_amount, max_amount, sort_order, is_active
 FROM public.payment_methods
 WHERE is_active = true;
 GRANT SELECT ON public.checkout_methods TO anon, authenticated;
 
-CREATE OR REPLACE VIEW public.checkout_invoices AS
+DROP VIEW IF EXISTS public.checkout_invoices CASCADE;
+CREATE VIEW public.checkout_invoices AS
 SELECT id, merchant_id, invoice_number, amount, currency, status, method_id, method_type,
        customer_name, customer_email, customer_phone, description, redirect_url,
        fee_amount, net_amount, expires_at, created_at
@@ -935,7 +937,8 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS support_email text,
   ADD COLUMN IF NOT EXISTS checkout_footer text;
 
-CREATE OR REPLACE VIEW public.checkout_brand
+DROP VIEW IF EXISTS public.checkout_brand CASCADE;
+CREATE VIEW public.checkout_brand
 WITH (security_invoker = true) AS
 SELECT id AS merchant_id, business_name, brand_color, logo_url, support_email, checkout_footer
 FROM public.profiles;
@@ -958,7 +961,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_merchant_mode ON public.invoices(merchan
 CREATE INDEX IF NOT EXISTS idx_transactions_merchant_mode ON public.transactions(merchant_id, mode);
 
 DROP VIEW IF EXISTS public.checkout_invoices CASCADE;
-CREATE OR REPLACE VIEW public.checkout_invoices
+CREATE VIEW public.checkout_invoices
 WITH (security_invoker = true)
 AS
 SELECT id, merchant_id, invoice_number, amount, currency, status, customer_name,
@@ -971,7 +974,7 @@ GRANT SELECT ON public.checkout_invoices TO anon, authenticated;
 -- >>> 20260701122326_144d5286-4c2b-446d-b6df-a5e765807684.sql
 
 DROP VIEW IF EXISTS public.checkout_invoices CASCADE;
-CREATE OR REPLACE VIEW public.checkout_invoices
+CREATE VIEW public.checkout_invoices
 WITH (security_invoker = true)
 AS
 SELECT id, merchant_id, invoice_number, amount, currency, status,
