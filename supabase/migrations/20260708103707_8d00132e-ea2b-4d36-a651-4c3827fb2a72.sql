@@ -1,0 +1,70 @@
+-- Tighten broad authenticated grants left by older installs.
+-- Safe to re-run.
+
+-- Remove broad signed-in table access first.
+REVOKE ALL ON public.admin_staff FROM authenticated;
+REVOKE ALL ON public.api_keys FROM authenticated;
+REVOKE ALL ON public.api_request_logs FROM authenticated;
+REVOKE ALL ON public.audit_logs FROM authenticated;
+REVOKE ALL ON public.byo_gateways FROM authenticated;
+REVOKE ALL ON public.digest_settings FROM authenticated;
+REVOKE ALL ON public.discount_codes FROM authenticated;
+REVOKE ALL ON public.disputes FROM authenticated;
+REVOKE ALL ON public.fraud_blocklist FROM authenticated;
+REVOKE ALL ON public.fx_rates FROM authenticated;
+REVOKE ALL ON public.idempotency_keys FROM authenticated;
+REVOKE ALL ON public.impersonation_events FROM authenticated;
+REVOKE ALL ON public.incidents FROM authenticated;
+REVOKE ALL ON public.invoices FROM authenticated;
+REVOKE ALL ON public.ip_whitelist FROM authenticated;
+REVOKE ALL ON public.merchant_fx_rates FROM authenticated;
+REVOKE ALL ON public.notification_log FROM authenticated;
+REVOKE ALL ON public.notification_settings FROM authenticated;
+REVOKE ALL ON public.notifications FROM authenticated;
+REVOKE ALL ON public.payment_methods FROM authenticated;
+REVOKE ALL ON public.payout_schedules FROM authenticated;
+REVOKE ALL ON public.payouts FROM authenticated;
+REVOKE ALL ON public.platform_gateways FROM authenticated;
+REVOKE ALL ON public.platform_settings FROM authenticated;
+REVOKE ALL ON public.profiles FROM authenticated;
+REVOKE ALL ON public.rate_limit_buckets FROM authenticated;
+REVOKE ALL ON public.recurring_schedules FROM authenticated;
+REVOKE ALL ON public.team_members FROM authenticated;
+REVOKE ALL ON public.transactions FROM authenticated;
+REVOKE ALL ON public.user_roles FROM authenticated;
+REVOKE ALL ON public.webhook_deliveries FROM authenticated;
+REVOKE ALL ON public.webhook_endpoints FROM authenticated;
+REVOKE ALL ON public.webhook_events FROM authenticated;
+
+-- Re-grant exact signed-in app privileges.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_staff TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.api_keys TO authenticated;
+GRANT SELECT ON public.api_request_logs TO authenticated;
+GRANT SELECT, INSERT ON public.audit_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.byo_gateways TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.digest_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.discount_codes TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.disputes TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.fraud_blocklist TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.fx_rates TO authenticated;
+GRANT SELECT, INSERT ON public.impersonation_events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.incidents TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.invoices TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ip_whitelist TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.merchant_fx_rates TO authenticated;
+GRANT SELECT ON public.notification_log TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.notification_settings TO authenticated;
+GRANT SELECT, UPDATE ON public.notifications TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payment_methods TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payout_schedules TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.payouts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_gateways TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.recurring_schedules TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_members TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.transactions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_roles TO authenticated;
+GRANT SELECT ON public.webhook_deliveries TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.webhook_endpoints TO authenticated;
+GRANT SELECT ON public.webhook_events TO authenticated;
