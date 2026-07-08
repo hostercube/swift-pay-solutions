@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/kyc")({
   component: KycPage,
 });
 
+type Doc = { name: string; path: string; type?: string };
 type Row = {
   id: string;
   email: string;
@@ -25,7 +26,7 @@ type Row = {
   kyc_id_number: string | null;
   kyc_business_type: string | null;
   kyc_address: string | null;
-  kyc_documents: Array<{ name: string; path: string }>;
+  kyc_documents: Doc[];
   kyc_submitted_at: string | null;
 };
 
