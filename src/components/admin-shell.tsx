@@ -34,6 +34,7 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     label: "Platform Ops",
     items: [
       { to: "/admin/platform", label: "Platform Ops", icon: Plug },
+      { to: "/admin/packages", label: "Packages", icon: Package },
     ],
   },
   {
