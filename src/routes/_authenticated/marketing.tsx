@@ -87,8 +87,8 @@ function MarketingPage() {
     setSaving(true);
     const patch = Object.fromEntries(
       FIELDS.map((f) => [f, (c[f] ?? "").toString().trim() || null]),
-    );
-    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+    ) as Record<string, string | null>;
+    const { error } = await supabase.from("profiles").update(patch as never).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Marketing & SEO settings saved");
