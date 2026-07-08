@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, UserPlus, Save } from "lucide-react";
 import { toast } from "sonner";
-import { ADMIN_PERMS } from "@/lib/permissions";
+import { ADMIN_PERM_GROUPS } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/staff")({
   head: () => ({ meta: [{ title: "Admin staff · PayNOC" }] }),
@@ -59,9 +59,6 @@ function AdminStaffPage() {
     load();
   };
 
-  const toggle = (list: string[], key: string) =>
-    list.includes(key) ? list.filter((p) => p !== key) : [...list, key];
-
   const savePerms = async (id: string, perms: string[]) => {
     const { error } = await supabase.from("admin_staff").update({ permissions: perms }).eq("id", id);
     if (error) return toast.error(error.message);
@@ -77,23 +74,13 @@ function AdminStaffPage() {
   };
 
   return (
-    <AdminShell title="Admin office staff" subtitle="Invite employees and tick which areas they can access.">
+    <AdminShell title="Admin office staff" subtitle="Invite office employees and grant granular per-area access.">
       <Card className="p-5">
         <div className="grid gap-3 md:grid-cols-2">
           <Input placeholder="employee@paynoc.bd" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input placeholder="Full name (optional)" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-          {ADMIN_PERMS.map((p) => (
-            <label key={p.key} className="flex items-center gap-2 rounded-md border border-glass-border px-3 py-2 text-sm">
-              <Checkbox
-                checked={newPerms.includes(p.key)}
-                onCheckedChange={() => setNewPerms((prev) => toggle(prev, p.key))}
-              />
-              {p.label}
-            </label>
-          ))}
-        </div>
+        <PermissionMatrix value={newPerms} onChange={setNewPerms} />
         <div className="mt-4 flex justify-end">
           <Button onClick={invite} disabled={busy || !email.trim()}>
             <UserPlus className="mr-1.5 h-4 w-4" /> Invite staff
@@ -112,11 +99,54 @@ function AdminStaffPage() {
   );
 }
 
+function PermissionMatrix({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const toggle = (key: string) =>
+    onChange(value.includes(key) ? value.filter((p) => p !== key) : [...value, key]);
+  const toggleGroup = (keys: string[], on: boolean) => {
+    if (on) onChange(Array.from(new Set([...value, ...keys])));
+    else onChange(value.filter((v) => !keys.includes(v)));
+  };
+  return (
+    <div className="mt-5 space-y-4">
+      {ADMIN_PERM_GROUPS.map((g) => {
+        const keys = g.perms.map((p) => p.key);
+        const allOn = keys.every((k) => value.includes(k));
+        const someOn = keys.some((k) => value.includes(k));
+        return (
+          <div key={g.group} className="rounded-lg border border-glass-border bg-card/40 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-brand">{g.group}</span>
+              <button
+                type="button"
+                onClick={() => toggleGroup(keys, !allOn)}
+                className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+              >
+                {allOn ? "Clear group" : someOn ? "Select all" : "Select group"}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {g.perms.map((p) => (
+                <label key={p.key} className="flex items-center gap-2 rounded-md border border-glass-border px-3 py-1.5 text-sm">
+                  <Checkbox checked={value.includes(p.key)} onCheckedChange={() => toggle(p.key)} />
+                  <span className="flex-1">{p.label}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{p.key}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function StaffRow({
   row, onSave, onRemove,
 }: { row: Row; onSave: (id: string, perms: string[]) => void; onRemove: (id: string) => void }) {
   const [perms, setPerms] = useState<string[]>(row.permissions ?? []);
   const dirty = JSON.stringify([...perms].sort()) !== JSON.stringify([...(row.permissions ?? [])].sort());
+
+  useEffect(() => setPerms(row.permissions ?? []), [row]);
 
   return (
     <Card className="p-5">
@@ -127,22 +157,13 @@ function StaffRow({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="capitalize">{row.status}</Badge>
+          <span className="text-xs text-muted-foreground">{perms.length} perms</span>
           <Button size="sm" variant="ghost" onClick={() => onRemove(row.id)}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-        {ADMIN_PERMS.map((p) => (
-          <label key={p.key} className="flex items-center gap-2 rounded-md border border-glass-border px-3 py-2 text-sm">
-            <Checkbox
-              checked={perms.includes(p.key)}
-              onCheckedChange={() => setPerms((prev) => prev.includes(p.key) ? prev.filter((x) => x !== p.key) : [...prev, p.key])}
-            />
-            {p.label}
-          </label>
-        ))}
-      </div>
+      <PermissionMatrix value={perms} onChange={setPerms} />
       {dirty && (
         <div className="mt-3 flex justify-end">
           <Button size="sm" onClick={() => onSave(row.id, perms)}>

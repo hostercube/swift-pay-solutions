@@ -1,23 +1,49 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft, Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug, Package } from "lucide-react";
+import {
+  Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft,
+  Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug, Package,
+  Receipt, ArrowRightLeft, Webhook, Megaphone,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
 
-const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/admin/merchants", label: "Merchants", icon: Users },
-  { to: "/admin/kyc", label: "KYC review", icon: ShieldCheck },
-  { to: "/admin/staff", label: "Staff", icon: UserCog },
-  { to: "/admin/platform-gateways", label: "Platform gateways", icon: Plug },
-  { to: "/admin/plugins", label: "Plugins & SDKs", icon: Package },
-  { to: "/admin/payouts", label: "Payouts", icon: Wallet },
-  { to: "/admin/fx", label: "FX rates", icon: DollarSign },
-  { to: "/admin/incidents", label: "Incidents", icon: Activity },
-  { to: "/admin/settings", label: "Platform", icon: Settings },
-  { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
+const navGroups: Array<{ label: string; items: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> }> = [
+  {
+    label: "Platform",
+    items: [
+      { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+      { to: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
+      { to: "/admin/incidents", label: "Incidents", icon: Activity },
+    ],
+  },
+  {
+    label: "Merchants",
+    items: [
+      { to: "/admin/merchants", label: "Merchants", icon: Users },
+      { to: "/admin/kyc", label: "KYC review", icon: ShieldCheck },
+      { to: "/admin/staff", label: "Admin staff", icon: UserCog },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/admin/transactions", label: "Transactions", icon: ArrowRightLeft },
+      { to: "/admin/invoices", label: "Invoices", icon: Receipt },
+      { to: "/admin/webhooks-health", label: "Webhook health", icon: Webhook },
+      { to: "/admin/payouts", label: "Payouts", icon: Wallet },
+      { to: "/admin/fx", label: "FX rates", icon: DollarSign },
+    ],
+  },
+  {
+    label: "Config",
+    items: [
+      { to: "/admin/platform-gateways", label: "Platform gateways", icon: Plug },
+      { to: "/admin/plugins", label: "Plugins & SDKs", icon: Package },
+      { to: "/admin/settings", label: "Platform settings", icon: Settings },
+      { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
+    ],
+  },
 ];
-
-
 
 export function AdminShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const navigate = useNavigate();
@@ -38,22 +64,29 @@ export function AdminShell({ title, subtitle, children }: { title: string; subti
               <div className="text-[10px] uppercase tracking-wider text-brand">Super Admin</div>
             </div>
           </div>
-          <nav className="flex-1 space-y-1 p-3">
-            {nav.map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    active ? "bg-brand/10 text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+            {navGroups.map((g) => (
+              <div key={g.label}>
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{g.label}</p>
+                <div className="space-y-1">
+                  {g.items.map((item) => {
+                    const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                          active ? "bg-brand/10 text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
             <Link
               to="/dashboard"
               className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
