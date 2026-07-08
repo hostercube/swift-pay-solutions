@@ -65,6 +65,8 @@ function MerchantsPage() {
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
       if (error) return toast.error(error.message);
       toast.success("Super admin granted");
+    }
+    load();
   }
 
   const createFn = useServerFn(adminCreateMerchant);
