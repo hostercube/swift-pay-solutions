@@ -95,6 +95,7 @@ const navGroups: NavGroup[] = [
       { to: "/notifications", label: "Notifications", icon: Bell },
       { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
       { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+      { to: "/marketing", label: "Marketing & SEO", icon: BarChart3, perm: "settings" },
       { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
     ],
   },

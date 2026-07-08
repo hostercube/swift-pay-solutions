@@ -5,6 +5,7 @@ import { Heart, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MerchantTracking, type TrackingConfig } from "@/components/merchant-tracking";
 
 export const Route = createFileRoute("/m/$slug")({
   head: ({ params }) => ({
@@ -26,6 +27,16 @@ type Merchant = {
   tip_min_amount: number;
   support_email: string | null;
   slug: string;
+  seo_meta_description?: string | null;
+  seo_meta_keywords?: string | null;
+  ga4_measurement_id?: string | null;
+  gtm_container_id?: string | null;
+  meta_pixel_id?: string | null;
+  tiktok_pixel_id?: string | null;
+  google_ads_conversion_id?: string | null;
+  google_ads_conversion_label?: string | null;
+  custom_head_html?: string | null;
+  custom_footer_html?: string | null;
 };
 
 function PublicMerchantPage() {
@@ -113,6 +124,8 @@ function PublicMerchantPage() {
 
   return (
     <div className="relative min-h-screen bg-background" style={style}>
+      <MerchantTracking config={m as TrackingConfig} />
+      <MerchantSeoHead merchant={m} />
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-lg px-4 py-16">
         <div className="glass rounded-3xl border border-glass-border p-8 text-center">
@@ -204,4 +217,35 @@ function PublicMerchantPage() {
       </div>
     </div>
   );
+}
+
+function MerchantSeoHead({ merchant }: { merchant: Merchant }) {
+  useEffect(() => {
+    const title = merchant.business_name
+      ? `${merchant.business_name} · PayNOC`
+      : `Pay ${merchant.slug} · PayNOC`;
+    document.title = title;
+    const desc =
+      merchant.seo_meta_description?.trim() ||
+      merchant.public_bio?.trim() ||
+      `Send a payment to ${merchant.business_name ?? merchant.slug} securely via PayNOC.`;
+    setMeta("name", "description", desc);
+    if (merchant.seo_meta_keywords?.trim()) {
+      setMeta("name", "keywords", merchant.seo_meta_keywords.trim());
+    }
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", desc);
+    if (merchant.logo_url) setMeta("property", "og:image", merchant.logo_url);
+  }, [merchant]);
+  return null;
+}
+
+function setMeta(attr: "name" | "property", key: string, value: string) {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", value);
 }

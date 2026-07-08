@@ -37,6 +37,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
 import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
+import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
@@ -220,6 +221,11 @@ const AuthenticatedNotificationSettingsRoute =
 const AuthenticatedMethodsRoute = AuthenticatedMethodsRouteImport.update({
   id: '/methods',
   path: '/methods',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/kyc': typeof AuthenticatedKycRoute
+  '/marketing': typeof AuthenticatedMarketingRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -614,6 +622,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
+  '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/ip-whitelist'
     | '/kyc'
+    | '/marketing'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -755,6 +765,7 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/ip-whitelist'
     | '/kyc'
+    | '/marketing'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -826,6 +837,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices'
     | '/_authenticated/ip-whitelist'
     | '/_authenticated/kyc'
+    | '/_authenticated/marketing'
     | '/_authenticated/methods'
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
@@ -1092,6 +1104,13 @@ declare module '@tanstack/react-router' {
       path: '/methods'
       fullPath: '/methods'
       preLoaderRoute: typeof AuthenticatedMethodsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketing': {
+      id: '/_authenticated/marketing'
+      path: '/marketing'
+      fullPath: '/marketing'
+      preLoaderRoute: typeof AuthenticatedMarketingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kyc': {
@@ -1473,6 +1492,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
+  AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -1504,6 +1524,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
+  AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
   AuthenticatedNotificationSettingsRoute:
     AuthenticatedNotificationSettingsRoute,

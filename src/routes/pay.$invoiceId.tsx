@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { Shield, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadReceipt } from "@/lib/pdf-receipt";
+import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
 
 export const Route = createFileRoute("/pay/$invoiceId")({
   head: () => ({ meta: [{ title: "Checkout · PayNOC" }] }),
@@ -64,6 +65,14 @@ type Brand = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  ga4_measurement_id?: string | null;
+  gtm_container_id?: string | null;
+  meta_pixel_id?: string | null;
+  tiktok_pixel_id?: string | null;
+  google_ads_conversion_id?: string | null;
+  google_ads_conversion_label?: string | null;
+  custom_head_html?: string | null;
+  custom_footer_html?: string | null;
 };
 
 function CheckoutPage() {
@@ -187,6 +196,20 @@ function CheckoutPage() {
       }
     }
   }, [txns, inv]);
+
+  // Fire client-side purchase pixel once per completed invoice.
+  const firedPurchaseRef = useRef(false);
+  useEffect(() => {
+    if (firedPurchaseRef.current || !inv || !brand) return;
+    const verified = txns.find((t) => t.status === "verified");
+    if (!verified) return;
+    firedPurchaseRef.current = true;
+    trackPurchase(brand as TrackingConfig, {
+      value: Number(inv.amount),
+      currency: inv.currency,
+      transactionId: inv.invoice_number,
+    });
+  }, [txns, inv, brand]);
 
   function computeFee(m: Method, amount: number) {
     const fee = (amount * Number(m.fee_percent || 0)) / 100 + Number(m.fee_flat || 0);
@@ -479,6 +502,7 @@ function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | 
   const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
     <div className="relative min-h-screen bg-background" style={style}>
+      <MerchantTracking config={brand as TrackingConfig | null} />
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 flex items-center justify-center gap-2">

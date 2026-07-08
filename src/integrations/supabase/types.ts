@@ -1088,8 +1088,14 @@ export type Database = {
           business_name: string | null
           checkout_footer: string | null
           created_at: string
+          custom_footer_html: string | null
+          custom_head_html: string | null
           email: string
           full_name: string | null
+          ga4_measurement_id: string | null
+          google_ads_conversion_id: string | null
+          google_ads_conversion_label: string | null
+          gtm_container_id: string | null
           id: string
           kyc_address: string | null
           kyc_business_type: string | null
@@ -1101,12 +1107,18 @@ export type Database = {
           kyc_status: string
           kyc_submitted_at: string | null
           logo_url: string | null
+          meta_capi_test_code: string | null
+          meta_capi_token: string | null
+          meta_pixel_id: string | null
           mfa_enabled: boolean
           phone: string | null
           public_bio: string | null
+          seo_meta_description: string | null
+          seo_meta_keywords: string | null
           slug: string | null
           status: string
           support_email: string | null
+          tiktok_pixel_id: string | null
           tip_min_amount: number
           updated_at: string
         }
@@ -1117,8 +1129,14 @@ export type Database = {
           business_name?: string | null
           checkout_footer?: string | null
           created_at?: string
+          custom_footer_html?: string | null
+          custom_head_html?: string | null
           email: string
           full_name?: string | null
+          ga4_measurement_id?: string | null
+          google_ads_conversion_id?: string | null
+          google_ads_conversion_label?: string | null
+          gtm_container_id?: string | null
           id: string
           kyc_address?: string | null
           kyc_business_type?: string | null
@@ -1130,12 +1148,18 @@ export type Database = {
           kyc_status?: string
           kyc_submitted_at?: string | null
           logo_url?: string | null
+          meta_capi_test_code?: string | null
+          meta_capi_token?: string | null
+          meta_pixel_id?: string | null
           mfa_enabled?: boolean
           phone?: string | null
           public_bio?: string | null
+          seo_meta_description?: string | null
+          seo_meta_keywords?: string | null
           slug?: string | null
           status?: string
           support_email?: string | null
+          tiktok_pixel_id?: string | null
           tip_min_amount?: number
           updated_at?: string
         }
@@ -1146,8 +1170,14 @@ export type Database = {
           business_name?: string | null
           checkout_footer?: string | null
           created_at?: string
+          custom_footer_html?: string | null
+          custom_head_html?: string | null
           email?: string
           full_name?: string | null
+          ga4_measurement_id?: string | null
+          google_ads_conversion_id?: string | null
+          google_ads_conversion_label?: string | null
+          gtm_container_id?: string | null
           id?: string
           kyc_address?: string | null
           kyc_business_type?: string | null
@@ -1159,12 +1189,18 @@ export type Database = {
           kyc_status?: string
           kyc_submitted_at?: string | null
           logo_url?: string | null
+          meta_capi_test_code?: string | null
+          meta_capi_token?: string | null
+          meta_pixel_id?: string | null
           mfa_enabled?: boolean
           phone?: string | null
           public_bio?: string | null
+          seo_meta_description?: string | null
+          seo_meta_keywords?: string | null
           slug?: string | null
           status?: string
           support_email?: string | null
+          tiktok_pixel_id?: string | null
           tip_min_amount?: number
           updated_at?: string
         }
@@ -1791,9 +1827,17 @@ export type Database = {
           brand_color: string
           business_name: string
           checkout_footer: string
+          custom_footer_html: string
+          custom_head_html: string
+          ga4_measurement_id: string
+          google_ads_conversion_id: string
+          google_ads_conversion_label: string
+          gtm_container_id: string
           logo_url: string
           merchant_id: string
+          meta_pixel_id: string
           support_email: string
+          tiktok_pixel_id: string
         }[]
       }
       get_checkout_invoice: {
@@ -1889,11 +1933,21 @@ export type Database = {
           accept_tips: boolean
           brand_color: string
           business_name: string
+          custom_footer_html: string
+          custom_head_html: string
+          ga4_measurement_id: string
+          google_ads_conversion_id: string
+          google_ads_conversion_label: string
+          gtm_container_id: string
           id: string
           logo_url: string
+          meta_pixel_id: string
           public_bio: string
+          seo_meta_description: string
+          seo_meta_keywords: string
           slug: string
           support_email: string
+          tiktok_pixel_id: string
           tip_min_amount: number
         }[]
       }
