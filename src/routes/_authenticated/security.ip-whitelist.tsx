@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, Plus, Lock } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/ip-whitelist")({
+export const Route = createFileRoute("/_authenticated/security/ip-whitelist")({
   head: () => ({ meta: [{ title: "IP Whitelist · PayNOC" }] }),
   component: IpWhitelistPage,
 });

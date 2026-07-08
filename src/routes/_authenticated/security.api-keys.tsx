@@ -6,7 +6,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/api-keys")({
+export const Route = createFileRoute("/_authenticated/security/api-keys")({
   head: () => ({ meta: [{ title: "API keys · PayNOC" }] }),
   component: ApiKeysPage,
 });

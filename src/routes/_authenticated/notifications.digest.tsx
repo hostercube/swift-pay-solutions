@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-export const Route = createFileRoute("/_authenticated/digest")({
+export const Route = createFileRoute("/_authenticated/notifications/digest")({
   head: () => ({ meta: [{ title: "Email digest · PayNOC" }] }),
   component: DigestPage,
 });
