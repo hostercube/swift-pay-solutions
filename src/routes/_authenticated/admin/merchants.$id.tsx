@@ -204,8 +204,8 @@ function MerchantDetailPage() {
                 {data.methods.map((m) => (
                   <li key={m.id} className="flex items-center justify-between rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm">
                     <span>
-                      <span className="font-medium capitalize">{m.method_type.replace(/_/g, " ")}</span>{" "}
-                      <span className="text-muted-foreground">— {m.name}</span>
+                      <span className="font-medium capitalize">{String(m.type).replace(/_/g, " ")}</span>{" "}
+                      <span className="text-muted-foreground">— {m.label}</span>
                     </span>
                     <Badge variant={m.is_active ? "default" : "outline"}>{m.is_active ? "Active" : "Off"}</Badge>
                   </li>
@@ -269,7 +269,7 @@ function MerchantDetailPage() {
                       <th className="px-3 py-2">Amount</th>
                       <th className="px-3 py-2">Status</th>
                       <th className="px-3 py-2">Requested</th>
-                      <th className="px-3 py-2">Paid</th>
+                      <th className="px-3 py-2">Processed</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -277,8 +277,8 @@ function MerchantDetailPage() {
                       <tr key={p2.id} className="border-t border-glass-border">
                         <td className="px-3 py-2">{p2.currency} {Number(p2.amount).toLocaleString()}</td>
                         <td className="px-3 py-2 capitalize">{p2.status}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{p2.requested_at ? new Date(p2.requested_at).toLocaleString() : "—"}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{p2.paid_at ? new Date(p2.paid_at).toLocaleString() : "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{p2.created_at ? new Date(p2.created_at).toLocaleString() : "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{p2.processed_at ? new Date(p2.processed_at).toLocaleString() : "—"}</td>
                       </tr>
                     ))}
                   </tbody>

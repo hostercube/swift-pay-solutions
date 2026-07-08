@@ -250,13 +250,13 @@ export const adminGetMerchantOverview = createServerFn({ method: "POST" })
     ] = await Promise.all([
       s.from("profiles").select("*").eq("id", mid).maybeSingle(),
       s.from("user_roles").select("role").eq("user_id", mid),
-      s.from("payment_methods").select("id, method_type, name, is_active, sort_order").eq("merchant_id", mid),
+      s.from("payment_methods").select("id, type, label, is_active, sort_order").eq("merchant_id", mid),
       s.from("byo_gateways").select("id, provider, is_active, created_at").eq("merchant_id", mid),
       s.from("api_keys").select("id, name, public_key, environment, is_active, last_used_at, created_at").eq("merchant_id", mid),
       s.from("invoices").select("status, amount").eq("merchant_id", mid),
       s.from("transactions").select("status, gross_amount").eq("merchant_id", mid),
       s.from("invoices").select("id, invoice_number, amount, currency, status, created_at, customer_email").eq("merchant_id", mid).order("created_at", { ascending: false }).limit(10),
-      s.from("payouts").select("id, amount, currency, status, requested_at, paid_at").eq("merchant_id", mid).order("requested_at", { ascending: false }).limit(10),
+      s.from("payouts").select("id, amount, currency, status, created_at, processed_at").eq("merchant_id", mid).order("created_at", { ascending: false }).limit(10),
       s.from("team_members").select("id, member_email, role, status").eq("merchant_id", mid),
       s.from("webhook_deliveries").select("status").eq("merchant_id", mid),
     ]);
