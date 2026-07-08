@@ -1329,3 +1329,282 @@ SELECT cron.schedule(
   $CRON$
 );
 
+
+-- =============================================================
+-- PayNOC — Addendum (2026-07-02 → 2026-07-08)
+-- Idempotent: safe to re-run. Adds: merchant_fx_rates, admin_staff,
+-- KYC fields, impersonation_events, platform_gateways, webhook_events,
+-- payment_methods gateway columns, team_members.permissions, and the
+-- updated handle_new_user() trigger that honours verification_mode.
+-- =============================================================
+
+-- ---- Merchant-specific FX overrides ------------------------------------
+CREATE TABLE IF NOT EXISTS public.merchant_fx_rates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  merchant_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  base_currency TEXT NOT NULL,
+  quote_currency TEXT NOT NULL,
+  rate NUMERIC NOT NULL CHECK (rate > 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (merchant_id, base_currency, quote_currency)
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.merchant_fx_rates TO authenticated;
+GRANT SELECT ON public.merchant_fx_rates TO anon;
+GRANT ALL ON public.merchant_fx_rates TO service_role;
+ALTER TABLE public.merchant_fx_rates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchant manage own fx" ON public.merchant_fx_rates;
+CREATE POLICY "merchant manage own fx" ON public.merchant_fx_rates
+  FOR ALL TO authenticated
+  USING (merchant_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'))
+  WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "public read merchant fx" ON public.merchant_fx_rates;
+CREATE POLICY "public read merchant fx" ON public.merchant_fx_rates
+  FOR SELECT TO anon USING (true);
+DO $$ BEGIN
+  CREATE TRIGGER trg_merchant_fx_updated BEFORE UPDATE ON public.merchant_fx_rates
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE OR REPLACE FUNCTION public.get_effective_fx_rate(
+  _merchant_id UUID, _base TEXT, _quote TEXT
+) RETURNS NUMERIC
+LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT COALESCE(
+    (SELECT rate FROM public.merchant_fx_rates
+       WHERE merchant_id = _merchant_id
+         AND upper(base_currency) = upper(_base)
+         AND upper(quote_currency) = upper(_quote) LIMIT 1),
+    (SELECT rate FROM public.fx_rates
+       WHERE upper(base_currency) = upper(_base)
+         AND upper(quote_currency) = upper(_quote) LIMIT 1)
+  );
+$$;
+
+-- ---- Merchant team: checkbox-based permissions -------------------------
+ALTER TABLE public.team_members
+  ADD COLUMN IF NOT EXISTS permissions TEXT[] NOT NULL DEFAULT '{}';
+
+-- ---- Admin office staff (super_admin managed) --------------------------
+CREATE TABLE IF NOT EXISTS public.admin_staff (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL UNIQUE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  permissions TEXT[] NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'invited' CHECK (status IN ('invited','active','disabled')),
+  invited_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_staff TO authenticated;
+GRANT ALL ON public.admin_staff TO service_role;
+ALTER TABLE public.admin_staff ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "super_admin manages admin_staff" ON public.admin_staff;
+CREATE POLICY "super_admin manages admin_staff" ON public.admin_staff
+  FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'super_admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "staff read own row" ON public.admin_staff;
+CREATE POLICY "staff read own row" ON public.admin_staff
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+DO $$ BEGIN
+  CREATE TRIGGER trg_admin_staff_updated BEFORE UPDATE ON public.admin_staff
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+CREATE OR REPLACE FUNCTION public.is_admin_office(_user_id UUID)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT public.has_role(_user_id, 'super_admin')
+      OR EXISTS (SELECT 1 FROM public.admin_staff
+                  WHERE user_id = _user_id AND status = 'active');
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_has_perm(_user_id UUID, _perm TEXT)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT public.has_role(_user_id, 'super_admin')
+      OR EXISTS (SELECT 1 FROM public.admin_staff
+                  WHERE user_id = _user_id AND status = 'active'
+                    AND _perm = ANY(permissions));
+$$;
+
+CREATE OR REPLACE FUNCTION public.merchant_has_perm(_user_id UUID, _merchant_id UUID, _perm TEXT)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT _user_id = _merchant_id
+      OR EXISTS (SELECT 1 FROM public.team_members
+                  WHERE merchant_id = _merchant_id AND member_user_id = _user_id
+                    AND status = 'active'
+                    AND _perm = ANY(permissions));
+$$;
+
+CREATE OR REPLACE FUNCTION public.activate_admin_staff()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  UPDATE public.admin_staff
+     SET user_id = NEW.id, status = 'active'
+   WHERE lower(email) = lower(NEW.email) AND status = 'invited';
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_admin_staff ON auth.users;
+CREATE TRIGGER on_auth_user_created_admin_staff
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.activate_admin_staff();
+
+-- Lock down helper functions (SECURITY DEFINER stays callable via RLS)
+REVOKE ALL ON FUNCTION public.is_admin_office(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin_office(UUID) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.admin_has_perm(UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_has_perm(UUID, TEXT) TO authenticated, service_role;
+REVOKE ALL ON FUNCTION public.merchant_has_perm(UUID, UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.merchant_has_perm(UUID, UUID, TEXT) TO authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.activate_admin_staff() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.get_effective_fx_rate(UUID, TEXT, TEXT) TO authenticated, anon, service_role;
+
+-- ---- KYC on profiles ---------------------------------------------------
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS kyc_status TEXT NOT NULL DEFAULT 'unverified'
+    CHECK (kyc_status IN ('unverified','pending','verified','rejected')),
+  ADD COLUMN IF NOT EXISTS kyc_documents JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS kyc_id_type TEXT,
+  ADD COLUMN IF NOT EXISTS kyc_id_number TEXT,
+  ADD COLUMN IF NOT EXISTS kyc_business_type TEXT,
+  ADD COLUMN IF NOT EXISTS kyc_address TEXT,
+  ADD COLUMN IF NOT EXISTS kyc_submitted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS kyc_reviewed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS kyc_reviewer_note TEXT;
+
+-- ---- Verification mode toggle -----------------------------------------
+ALTER TABLE public.platform_settings
+  ADD COLUMN IF NOT EXISTS verification_mode TEXT NOT NULL DEFAULT 'manual'
+    CHECK (verification_mode IN ('auto','manual'));
+
+-- ---- Impersonation audit ----------------------------------------------
+CREATE TABLE IF NOT EXISTS public.impersonation_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  admin_email TEXT NOT NULL,
+  target_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_email TEXT NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+GRANT SELECT, INSERT ON public.impersonation_events TO authenticated;
+GRANT ALL ON public.impersonation_events TO service_role;
+ALTER TABLE public.impersonation_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "super_admin sees impersonation" ON public.impersonation_events;
+CREATE POLICY "super_admin sees impersonation" ON public.impersonation_events
+  FOR SELECT TO authenticated
+  USING (public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "super_admin writes impersonation" ON public.impersonation_events;
+CREATE POLICY "super_admin writes impersonation" ON public.impersonation_events
+  FOR INSERT TO authenticated
+  WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
+
+-- ---- Updated signup trigger (honours verification_mode) ---------------
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _mode TEXT;
+BEGIN
+  SELECT verification_mode INTO _mode FROM public.platform_settings WHERE id = 1;
+  INSERT INTO public.profiles (id, email, full_name, business_name, phone, kyc_status)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'business_name',
+    NEW.raw_user_meta_data->>'phone',
+    CASE WHEN _mode = 'auto' THEN 'verified' ELSE 'unverified' END
+  );
+  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, 'merchant');
+  RETURN NEW;
+END;
+$$;
+
+-- ---- BYO providers: widen the allow-list -------------------------------
+ALTER TABLE public.byo_gateways DROP CONSTRAINT IF EXISTS byo_gateways_provider_check;
+ALTER TABLE public.byo_gateways ADD CONSTRAINT byo_gateways_provider_check CHECK (provider = ANY (ARRAY[
+  'bkash','nagad','rocket','sslcommerz','shurjopay','aamarpay',
+  'stripe','paypal','razorpay','paddle','twocheckout',
+  'coinbase_commerce','nowpayments','binance_pay',
+  'uddoktapay','piprapay','ownpay'
+]));
+
+-- ---- Platform-wide gateways (super-admin managed) ---------------------
+CREATE TABLE IF NOT EXISTS public.platform_gateways (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider TEXT NOT NULL UNIQUE,
+  mode TEXT NOT NULL DEFAULT 'sandbox' CHECK (mode IN ('sandbox','live')),
+  credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  is_enabled_for_merchants BOOLEAN NOT NULL DEFAULT false,
+  commission_percent NUMERIC(6,3) NOT NULL DEFAULT 0,
+  commission_flat NUMERIC(12,2) NOT NULL DEFAULT 0,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+GRANT SELECT ON public.platform_gateways TO authenticated;
+GRANT ALL ON public.platform_gateways TO service_role;
+ALTER TABLE public.platform_gateways ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "super admin manage platform gateways" ON public.platform_gateways;
+CREATE POLICY "super admin manage platform gateways"
+  ON public.platform_gateways FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'super_admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "merchants view enabled platform gateways" ON public.platform_gateways;
+CREATE POLICY "merchants view enabled platform gateways"
+  ON public.platform_gateways FOR SELECT TO authenticated
+  USING (is_enabled_for_merchants = true AND is_active = true);
+DO $$ BEGIN
+  CREATE TRIGGER trg_platform_gateways_upd BEFORE UPDATE ON public.platform_gateways
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ---- Webhook events audit ---------------------------------------------
+CREATE TABLE IF NOT EXISTS public.webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider TEXT NOT NULL,
+  merchant_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  invoice_id UUID REFERENCES public.invoices(id) ON DELETE SET NULL,
+  transaction_id UUID REFERENCES public.transactions(id) ON DELETE SET NULL,
+  event_type TEXT,
+  provider_event_id TEXT,
+  raw_body TEXT NOT NULL,
+  headers JSONB NOT NULL DEFAULT '{}'::jsonb,
+  signature_verified BOOLEAN NOT NULL DEFAULT false,
+  processed BOOLEAN NOT NULL DEFAULT false,
+  error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (provider, provider_event_id)
+);
+GRANT SELECT ON public.webhook_events TO authenticated;
+GRANT ALL ON public.webhook_events TO service_role;
+ALTER TABLE public.webhook_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchant view own webhook events" ON public.webhook_events;
+CREATE POLICY "merchant view own webhook events"
+  ON public.webhook_events FOR SELECT TO authenticated
+  USING (merchant_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
+CREATE INDEX IF NOT EXISTS idx_webhook_events_merchant ON public.webhook_events(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_provider ON public.webhook_events(provider, created_at DESC);
+
+-- ---- Gateway pointer columns on payment_methods -----------------------
+ALTER TABLE public.payment_methods
+  ADD COLUMN IF NOT EXISTS gateway_provider TEXT,
+  ADD COLUMN IF NOT EXISTS gateway_source TEXT DEFAULT 'manual'
+    CHECK (gateway_source IN ('manual','byo','platform'));
+
+-- ---- Seed platform_settings row so verification_mode is readable ------
+INSERT INTO public.platform_settings (id) VALUES (1)
+ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================
+-- End addendum
+-- =============================================================
