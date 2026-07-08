@@ -32,36 +32,72 @@ import { useMerchantPerms } from "@/hooks/use-merchant-perms";
 import type { MerchantPerm } from "@/lib/permissions";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm?: MerchantPerm };
+type NavGroup = { label: string; items: NavItem[] };
 
-const nav: NavItem[] = [
-  { to: "/onboarding", label: "Get started", icon: Rocket },
-  { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/invoices", label: "Invoices", icon: Receipt, perm: "invoices" },
-  { to: "/recurring", label: "Recurring", icon: Repeat, perm: "invoices" },
-  { to: "/discounts", label: "Discount codes", icon: Tag, perm: "invoices" },
-  { to: "/transactions", label: "Transactions", icon: CreditCard, perm: "transactions" },
-  { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
-  { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
-  { to: "/refunds", label: "Refunds", icon: Receipt, perm: "refunds" },
-  { to: "/disputes", label: "Disputes", icon: Gavel, perm: "disputes" },
-  { to: "/reports", label: "Reports", icon: BarChart3, perm: "reports" },
-  { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
-  { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
-  { to: "/team", label: "Team", icon: Users, perm: "team" },
-  { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
-  { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
-  { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
-  { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
-  { to: "/api-reference", label: "API reference", icon: BookOpen },
-  { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
-  { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
-  { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
-  { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
-  { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
-  { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
-  { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
+const navGroups: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      { to: "/onboarding", label: "Get started", icon: Rocket },
+      { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
+      { to: "/reports", label: "Reports", icon: BarChart3, perm: "reports" },
+    ],
+  },
+  {
+    label: "Payments",
+    items: [
+      { to: "/transactions", label: "Transactions", icon: CreditCard, perm: "transactions" },
+      { to: "/invoices", label: "Invoices", icon: Receipt, perm: "invoices" },
+      { to: "/recurring", label: "Recurring", icon: Repeat, perm: "invoices" },
+      { to: "/discounts", label: "Discount codes", icon: Tag, perm: "invoices" },
+      { to: "/refunds", label: "Refunds", icon: Receipt, perm: "refunds" },
+      { to: "/disputes", label: "Disputes", icon: Gavel, perm: "disputes" },
+    ],
+  },
+  {
+    label: "Money",
+    items: [
+      { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
+      { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
+      { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
+    ],
+  },
+  {
+    label: "Gateways",
+    items: [
+      { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
+      { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
+    ],
+  },
+  {
+    label: "Developers",
+    items: [
+      { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
+      { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
+      { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
+      { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
+      { to: "/api-reference", label: "API reference", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Security",
+    items: [
+      { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
+      { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
+      { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
+      { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { to: "/team", label: "Team", icon: Users, perm: "team" },
+      { to: "/notifications", label: "Notifications", icon: Bell },
+      { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
+      { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+      { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
+    ],
+  },
 ];
 
 export function MerchantShell({
@@ -126,35 +162,48 @@ export function MerchantShell({
             </span>
             <span className="font-display text-lg font-bold">PayNOC</span>
           </div>
-          <nav className="flex-1 space-y-1 p-3">
-            {nav.filter((item) => !item.perm || perms.has(item.perm)).map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              const showBadge = item.to === "/notifications" && unread > 0;
+          <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+            {navGroups.map((group) => {
+              const items = group.items.filter((item) => !item.perm || perms.has(item.perm));
+              if (items.length === 0) return null;
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    active
-                      ? "bg-brand/10 text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className="flex-1">{item.label}</span>
-                  {showBadge && (
-                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
-                      {unread}
-                    </span>
-                  )}
-                </Link>
+                <div key={group.label}>
+                  <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+                      const showBadge = item.to === "/notifications" && unread > 0;
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                            active
+                              ? "bg-brand/10 text-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span className="flex-1">{item.label}</span>
+                          {showBadge && (
+                            <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
+                              {unread}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
             {(isSuperAdmin || isAdminOffice) && (
-              <>
-                <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div>
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Admin
-                </div>
+                </p>
                 <Link
                   to="/admin"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
@@ -162,7 +211,7 @@ export function MerchantShell({
                   <Users className="h-4 w-4" />
                   {isSuperAdmin ? "Super Admin Panel" : "Admin Panel"}
                 </Link>
-              </>
+              </div>
             )}
           </nav>
           <button
