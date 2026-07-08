@@ -101,6 +101,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -126,6 +127,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -1202,6 +1204,7 @@ CREATE POLICY "Merchant admins can delete schedules"
   ON public.recurring_schedules FOR DELETE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'));
 
+DROP TRIGGER IF EXISTS update_recurring_schedules_updated_at ON public.recurring_schedules;
 CREATE TRIGGER update_recurring_schedules_updated_at
   BEFORE UPDATE ON public.recurring_schedules
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
