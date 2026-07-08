@@ -474,3 +474,72 @@ function parsePaypal(v: VerifyArgs): Partial<VerifyResult> {
     amount: pu?.amount ? Number(pu.amount.value) : undefined, currency: pu?.amount?.currency_code,
   };
 }
+
+// ─── UddoktaPay / PipraPay / OwnPay webhook verifiers ─────────────
+function verifyUddoktapay(v: VerifyArgs): VerifyResult {
+  const sig = v.headers["rt-uddoktapay-api-key"];
+  if (!sig || !safeEqual(sig, v.creds.api_key)) return { verified: false, reason: "bad_api_key" };
+  const body = JSON.parse(v.rawBody) as {
+    invoice_id?: string; status?: string; amount?: string; fee?: string; charged_amount?: string;
+    payment_method?: string; sender_number?: string; transaction_id?: string;
+    metadata?: { invoice_id?: string };
+  };
+  return {
+    verified: true,
+    eventType: body.status,
+    providerEventId: body.invoice_id ?? body.transaction_id,
+    invoiceRef: body.metadata?.invoice_id ?? body.invoice_id,
+    providerTxnId: body.transaction_id ?? body.invoice_id,
+    status: body.status === "COMPLETED" ? "completed"
+          : body.status === "PENDING" ? "pending" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: "BDT",
+  };
+}
+
+function verifyPiprapay(v: VerifyArgs): VerifyResult {
+  const sig = v.headers["mh-piprapay-api-key"];
+  if (!sig || !safeEqual(sig, v.creds.api_key)) return { verified: false, reason: "bad_api_key" };
+  const body = JSON.parse(v.rawBody) as {
+    pp_id?: string; status?: string; amount?: string; currency?: string;
+    transaction_id?: string; metadata?: { invoice_id?: string };
+  };
+  return {
+    verified: true,
+    eventType: body.status,
+    providerEventId: body.pp_id ?? body.transaction_id,
+    invoiceRef: body.metadata?.invoice_id,
+    providerTxnId: body.transaction_id ?? body.pp_id,
+    status: body.status === "completed" || body.status === "COMPLETED" ? "completed"
+          : body.status === "pending" ? "pending" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: body.currency,
+  };
+}
+
+function verifyOwnpay(v: VerifyArgs): VerifyResult {
+  const sig = v.headers["x-signature"] ?? v.headers["x-ownpay-signature"];
+  if (!sig || !v.creds.webhook_secret) {
+    // Fallback to plain API-key header if no HMAC secret configured.
+    const apiSig = v.headers["x-api-key"];
+    if (!apiSig || !safeEqual(apiSig, v.creds.api_key)) return { verified: false, reason: "missing_signature" };
+  } else {
+    const expected = hmacSha256Hex(v.creds.webhook_secret, v.rawBody);
+    if (!safeEqualHex(sig.replace(/^sha256=/, ""), expected)) return { verified: false, reason: "bad_signature" };
+  }
+  const body = JSON.parse(v.rawBody) as {
+    charge_id?: string; status?: string; amount?: string; currency?: string;
+    transaction_id?: string; metadata?: { invoice_id?: string };
+  };
+  return {
+    verified: true,
+    eventType: body.status,
+    providerEventId: body.charge_id ?? body.transaction_id,
+    invoiceRef: body.metadata?.invoice_id,
+    providerTxnId: body.transaction_id ?? body.charge_id,
+    status: body.status === "completed" || body.status === "paid" ? "completed"
+          : body.status === "pending" ? "pending" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: body.currency,
+  };
+}
