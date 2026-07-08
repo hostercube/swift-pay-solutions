@@ -124,6 +124,8 @@ function PublicMerchantPage() {
 
   return (
     <div className="relative min-h-screen bg-background" style={style}>
+      <MerchantTracking config={m as TrackingConfig} />
+      <MerchantSeoHead merchant={m} />
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-lg px-4 py-16">
         <div className="glass rounded-3xl border border-glass-border p-8 text-center">
