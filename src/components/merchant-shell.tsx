@@ -162,35 +162,48 @@ export function MerchantShell({
             </span>
             <span className="font-display text-lg font-bold">PayNOC</span>
           </div>
-          <nav className="flex-1 space-y-1 p-3">
-            {nav.filter((item) => !item.perm || perms.has(item.perm)).map((item) => {
-              const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
-              const showBadge = item.to === "/notifications" && unread > 0;
+          <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+            {navGroups.map((group) => {
+              const items = group.items.filter((item) => !item.perm || perms.has(item.perm));
+              if (items.length === 0) return null;
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    active
-                      ? "bg-brand/10 text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span className="flex-1">{item.label}</span>
-                  {showBadge && (
-                    <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
-                      {unread}
-                    </span>
-                  )}
-                </Link>
+                <div key={group.label}>
+                  <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    {group.label}
+                  </p>
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+                      const showBadge = item.to === "/notifications" && unread > 0;
+                      return (
+                        <Link
+                          key={item.to}
+                          to={item.to}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                            active
+                              ? "bg-brand/10 text-foreground"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span className="flex-1">{item.label}</span>
+                          {showBadge && (
+                            <span className="rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-brand-foreground">
+                              {unread}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
             {(isSuperAdmin || isAdminOffice) && (
-              <>
-                <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div>
+                <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Admin
-                </div>
+                </p>
                 <Link
                   to="/admin"
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
@@ -198,7 +211,7 @@ export function MerchantShell({
                   <Users className="h-4 w-4" />
                   {isSuperAdmin ? "Super Admin Panel" : "Admin Panel"}
                 </Link>
-              </>
+              </div>
             )}
           </nav>
           <button
