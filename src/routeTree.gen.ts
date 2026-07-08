@@ -70,6 +70,7 @@ import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksRunPayoutScheduleRouteImport } from './routes/api/public/hooks/run-payout-schedule'
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
+import { Route as AuthenticatedAdminMerchantsIdRouteImport } from './routes/_authenticated/admin/merchants.$id'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
 const StatusRoute = StatusRouteImport.update({
@@ -394,6 +395,12 @@ const ApiPublicHooksExpireInvoicesRoute =
     path: '/api/public/hooks/expire-invoices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminMerchantsIdRoute =
+  AuthenticatedAdminMerchantsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminMerchantsRoute,
+  } as any)
 const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -444,7 +451,7 @@ export interface FileRoutesByFullPath {
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByFullPath {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -506,7 +514,7 @@ export interface FileRoutesByTo {
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
@@ -515,6 +523,7 @@ export interface FileRoutesByTo {
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -571,7 +580,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
   '/_authenticated/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
+  '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/_authenticated/admin/plugins': typeof AuthenticatedAdminPluginsRoute
@@ -580,6 +589,7 @@ export interface FileRoutesById {
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -645,6 +655,7 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin/'
+    | '/admin/merchants/$id'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -707,6 +718,7 @@ export interface FileRouteTypes {
     | '/invoices/$id'
     | '/invoices/new'
     | '/admin'
+    | '/admin/merchants/$id'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -771,6 +783,7 @@ export interface FileRouteTypes {
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/merchants/$id'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -1234,6 +1247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksExpireInvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/merchants/$id': {
+      id: '/_authenticated/admin/merchants/$id'
+      path: '/$id'
+      fullPath: '/admin/merchants/$id'
+      preLoaderRoute: typeof AuthenticatedAdminMerchantsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminMerchantsRoute
+    }
     '/api/public/v1/invoices/$id': {
       id: '/api/public/v1/invoices/$id'
       path: '/$id'
@@ -1244,12 +1264,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminMerchantsRouteChildren {
+  AuthenticatedAdminMerchantsIdRoute: typeof AuthenticatedAdminMerchantsIdRoute
+}
+
+const AuthenticatedAdminMerchantsRouteChildren: AuthenticatedAdminMerchantsRouteChildren =
+  {
+    AuthenticatedAdminMerchantsIdRoute: AuthenticatedAdminMerchantsIdRoute,
+  }
+
+const AuthenticatedAdminMerchantsRouteWithChildren =
+  AuthenticatedAdminMerchantsRoute._addFileChildren(
+    AuthenticatedAdminMerchantsRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
   AuthenticatedAdminIncidentsRoute: typeof AuthenticatedAdminIncidentsRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
-  AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
+  AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRouteWithChildren
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformGatewaysRoute: typeof AuthenticatedAdminPlatformGatewaysRoute
   AuthenticatedAdminPluginsRoute: typeof AuthenticatedAdminPluginsRoute
@@ -1264,7 +1298,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
     AuthenticatedAdminIncidentsRoute: AuthenticatedAdminIncidentsRoute,
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
-    AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
+    AuthenticatedAdminMerchantsRoute:
+      AuthenticatedAdminMerchantsRouteWithChildren,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminPlatformGatewaysRoute:
       AuthenticatedAdminPlatformGatewaysRoute,
