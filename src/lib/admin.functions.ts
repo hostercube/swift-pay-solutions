@@ -274,7 +274,7 @@ export const adminGetMerchantOverview = createServerFn({ method: "POST" })
         transactions: tx.length,
         transactions_verified: tx.filter((t) => t.status === "verified").length,
         gross_volume: tx.filter((t) => t.status === "verified").reduce((s2, t) => s2 + Number(t.gross_amount ?? 0), 0),
-        webhooks_delivered: wh.filter((w) => w.status === "delivered").length,
+        webhooks_delivered: wh.filter((w) => w.status === "success").length,
         webhooks_failed: wh.filter((w) => w.status === "failed").length,
       },
       methods: methods.data ?? [],

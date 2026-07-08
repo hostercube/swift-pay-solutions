@@ -54,8 +54,11 @@ export const ADMIN_PERM_GROUPS = [
   },
 ] as const;
 
-export const ADMIN_PERMS = ADMIN_PERM_GROUPS.flatMap((g) => g.perms);
-export type AdminPerm = (typeof ADMIN_PERMS)[number]["key"];
+export type AdminPermItem = { key: string; label: string };
+export const ADMIN_PERMS: readonly AdminPermItem[] = ADMIN_PERM_GROUPS.flatMap(
+  (g) => g.perms as readonly AdminPermItem[],
+);
+export type AdminPerm = string;
 
 export const MERCHANT_PERMS = [
   { key: "invoices", label: "Invoices" },
