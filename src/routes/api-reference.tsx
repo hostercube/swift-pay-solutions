@@ -736,6 +736,17 @@ function ApiReferencePage() {
               </a>
             </Section>
 
+            {/* Plugins */}
+            <Section id="plugins" eyebrow="Integrations" title="Plugins & platform integrations">
+              <p className="text-sm text-muted-foreground">
+                Drop-in modules for the platforms you already run. Every listing here is published live by the
+                PayNOC team — download the archive, install it in your platform, paste your API key, and you're
+                accepting payments in minutes.
+              </p>
+              <PluginsGrid />
+            </Section>
+
+
             <div className="mt-16 rounded-lg border border-glass-border bg-card/40 p-6 text-sm text-muted-foreground">
               Need help? Email <span className="font-mono text-foreground">developers@paynoc.example</span> or
               open an issue in your merchant dashboard — we typically reply within one business day.
