@@ -16,6 +16,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('disputes', 'disputes', false)
 ON CONFLICT (id) DO NOTHING;
 
+-- storage.objects is owned by supabase_storage_admin. To create policies that
+-- reference auth.uid(), that role needs USAGE on the auth schema + EXECUTE on
+-- auth.uid(). Without these grants you get: ERROR 42501 permission denied for
+-- schema auth.
+GRANT USAGE ON SCHEMA auth TO supabase_storage_admin;
+GRANT EXECUTE ON FUNCTION auth.uid() TO supabase_storage_admin;
+
 -- Switch to the storage owner role to create policies
 SET ROLE supabase_storage_admin;
 
