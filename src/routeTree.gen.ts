@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AymanLoginRouteImport } from './routes/ayman-login'
@@ -82,6 +84,11 @@ const StatusRoute = StatusRouteImport.update({
   path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -90,6 +97,11 @@ const PricingRoute = PricingRouteImport.update({
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -442,8 +454,10 @@ export interface FileRoutesByFullPath {
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/api-keys': typeof AuthenticatedApiKeysRoute
@@ -510,8 +524,10 @@ export interface FileRoutesByTo {
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
   '/api-logs': typeof AuthenticatedApiLogsRoute
@@ -579,8 +595,10 @@ export interface FileRoutesById {
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
   '/docs': typeof DocsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/portal': typeof PortalRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
@@ -649,8 +667,10 @@ export interface FileRouteTypes {
     | '/ayman-login'
     | '/contact'
     | '/docs'
+    | '/forgot-password'
     | '/portal'
     | '/pricing'
+    | '/reset-password'
     | '/status'
     | '/admin'
     | '/api-keys'
@@ -717,8 +737,10 @@ export interface FileRouteTypes {
     | '/ayman-login'
     | '/contact'
     | '/docs'
+    | '/forgot-password'
     | '/portal'
     | '/pricing'
+    | '/reset-password'
     | '/status'
     | '/api-keys'
     | '/api-logs'
@@ -785,8 +807,10 @@ export interface FileRouteTypes {
     | '/ayman-login'
     | '/contact'
     | '/docs'
+    | '/forgot-password'
     | '/portal'
     | '/pricing'
+    | '/reset-password'
     | '/status'
     | '/_authenticated/admin'
     | '/_authenticated/api-keys'
@@ -855,8 +879,10 @@ export interface RootRouteChildren {
   AymanLoginRoute: typeof AymanLoginRoute
   ContactRoute: typeof ContactRoute
   DocsRoute: typeof DocsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   PortalRoute: typeof PortalRoute
   PricingRoute: typeof PricingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   StatusRoute: typeof StatusRoute
   MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
@@ -879,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pricing': {
       id: '/pricing'
       path: '/pricing'
@@ -891,6 +924,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/docs': {
@@ -1503,8 +1543,10 @@ const rootRouteChildren: RootRouteChildren = {
   AymanLoginRoute: AymanLoginRoute,
   ContactRoute: ContactRoute,
   DocsRoute: DocsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   PortalRoute: PortalRoute,
   PricingRoute: PricingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   StatusRoute: StatusRoute,
   MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
