@@ -5,6 +5,7 @@ import { Heart, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MerchantTracking, type TrackingConfig } from "@/components/merchant-tracking";
 
 export const Route = createFileRoute("/m/$slug")({
   head: ({ params }) => ({
@@ -26,6 +27,16 @@ type Merchant = {
   tip_min_amount: number;
   support_email: string | null;
   slug: string;
+  seo_meta_description?: string | null;
+  seo_meta_keywords?: string | null;
+  ga4_measurement_id?: string | null;
+  gtm_container_id?: string | null;
+  meta_pixel_id?: string | null;
+  tiktok_pixel_id?: string | null;
+  google_ads_conversion_id?: string | null;
+  google_ads_conversion_label?: string | null;
+  custom_head_html?: string | null;
+  custom_footer_html?: string | null;
 };
 
 function PublicMerchantPage() {
