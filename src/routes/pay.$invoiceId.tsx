@@ -197,6 +197,20 @@ function CheckoutPage() {
     }
   }, [txns, inv]);
 
+  // Fire client-side purchase pixel once per completed invoice.
+  const firedPurchaseRef = useRef(false);
+  useEffect(() => {
+    if (firedPurchaseRef.current || !inv || !brand) return;
+    const verified = txns.find((t) => t.status === "verified");
+    if (!verified) return;
+    firedPurchaseRef.current = true;
+    trackPurchase(brand as TrackingConfig, {
+      value: Number(inv.amount),
+      currency: inv.currency,
+      transactionId: inv.invoice_number,
+    });
+  }, [txns, inv, brand]);
+
   function computeFee(m: Method, amount: number) {
     const fee = (amount * Number(m.fee_percent || 0)) / 100 + Number(m.fee_flat || 0);
     return { fee: Number(fee.toFixed(2)), net: Number((amount - fee).toFixed(2)) };
