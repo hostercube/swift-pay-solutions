@@ -50,6 +50,7 @@ export const ADMIN_PERM_GROUPS = [
       { key: "settings.manage",  label: "Platform settings" },
       { key: "audit.view",       label: "Audit logs" },
       { key: "staff.manage",     label: "Manage admin staff" },
+      { key: "packages",         label: "Manage subscription packages" },
     ],
   },
 ] as const;
