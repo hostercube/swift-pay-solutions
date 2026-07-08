@@ -50,6 +50,12 @@ function AuthPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
+      if (await isAdminUser(data.session.user.id)) {
+        await supabase.auth.signOut();
+        toast.info("Admins must sign in from the admin portal.");
+        navigate({ to: "/ayman-login" });
+        return;
+      }
       const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
         const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -61,14 +67,15 @@ function AuthPage() {
           return;
         }
       }
-      const dest = (await isAdminUser(data.session.user.id)) ? "/admin" : "/dashboard";
-      navigate({ to: dest });
+      navigate({ to: "/dashboard" });
     });
   }, [navigate]);
 
-  async function landingFor(userId: string): Promise<"/admin" | "/dashboard"> {
-    return (await isAdminUser(userId)) ? "/admin" : "/dashboard";
+  async function landingForMerchant(userId: string): Promise<"/ayman-login" | "/dashboard"> {
+    // Admins are never allowed through the merchant/staff login.
+    return (await isAdminUser(userId)) ? "/ayman-login" : "/dashboard";
   }
+
 
   async function checkCaptcha(): Promise<boolean> {
     if (!captcha?.enabled) return true;
@@ -97,7 +104,7 @@ function AuthPage() {
     if (error) return toast.error(error.message);
     toast.success("Verified");
     const { data: u } = await supabase.auth.getUser();
-    navigate({ to: u.user ? await landingFor(u.user.id) : "/dashboard" });
+    navigate({ to: u.user ? await landingForMerchant(u.user.id) : "/dashboard" });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -139,7 +146,7 @@ function AuthPage() {
         }
 
         toast.success("Welcome back");
-        navigate({ to: sd.user ? await landingFor(sd.user.id) : "/dashboard" });
+        navigate({ to: sd.user ? await landingForMerchant(sd.user.id) : "/dashboard" });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Authentication failed";
