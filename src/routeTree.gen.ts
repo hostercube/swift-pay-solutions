@@ -54,12 +54,14 @@ import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedAdminPlatformGatewaysRouteImport } from './routes/_authenticated/admin/platform-gateways'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminIncidentsRouteImport } from './routes/_authenticated/admin/incidents'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/public/webhooks.$provider'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
@@ -301,6 +303,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPlatformGatewaysRoute =
+  AuthenticatedAdminPlatformGatewaysRouteImport.update({
+    id: '/platform-gateways',
+    path: '/platform-gateways',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminPayoutsRoute =
   AuthenticatedAdminPayoutsRouteImport.update({
     id: '/payouts',
@@ -334,6 +342,12 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const ApiPublicWebhooksProviderRoute =
+  ApiPublicWebhooksProviderRouteImport.update({
+    id: '/api/public/webhooks/$provider',
+    path: '/api/public/webhooks/$provider',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1PostmanRoute = ApiPublicV1PostmanRouteImport.update({
   id: '/api/public/v1/postman',
   path: '/api/public/v1/postman',
@@ -425,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -437,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesByTo {
@@ -484,6 +500,7 @@ export interface FileRoutesByTo {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -496,6 +513,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesById {
@@ -546,6 +564,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -558,6 +577,7 @@ export interface FileRoutesById {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRouteTypes {
@@ -608,6 +628,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
+    | '/admin/platform-gateways'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -620,6 +641,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/webhooks/$provider'
     | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -667,6 +689,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
+    | '/admin/platform-gateways'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -679,6 +702,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/webhooks/$provider'
     | '/api/public/v1/invoices/$id'
   id:
     | '__root__'
@@ -728,6 +752,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/platform-gateways'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/staff'
     | '/_authenticated/invoices/$id'
@@ -740,6 +765,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/webhooks/$provider'
     | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
 }
@@ -763,6 +789,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
   ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
+  ApiPublicWebhooksProviderRoute: typeof ApiPublicWebhooksProviderRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1082,6 +1109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/platform-gateways': {
+      id: '/_authenticated/admin/platform-gateways'
+      path: '/platform-gateways'
+      fullPath: '/admin/platform-gateways'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformGatewaysRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/payouts': {
       id: '/_authenticated/admin/payouts'
       path: '/payouts'
@@ -1123,6 +1157,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/api/public/webhooks/$provider': {
+      id: '/api/public/webhooks/$provider'
+      path: '/api/public/webhooks/$provider'
+      fullPath: '/api/public/webhooks/$provider'
+      preLoaderRoute: typeof ApiPublicWebhooksProviderRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/postman': {
       id: '/api/public/v1/postman'
@@ -1190,6 +1231,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminPlatformGatewaysRoute: typeof AuthenticatedAdminPlatformGatewaysRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1203,6 +1245,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+    AuthenticatedAdminPlatformGatewaysRoute:
+      AuthenticatedAdminPlatformGatewaysRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -1325,6 +1369,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
   ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
+  ApiPublicWebhooksProviderRoute: ApiPublicWebhooksProviderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
