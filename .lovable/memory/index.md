@@ -8,6 +8,7 @@ Original spec requested NestJS/Docker/Coolify/MinIO/Android/multi-language SDKs 
 UI: Stripe-level, glass/modern, dark+light, responsive, animated, professional charts.
 Build task-by-task: user says "task N koro", agent builds only that task.
 No placeholders, no mock data, every CRUD/API/integration must be functional.
+Every SQL/backend change must also be added to db/migrations before final delivery.
 
 ## Memories
 - [Full PayNOC spec](mem://paynoc/full-spec) — Complete original user brief: modules, payment methods, security, DB, plugins
