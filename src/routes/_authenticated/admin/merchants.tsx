@@ -110,7 +110,7 @@ function MerchantsPage() {
 
   return (
     <AdminShell title="Merchants" subtitle="Approve, suspend, or review every merchant on the platform.">
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -118,7 +118,31 @@ function MerchantsPage() {
           className="w-full max-w-sm rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
         />
         <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
+        <div className="ml-auto">
+          <Button size="sm" onClick={() => setShowCreate((v) => !v)}>
+            <UserPlus className="mr-1.5 h-4 w-4" /> Create merchant
+          </Button>
+        </div>
       </div>
+
+      {showCreate && (
+        <Card className="mb-4 p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            <Input placeholder="Email" value={c.email} onChange={(e) => setC({ ...c, email: e.target.value })} />
+            <Input placeholder="Password (min 8)" type="text" value={c.password} onChange={(e) => setC({ ...c, password: e.target.value })} />
+            <Input placeholder="Business name" value={c.business_name} onChange={(e) => setC({ ...c, business_name: e.target.value })} />
+            <Input placeholder="Full name" value={c.full_name} onChange={(e) => setC({ ...c, full_name: e.target.value })} />
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={c.verified} onChange={(e) => setC({ ...c, verified: e.target.checked })} />
+            Mark KYC as verified
+          </label>
+          <div className="mt-3 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+            <Button onClick={createMerchant} disabled={!c.email || c.password.length < 8}>Create</Button>
+          </div>
+        </Card>
+      )}
 
       <div className="glass overflow-hidden rounded-2xl border border-glass-border">
         <table className="w-full text-sm">
