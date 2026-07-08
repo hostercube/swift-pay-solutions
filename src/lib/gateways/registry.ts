@@ -130,7 +130,54 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "signature_key", label: "Signature Key", type: "password", required: true },
     ],
     docsUrl: "https://aamarpay.com/developer",
+  {
+    id: "uddoktapay",
+    label: "UddoktaPay",
+    region: "BD",
+    currencies: ["BDT"],
+    flow: "hosted_redirect",
+    supportsApi: true,
+    supportsWebhook: true,
+    fields: [
+      { key: "base_url", label: "Base URL", type: "text", required: true, placeholder: "https://pay.your-domain.com", help: "Your UddoktaPay installation URL" },
+      { key: "api_key", label: "API Key", type: "password", required: true },
+    ],
+    docsUrl: "https://uddoktapay.readme.io/reference/overview",
+    webhookHint: "Add the webhook URL below in UddoktaPay admin → Webhook Settings.",
   },
+  {
+    id: "piprapay",
+    label: "PipraPay",
+    region: "BD",
+    currencies: ["BDT", "USD", "INR"],
+    flow: "hosted_redirect",
+    supportsApi: true,
+    supportsWebhook: true,
+    fields: [
+      { key: "base_url", label: "Base URL", type: "text", required: true, placeholder: "https://sandbox.piprapay.com" },
+      { key: "api_key", label: "API Key", type: "password", required: true },
+    ],
+    docsUrl: "https://docs.piprapay.com/reference/overview",
+    webhookHint: "PipraPay sends webhooks with the mh-piprapay-api-key header for verification.",
+  },
+  {
+    id: "ownpay",
+    label: "OwnPay (self-hosted)",
+    region: "BD",
+    currencies: ["BDT", "USD"],
+    flow: "hosted_redirect",
+    supportsApi: true,
+    supportsWebhook: true,
+    fields: [
+      { key: "base_url", label: "Base URL", type: "text", required: true, placeholder: "https://pay.your-domain.com", help: "Your OwnPay self-hosted instance" },
+      { key: "api_key", label: "API Key", type: "password", required: true },
+      { key: "webhook_secret", label: "Webhook Secret (HMAC)", type: "password" },
+    ],
+    docsUrl: "https://ownpay.org/",
+    webhookHint: "OwnPay posts JSON with an X-Signature HMAC-SHA256 header.",
+  },
+
+
 
   // ── International ──────────────────────────────────────────
   {
