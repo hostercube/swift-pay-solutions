@@ -54,6 +54,7 @@ import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedAdminPluginsRouteImport } from './routes/_authenticated/admin/plugins'
 import { Route as AuthenticatedAdminPlatformGatewaysRouteImport } from './routes/_authenticated/admin/platform-gateways'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
@@ -303,6 +304,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPluginsRoute =
+  AuthenticatedAdminPluginsRouteImport.update({
+    id: '/plugins',
+    path: '/plugins',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminPlatformGatewaysRoute =
   AuthenticatedAdminPlatformGatewaysRouteImport.update({
     id: '/platform-gateways',
@@ -440,6 +447,7 @@ export interface FileRoutesByFullPath {
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
+  '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -501,6 +509,7 @@ export interface FileRoutesByTo {
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
+  '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -565,6 +574,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
+  '/_authenticated/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/platform-gateways'
+    | '/admin/plugins'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -690,6 +701,7 @@ export interface FileRouteTypes {
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/platform-gateways'
+    | '/admin/plugins'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -753,6 +765,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform-gateways'
+    | '/_authenticated/admin/plugins'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/staff'
     | '/_authenticated/invoices/$id'
@@ -1109,6 +1122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/plugins': {
+      id: '/_authenticated/admin/plugins'
+      path: '/plugins'
+      fullPath: '/admin/plugins'
+      preLoaderRoute: typeof AuthenticatedAdminPluginsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/platform-gateways': {
       id: '/_authenticated/admin/platform-gateways'
       path: '/platform-gateways'
@@ -1232,6 +1252,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformGatewaysRoute: typeof AuthenticatedAdminPlatformGatewaysRoute
+  AuthenticatedAdminPluginsRoute: typeof AuthenticatedAdminPluginsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1247,6 +1268,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminPlatformGatewaysRoute:
       AuthenticatedAdminPlatformGatewaysRoute,
+    AuthenticatedAdminPluginsRoute: AuthenticatedAdminPluginsRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
