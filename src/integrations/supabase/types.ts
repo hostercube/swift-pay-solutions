@@ -413,6 +413,36 @@ export type Database = {
         }
         Relationships: []
       }
+      impersonation_events: {
+        Row: {
+          admin_email: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          target_email: string
+          target_user_id: string
+        }
+        Insert: {
+          admin_email: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_email: string
+          target_user_id: string
+        }
+        Update: {
+          admin_email?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_email?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       incidents: {
         Row: {
           body: string | null
@@ -921,6 +951,7 @@ export type Database = {
           settings: Json
           support_email: string | null
           updated_at: string
+          verification_mode: string
         }
         Insert: {
           allow_signup?: boolean
@@ -933,6 +964,7 @@ export type Database = {
           settings?: Json
           support_email?: string | null
           updated_at?: string
+          verification_mode?: string
         }
         Update: {
           allow_signup?: boolean
@@ -945,6 +977,7 @@ export type Database = {
           settings?: Json
           support_email?: string | null
           updated_at?: string
+          verification_mode?: string
         }
         Relationships: []
       }
@@ -959,6 +992,15 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          kyc_address: string | null
+          kyc_business_type: string | null
+          kyc_documents: Json
+          kyc_id_number: string | null
+          kyc_id_type: string | null
+          kyc_reviewed_at: string | null
+          kyc_reviewer_note: string | null
+          kyc_status: string
+          kyc_submitted_at: string | null
           logo_url: string | null
           mfa_enabled: boolean
           phone: string | null
@@ -979,6 +1021,15 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          kyc_address?: string | null
+          kyc_business_type?: string | null
+          kyc_documents?: Json
+          kyc_id_number?: string | null
+          kyc_id_type?: string | null
+          kyc_reviewed_at?: string | null
+          kyc_reviewer_note?: string | null
+          kyc_status?: string
+          kyc_submitted_at?: string | null
           logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null
@@ -999,6 +1050,15 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          kyc_address?: string | null
+          kyc_business_type?: string | null
+          kyc_documents?: Json
+          kyc_id_number?: string | null
+          kyc_id_type?: string | null
+          kyc_reviewed_at?: string | null
+          kyc_reviewer_note?: string | null
+          kyc_status?: string
+          kyc_submitted_at?: string | null
           logo_url?: string | null
           mfa_enabled?: boolean
           phone?: string | null

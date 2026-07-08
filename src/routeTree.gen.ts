@@ -35,6 +35,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
 import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
+import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedIntegrateRouteImport } from './routes/_authenticated/integrate'
@@ -55,6 +56,7 @@ import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
+import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminIncidentsRouteImport } from './routes/_authenticated/admin/incidents'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
@@ -200,6 +202,11 @@ const AuthenticatedMethodsRoute = AuthenticatedMethodsRouteImport.update({
   path: '/methods',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedIpWhitelistRoute =
   AuthenticatedIpWhitelistRouteImport.update({
     id: '/ip-whitelist',
@@ -306,6 +313,11 @@ const AuthenticatedAdminMerchantsRoute =
     path: '/merchants',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminKycRoute = AuthenticatedAdminKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAdminIncidentsRoute =
   AuthenticatedAdminIncidentsRouteImport.update({
     id: '/incidents',
@@ -390,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/integrate': typeof AuthenticatedIntegrateRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -409,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -447,6 +461,7 @@ export interface FileRoutesByTo {
   '/integrate': typeof AuthenticatedIntegrateRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
+  '/kyc': typeof AuthenticatedKycRoute
   '/methods': typeof AuthenticatedMethodsRoute
   '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -466,6 +481,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -507,6 +523,7 @@ export interface FileRoutesById {
   '/_authenticated/integrate': typeof AuthenticatedIntegrateRoute
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
+  '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/methods': typeof AuthenticatedMethodsRoute
   '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -526,6 +543,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
   '/_authenticated/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
+  '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -567,6 +585,7 @@ export interface FileRouteTypes {
     | '/integrate'
     | '/invoices'
     | '/ip-whitelist'
+    | '/kyc'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -586,6 +605,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/fx'
     | '/admin/incidents'
+    | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/settings'
@@ -624,6 +644,7 @@ export interface FileRouteTypes {
     | '/integrate'
     | '/invoices'
     | '/ip-whitelist'
+    | '/kyc'
     | '/methods'
     | '/notification-settings'
     | '/notifications'
@@ -643,6 +664,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/fx'
     | '/admin/incidents'
+    | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
     | '/admin/settings'
@@ -683,6 +705,7 @@ export interface FileRouteTypes {
     | '/_authenticated/integrate'
     | '/_authenticated/invoices'
     | '/_authenticated/ip-whitelist'
+    | '/_authenticated/kyc'
     | '/_authenticated/methods'
     | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
@@ -702,6 +725,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/fx'
     | '/_authenticated/admin/incidents'
+    | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/settings'
@@ -925,6 +949,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMethodsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kyc': {
+      id: '/_authenticated/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof AuthenticatedKycRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ip-whitelist': {
       id: '/_authenticated/ip-whitelist'
       path: '/ip-whitelist'
@@ -1065,6 +1096,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMerchantsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/kyc': {
+      id: '/_authenticated/admin/kyc'
+      path: '/kyc'
+      fullPath: '/admin/kyc'
+      preLoaderRoute: typeof AuthenticatedAdminKycRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/incidents': {
       id: '/_authenticated/admin/incidents'
       path: '/incidents'
@@ -1149,6 +1187,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
   AuthenticatedAdminIncidentsRoute: typeof AuthenticatedAdminIncidentsRoute
+  AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -1161,6 +1200,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
     AuthenticatedAdminIncidentsRoute: AuthenticatedAdminIncidentsRoute,
+    AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -1202,6 +1242,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIntegrateRoute: typeof AuthenticatedIntegrateRoute
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
+  AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
   AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
@@ -1232,6 +1273,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIntegrateRoute: AuthenticatedIntegrateRoute,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
+  AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
   AuthenticatedNotificationSettingsRoute:
     AuthenticatedNotificationSettingsRoute,

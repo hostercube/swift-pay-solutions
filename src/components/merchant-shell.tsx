@@ -60,6 +60,7 @@ const nav: NavItem[] = [
   { to: "/notifications", label: "Notifications", icon: Bell },
   { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
   { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+  { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
   { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
 ];
 
