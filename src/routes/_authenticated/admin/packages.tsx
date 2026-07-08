@@ -167,7 +167,7 @@ function AdminPackagesPage() {
     const { data: prof, error: perr } = await supabase
       .from("profiles").select("id").eq("email", assignForm.merchant_email.trim().toLowerCase()).maybeSingle();
     if (perr || !prof) { setBusy(false); return toast.error("Merchant not found"); }
-    const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) =>
+    const rpc = supabase.rpc.bind(supabase) as unknown as (fn: string, args: Record<string, unknown>) =>
       Promise<{ data: unknown; error: { message: string } | null }>;
     const { error } = await rpc("assign_subscription", {
       _merchant_id: prof.id, _package_id: assignForm.package_id, _auto_renew: assignForm.auto_renew,
@@ -182,7 +182,7 @@ function AdminPackagesPage() {
 
   const cancelSub = async (id: string) => {
     if (!confirm("Cancel this subscription?")) return;
-    const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) =>
+    const rpc = supabase.rpc.bind(supabase) as unknown as (fn: string, args: Record<string, unknown>) =>
       Promise<{ error: { message: string } | null }>;
     const { error } = await rpc("cancel_subscription", { _subscription_id: id });
     if (error) return toast.error(error.message);
