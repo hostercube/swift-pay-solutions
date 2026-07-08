@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_staff: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invited_by: string | null
+          permissions: string[]
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          permissions?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          permissions?: string[]
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -1079,6 +1115,7 @@ export type Database = {
           member_id: string | null
           member_user_id: string | null
           merchant_id: string
+          permissions: string[]
           role: string
           status: string
         }
@@ -1090,6 +1127,7 @@ export type Database = {
           member_id?: string | null
           member_user_id?: string | null
           merchant_id: string
+          permissions?: string[]
           role?: string
           status?: string
         }
@@ -1101,6 +1139,7 @@ export type Database = {
           member_id?: string | null
           member_user_id?: string | null
           merchant_id?: string
+          permissions?: string[]
           role?: string
           status?: string
         }
@@ -1487,6 +1526,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_has_perm: {
+        Args: { _perm: string; _user_id: string }
+        Returns: boolean
+      }
       apply_discount_code: {
         Args: { _code: string; _invoice_id: string }
         Returns: {
@@ -1630,8 +1673,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_office: { Args: { _user_id: string }; Returns: boolean }
       merchant_can: {
         Args: { _merchant_id: string; _min_role: string; _user_id: string }
+        Returns: boolean
+      }
+      merchant_has_perm: {
+        Args: { _merchant_id: string; _perm: string; _user_id: string }
         Returns: boolean
       }
     }
