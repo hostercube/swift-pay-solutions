@@ -234,6 +234,79 @@ async function paypalInitiate(a: InitiateArgs): Promise<InitiateResult> {
   return { redirectUrl: approve, providerRef: j.id };
 }
 
+// ─── UddoktaPay / PipraPay / OwnPay (BD aggregators) ──────────────
+// All three follow the same pattern: POST create-charge with an API key
+// header to a self-hosted base URL, get a redirect payment_url back, then
+// receive a webhook carrying the same API key (or an HMAC) for verification.
+
+async function uddoktapayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = (a.creds.base_url || "").replace(/\/$/, "");
+  if (!base) throw new Error("UddoktaPay base_url missing");
+  const res = await fetch(`${base}/api/checkout-v2`, {
+    method: "POST",
+    headers: { "RT-UDDOKTAPAY-API-KEY": a.creds.api_key, "Content-Type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      full_name: a.customerName ?? "Customer",
+      email: a.customerEmail ?? "customer@paynoc.bd",
+      amount: a.amount.toFixed(2),
+      metadata: { invoice_id: a.invoiceId },
+      redirect_url: a.successUrl,
+      return_type: "GET",
+      cancel_url: a.cancelUrl,
+      webhook_url: a.webhookUrl,
+    }),
+  });
+  const j = await res.json() as { status?: boolean; payment_url?: string; invoice_id?: string; message?: string };
+  if (!j.status || !j.payment_url) throw new Error(j.message ?? "UddoktaPay create failed");
+  return { redirectUrl: j.payment_url, providerRef: j.invoice_id ?? a.invoiceId };
+}
+
+async function piprapayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = (a.creds.base_url || "").replace(/\/$/, "");
+  if (!base) throw new Error("PipraPay base_url missing");
+  const res = await fetch(`${base}/api/create-charge`, {
+    method: "POST",
+    headers: { "mh-piprapay-api-key": a.creds.api_key, "Content-Type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      full_name: a.customerName ?? "Customer",
+      email_mobile: a.customerEmail ?? "01700000000",
+      amount: a.amount.toFixed(2),
+      metadata: { invoice_id: a.invoiceId },
+      redirect_url: a.successUrl,
+      return_type: "GET",
+      cancel_url: a.cancelUrl,
+      webhook_url: a.webhookUrl,
+      currency: a.currency,
+    }),
+  });
+  const j = await res.json() as { status?: boolean; pp_url?: string; pp_id?: string; message?: string };
+  if (!j.status || !j.pp_url) throw new Error(j.message ?? "PipraPay create failed");
+  return { redirectUrl: j.pp_url, providerRef: j.pp_id ?? a.invoiceId };
+}
+
+async function ownpayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = (a.creds.base_url || "").replace(/\/$/, "");
+  if (!base) throw new Error("OwnPay base_url missing");
+  // OwnPay follows the same aggregator contract as UddoktaPay/PipraPay.
+  const res = await fetch(`${base}/api/checkout`, {
+    method: "POST",
+    headers: { "X-API-Key": a.creds.api_key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      full_name: a.customerName ?? "Customer",
+      email: a.customerEmail ?? "customer@paynoc.bd",
+      amount: a.amount.toFixed(2),
+      currency: a.currency,
+      metadata: { invoice_id: a.invoiceId },
+      redirect_url: a.successUrl,
+      cancel_url: a.cancelUrl,
+      webhook_url: a.webhookUrl,
+    }),
+  });
+  const j = await res.json() as { status?: boolean; payment_url?: string; charge_id?: string; message?: string };
+  if (!j.payment_url) throw new Error(j.message ?? "OwnPay create failed");
+  return { redirectUrl: j.payment_url, providerRef: j.charge_id ?? a.invoiceId };
+}
+
 // Registry dispatcher
 export async function initiateCheckout(providerId: string, args: InitiateArgs): Promise<InitiateResult> {
   switch (providerId) {
@@ -244,6 +317,10 @@ export async function initiateCheckout(providerId: string, args: InitiateArgs): 
     case "coinbase_commerce": return coinbaseInitiate(args);
     case "nowpayments":       return nowpaymentsInitiate(args);
     case "paypal":            return paypalInitiate(args);
+    case "uddoktapay":        return uddoktapayInitiate(args);
+    case "piprapay":          return piprapayInitiate(args);
+    case "ownpay":            return ownpayInitiate(args);
+
     // The remaining providers (nagad RSA, rocket manual, shurjopay, aamarpay,
     // paddle, twocheckout, binance_pay) require merchant-specific onboarding
     // or SDK signing that is easier to complete once the merchant supplies
