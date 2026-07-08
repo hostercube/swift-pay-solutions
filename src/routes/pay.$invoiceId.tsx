@@ -502,6 +502,7 @@ function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | 
   const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
     <div className="relative min-h-screen bg-background" style={style}>
+      <MerchantTracking config={brand as TrackingConfig | null} />
       <div className="grid-radial absolute inset-0 opacity-30" />
       <div className="relative mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 flex items-center justify-center gap-2">
