@@ -92,7 +92,7 @@ function CheckoutPage() {
 
   const [loadError, setLoadError] = useState<string | null>(null);
   const load = useCallback(async () => {
-    const rpc = supabase.rpc as unknown as (
+    const rpc = supabase.rpc.bind(supabase) as unknown as (
       fn: string, args: Record<string, unknown>,
     ) => Promise<{ data: unknown; error: { message: string } | null }>;
     try {
@@ -131,7 +131,7 @@ function CheckoutPage() {
       return;
     }
     (async () => {
-      const rpc = supabase.rpc as unknown as (
+      const rpc = supabase.rpc.bind(supabase) as unknown as (
         fn: string, args: Record<string, unknown>,
       ) => Promise<{ data: unknown }>;
       const { data } = await rpc("get_effective_fx_rate", {
@@ -147,7 +147,7 @@ function CheckoutPage() {
   async function applyCoupon() {
     if (!inv || !couponInput.trim()) return;
     setCouponBusy(true);
-    const rpc = supabase.rpc as unknown as (
+    const rpc = supabase.rpc.bind(supabase) as unknown as (
       fn: string,
       args: Record<string, unknown>,
     ) => Promise<{ data: unknown }>;
@@ -233,7 +233,7 @@ function CheckoutPage() {
 
     // Fraud blocklist screen (email + phone; ip is not visible to browser)
     try {
-      const rpc = (supabase.rpc as unknown as (
+      const rpc = (supabase.rpc.bind(supabase) as unknown as (
         fn: string,
         args: Record<string, unknown>,
       ) => Promise<{ data: boolean | null; error: { message: string } | null }>);
