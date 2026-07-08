@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Plug, ExternalLink } from "lucide-react";
-import { GATEWAYS, gatewaysByRegion } from "@/lib/gateways/registry";
+import { Trash2, Plug, ExternalLink, Check, Settings2, X } from "lucide-react";
+import { GATEWAYS, getGateway, gatewaysByRegion } from "@/lib/gateways/registry";
 
 export const Route = createFileRoute("/_authenticated/byo-gateways")({
   head: () => ({ meta: [{ title: "Payment Gateways · PayNOC" }] }),
@@ -20,165 +20,284 @@ export const Route = createFileRoute("/_authenticated/byo-gateways")({
 type Row = {
   id: string;
   provider: string;
-  mode: string;
+  mode: "sandbox" | "live";
   credentials: Record<string, string>;
   is_active: boolean;
   created_at: string;
 };
 
-type SbClient = {
-  from: (t: string) => {
-    select: (s: string) => {
-      eq: (c: string, v: string) => { order: (c: string, o: object) => Promise<{ data: Row[] | null }> };
-    };
-    upsert: (v: object, o: object) => Promise<{ error: { message: string } | null }>;
-    delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> };
-  };
-};
+type Draft = { provider: string; mode: "sandbox" | "live"; creds: Record<string, string> };
 
 function ByoPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
-  const [provider, setProvider] = useState("bkash");
-  const [mode, setMode] = useState<"sandbox" | "live">("sandbox");
-  const [creds, setCreds] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
-
-  const spec = useMemo(() => GATEWAYS.find((p) => p.id === provider)!, [provider]);
-  const client = supabase as unknown as SbClient;
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     if (!user) return;
-    const { data } = await client
+    const { data, error } = await supabase
       .from("byo_gateways")
       .select("id, provider, mode, credentials, is_active, created_at")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
-    setRows((data ?? []) as Row[]);
+    if (error) toast.error(error.message);
+    setRows((data ?? []) as unknown as Row[]);
   };
 
   useEffect(() => { load(); }, [user]);
-  useEffect(() => { setCreds({}); }, [provider]);
+
+  const byProvider = useMemo(() => {
+    const map = new Map<string, Row>();
+    rows.forEach((r) => map.set(r.provider, r));
+    return map;
+  }, [rows]);
+
+  const openNew = (providerId: string) => {
+    const existing = byProvider.get(providerId);
+    setEditId(existing?.id ?? null);
+    setDraft({
+      provider: providerId,
+      mode: existing?.mode ?? "sandbox",
+      creds: existing?.credentials ?? {},
+    });
+  };
 
   const save = async () => {
-    if (!user) return;
+    if (!user || !draft) return;
+    const spec = getGateway(draft.provider);
+    if (!spec) return;
     for (const f of spec.fields) {
-      if (f.required && !creds[f.key]?.trim()) return toast.error(`Missing ${f.label}`);
+      if (f.required && !draft.creds[f.key]?.trim()) return toast.error(`Missing ${f.label}`);
     }
     setBusy(true);
-    const { error } = await client.from("byo_gateways").upsert(
-      { merchant_id: user.id, provider, mode, credentials: creds, is_active: true },
+    const { error } = await supabase.from("byo_gateways").upsert(
+      {
+        merchant_id: user.id,
+        provider: draft.provider,
+        mode: draft.mode,
+        credentials: draft.creds,
+        is_active: true,
+      },
       { onConflict: "merchant_id,provider" },
     );
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(`${spec.label} connected. Webhook URL will be shown below.`);
-    setCreds({}); load();
+    toast.success(`${spec.label} saved`);
+    setDraft(null);
+    setEditId(null);
+    load();
   };
 
-  const remove = async (id: string) => {
-    const { error } = await client.from("byo_gateways").delete().eq("id", id);
+  const toggleActive = async (r: Row) => {
+    const { error } = await supabase
+      .from("byo_gateways")
+      .update({ is_active: !r.is_active })
+      .eq("id", r.id);
     if (error) return toast.error(error.message);
     load();
   };
 
-  const filtered = gatewaysByRegion(tab);
+  const remove = async (id: string) => {
+    if (!confirm("Disconnect this gateway?")) return;
+    const { error } = await supabase.from("byo_gateways").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Disconnected");
+    load();
+  };
+
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const filtered = gatewaysByRegion(tab);
 
   return (
-    <MerchantShell title="Payment Gateways" subtitle="Connect Bangladesh, international, and crypto gateways. Merchants can mix BYO credentials with platform-managed ones.">
+    <MerchantShell
+      title="Payment Gateways"
+      subtitle="Connect your own accounts for any supported gateway. Toggle sandbox / live and enable / disable at any time."
+    >
       <div className="mb-4 flex gap-2">
         {(["BD", "GLOBAL", "CRYPTO"] as const).map((t) => (
-          <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => { setTab(t); const first = gatewaysByRegion(t)[0]; if (first) setProvider(first.id); }}>
+          <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>
             {t === "BD" ? "Bangladesh" : t === "GLOBAL" ? "International" : "Crypto"}
           </Button>
         ))}
       </div>
 
-      <Card className="p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <Plug className="h-4 w-4 text-brand" />
-          <h3 className="font-medium">Connect gateway</h3>
-        </div>
-        <div className="grid gap-3 md:grid-cols-[240px_180px_1fr]">
-          <select
-            className="rounded-md border border-glass-border bg-background px-3 py-2 text-sm"
-            value={provider}
-            onChange={(e) => setProvider(e.target.value)}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((g) => {
+          const row = byProvider.get(g.id);
+          const connected = !!row;
+          return (
+            <Card key={g.id} className="flex flex-col gap-3 p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Plug className="h-4 w-4 text-brand" />
+                    <span className="font-semibold">{g.label}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {g.currencies.join(" · ")} · {g.flow.replace("_", " ")}
+                  </div>
+                </div>
+                {connected ? (
+                  <Badge className="gap-1"><Check className="h-3 w-3" /> Connected</Badge>
+                ) : (
+                  <Badge variant="outline">Not connected</Badge>
+                )}
+              </div>
+
+              {connected && row && (
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <Badge variant={row.mode === "live" ? "default" : "outline"} className="capitalize">{row.mode}</Badge>
+                  <Badge variant={row.is_active ? "default" : "outline"}>
+                    {row.is_active ? "Enabled" : "Disabled"}
+                  </Badge>
+                </div>
+              )}
+
+              {g.docsUrl && (
+                <a
+                  href={g.docsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-brand hover:underline"
+                >
+                  Provider docs <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+
+              <div className="mt-auto flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => openNew(g.id)}>
+                  <Settings2 className="mr-1 h-3 w-3" />
+                  {connected ? "Edit" : "Connect"}
+                </Button>
+                {connected && row && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => toggleActive(row)}>
+                      {row.is_active ? "Disable" : "Enable"}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => remove(row.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {draft && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setDraft(null)}
+        >
+          <div
+            className="glass max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-glass-border p-6"
+            onClick={(e) => e.stopPropagation()}
           >
-            {filtered.map((p) => <option key={p.id} value={p.id}>{p.label} · {p.currencies.join("/")}</option>)}
-          </select>
+            <DraftEditor
+              draft={draft}
+              editing={!!editId}
+              onChange={setDraft}
+              onSave={save}
+              onClose={() => { setDraft(null); setEditId(null); }}
+              busy={busy}
+              origin={origin}
+            />
+          </div>
+        </div>
+      )}
+    </MerchantShell>
+  );
+}
+
+function DraftEditor({
+  draft, editing, onChange, onSave, onClose, busy, origin,
+}: {
+  draft: Draft;
+  editing: boolean;
+  onChange: (d: Draft) => void;
+  onSave: () => void;
+  onClose: () => void;
+  busy: boolean;
+  origin: string;
+}) {
+  const spec = getGateway(draft.provider)!;
+  return (
+    <div>
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <div className="text-xs uppercase text-muted-foreground">{editing ? "Edit gateway" : "Connect gateway"}</div>
+          <h2 className="font-display text-xl font-semibold">{spec.label}</h2>
+        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs uppercase text-muted-foreground">Mode</label>
           <select
-            className="rounded-md border border-glass-border bg-background px-3 py-2 text-sm"
-            value={mode}
-            onChange={(e) => setMode(e.target.value as "sandbox" | "live")}
+            className="mt-1 w-full rounded-md border border-glass-border bg-background px-3 py-2 text-sm"
+            value={draft.mode}
+            onChange={(e) => onChange({ ...draft, mode: e.target.value as "sandbox" | "live" })}
           >
             <option value="sandbox">Sandbox</option>
             <option value="live">Live</option>
           </select>
-          <div className="text-xs text-muted-foreground self-center">
-            Flow: <b>{spec.flow.replace("_", " ")}</b>
-            {spec.docsUrl && (
-              <a className="ml-3 inline-flex items-center gap-1 text-brand" href={spec.docsUrl} target="_blank" rel="noreferrer">
-                Docs <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
-          </div>
         </div>
+        <div className="text-xs text-muted-foreground">
+          Webhook URL to paste in the provider dashboard:
+          <div className="mt-1 break-all rounded-md bg-muted px-2 py-1 font-mono text-[11px]">
+            {origin}/api/public/webhooks/{spec.id}
+          </div>
+          {spec.webhookHint && <p className="mt-1 text-[11px]">{spec.webhookHint}</p>}
+        </div>
+      </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {spec.fields.map((f) => (
-            f.type === "textarea" ? (
-              <Textarea key={f.key} placeholder={f.placeholder ?? f.label} className="md:col-span-2 min-h-24"
-                value={creds[f.key] ?? ""} onChange={(e) => setCreds({ ...creds, [f.key]: e.target.value })} />
-            ) : (
-              <Input key={f.key} placeholder={f.placeholder ?? f.label}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {spec.fields.map((f) =>
+          f.type === "textarea" ? (
+            <div key={f.key} className="sm:col-span-2">
+              <label className="text-xs uppercase text-muted-foreground">
+                {f.label} {f.required && <span className="text-destructive">*</span>}
+              </label>
+              <Textarea
+                className="mt-1 min-h-24"
+                placeholder={f.placeholder ?? ""}
+                value={draft.creds[f.key] ?? ""}
+                onChange={(e) => onChange({ ...draft, creds: { ...draft.creds, [f.key]: e.target.value } })}
+              />
+              {f.help && <p className="mt-1 text-[11px] text-muted-foreground">{f.help}</p>}
+            </div>
+          ) : (
+            <div key={f.key}>
+              <label className="text-xs uppercase text-muted-foreground">
+                {f.label} {f.required && <span className="text-destructive">*</span>}
+              </label>
+              <Input
+                className="mt-1"
                 type={f.type === "password" ? "password" : "text"}
-                value={creds[f.key] ?? ""} onChange={(e) => setCreds({ ...creds, [f.key]: e.target.value })} />
-            )
-          ))}
-        </div>
+                placeholder={f.placeholder ?? ""}
+                value={draft.creds[f.key] ?? ""}
+                onChange={(e) => onChange({ ...draft, creds: { ...draft.creds, [f.key]: e.target.value } })}
+              />
+              {f.help && <p className="mt-1 text-[11px] text-muted-foreground">{f.help}</p>}
+            </div>
+          ),
+        )}
+      </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            Webhook URL: <code className="rounded bg-muted px-2 py-1">{origin}/api/public/webhooks/{spec.id}</code>
-            {spec.webhookHint && <span className="ml-2">— {spec.webhookHint}</span>}
-          </div>
-          <Button onClick={save} disabled={busy}>Save gateway</Button>
-        </div>
-      </Card>
-
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Provider</th>
-              <th className="px-4 py-3">Mode</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Added</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No gateways connected</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 capitalize">{r.provider.replace("_", " ")}</td>
-                <td className="px-4 py-3"><Badge variant={r.mode === "live" ? "default" : "outline"}>{r.mode}</Badge></td>
-                <td className="px-4 py-3">{r.is_active ? <Badge>Active</Badge> : <Badge variant="outline">Disabled</Badge>}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
-    </MerchantShell>
+      <div className="mt-6 flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <Button onClick={onSave} disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Connect"}</Button>
+      </div>
+    </div>
   );
 }
+
+// Ensure the registry stays imported even if we later trim unused exports.
+void GATEWAYS;
