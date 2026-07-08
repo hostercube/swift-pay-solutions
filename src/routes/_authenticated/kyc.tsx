@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Upload, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
@@ -16,7 +15,21 @@ export const Route = createFileRoute("/_authenticated/kyc")({
   component: KycPage,
 });
 
-type Doc = { name: string; path: string };
+type Doc = { name: string; path: string; type?: string };
+
+const DOC_TYPES = [
+  "NID",
+  "Passport",
+  "Driving Licence",
+  "Trade Licence",
+  "BIN",
+  "TIN",
+  "RJSC",
+  "DBID",
+  "Bank Statement",
+  "Utility Bill",
+  "Other",
+];
 
 function KycPage() {
   const { user } = useAuth();
@@ -28,6 +41,7 @@ function KycPage() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [nextType, setNextType] = useState<string>(DOC_TYPES[0]);
 
   const load = async () => {
     if (!user) return;
@@ -47,12 +61,13 @@ function KycPage() {
   };
   useEffect(() => { load(); }, [user]);
 
-  const upload = async (f: File) => {
+  const upload = async (f: File, type: string) => {
     if (!user) return;
     const path = `${user.id}/${Date.now()}-${f.name}`;
     const { error } = await supabase.storage.from("kyc").upload(path, f, { upsert: false });
     if (error) return toast.error(error.message);
-    setDocs((d) => [...d, { name: f.name, path }]);
+    setDocs((d) => [...d, { name: f.name, path, type }]);
+    toast.success(`${type} uploaded`);
   };
 
   const removeDoc = async (path: string) => {
@@ -105,7 +120,7 @@ function KycPage() {
 
         <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <label className="text-xs text-muted-foreground">ID type (NID / Passport)</label>
+            <label className="text-xs text-muted-foreground">Primary ID type (NID / Passport)</label>
             <Input value={idType} onChange={(e) => setIdType(e.target.value)} disabled={status === "verified"} />
           </div>
           <div>
@@ -122,27 +137,52 @@ function KycPage() {
           </div>
         </div>
 
-        <div className="mt-4">
-          <label className="text-xs text-muted-foreground">Documents (ID front/back, trade licence, etc.)</label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {docs.map((d) => (
-              <Badge key={d.path} variant="outline" className="gap-1">
-                {d.name}
-                {status !== "verified" && (
-                  <button onClick={() => removeDoc(d.path)}><X className="h-3 w-3" /></button>
-                )}
-              </Badge>
-            ))}
-          </div>
+        <div className="mt-5">
+          <label className="text-xs text-muted-foreground">
+            Documents — upload any combination: NID/Passport, Driving Licence, Trade Licence, BIN/TIN/RJSC/DBID, or Other.
+          </label>
+
+          {docs.length > 0 && (
+            <div className="mt-2 space-y-1.5">
+              {docs.map((d) => (
+                <div key={d.path} className="flex items-center justify-between rounded-md border border-glass-border px-3 py-2 text-sm">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Badge variant="outline">{d.type ?? "Other"}</Badge>
+                    <span className="truncate">{d.name}</span>
+                  </div>
+                  {status !== "verified" && (
+                    <button onClick={() => removeDoc(d.path)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {status !== "verified" && (
-            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-md border border-glass-border px-3 py-2 text-sm hover:bg-muted">
-              <Upload className="h-4 w-4" /> Upload document
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-              />
-            </label>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <select
+                value={nextType}
+                onChange={(e) => setNextType(e.target.value)}
+                className="rounded-md border border-glass-border bg-card/60 px-3 py-2 text-sm"
+              >
+                {DOC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-glass-border px-3 py-2 text-sm hover:bg-muted">
+                <Upload className="h-4 w-4" /> Upload {nextType}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) upload(f, nextType);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
           )}
         </div>
 
