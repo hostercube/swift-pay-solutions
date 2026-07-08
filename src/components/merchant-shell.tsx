@@ -126,7 +126,7 @@ export function MerchantShell({
             <span className="font-display text-lg font-bold">PayNOC</span>
           </div>
           <nav className="flex-1 space-y-1 p-3">
-            {nav.map((item) => {
+            {nav.filter((item) => !item.perm || perms.has(item.perm)).map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
               const showBadge = item.to === "/notifications" && unread > 0;
               return (
@@ -149,7 +149,7 @@ export function MerchantShell({
                 </Link>
               );
             })}
-            {isSuperAdmin && (
+            {(isSuperAdmin || isAdminOffice) && (
               <>
                 <div className="mt-4 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Admin
@@ -159,7 +159,7 @@ export function MerchantShell({
                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand transition hover:bg-brand/10"
                 >
                   <Users className="h-4 w-4" />
-                  Super Admin Panel
+                  {isSuperAdmin ? "Super Admin Panel" : "Admin Panel"}
                 </Link>
               </>
             )}
