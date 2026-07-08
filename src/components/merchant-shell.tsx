@@ -32,36 +32,72 @@ import { useMerchantPerms } from "@/hooks/use-merchant-perms";
 import type { MerchantPerm } from "@/lib/permissions";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm?: MerchantPerm };
+type NavGroup = { label: string; items: NavItem[] };
 
-const nav: NavItem[] = [
-  { to: "/onboarding", label: "Get started", icon: Rocket },
-  { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/invoices", label: "Invoices", icon: Receipt, perm: "invoices" },
-  { to: "/recurring", label: "Recurring", icon: Repeat, perm: "invoices" },
-  { to: "/discounts", label: "Discount codes", icon: Tag, perm: "invoices" },
-  { to: "/transactions", label: "Transactions", icon: CreditCard, perm: "transactions" },
-  { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
-  { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
-  { to: "/refunds", label: "Refunds", icon: Receipt, perm: "refunds" },
-  { to: "/disputes", label: "Disputes", icon: Gavel, perm: "disputes" },
-  { to: "/reports", label: "Reports", icon: BarChart3, perm: "reports" },
-  { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
-  { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
-  { to: "/team", label: "Team", icon: Users, perm: "team" },
-  { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
-  { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
-  { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
-  { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
-  { to: "/api-reference", label: "API reference", icon: BookOpen },
-  { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
-  { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
-  { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
-  { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
-  { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
-  { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
-  { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
+const navGroups: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      { to: "/onboarding", label: "Get started", icon: Rocket },
+      { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
+      { to: "/reports", label: "Reports", icon: BarChart3, perm: "reports" },
+    ],
+  },
+  {
+    label: "Payments",
+    items: [
+      { to: "/transactions", label: "Transactions", icon: CreditCard, perm: "transactions" },
+      { to: "/invoices", label: "Invoices", icon: Receipt, perm: "invoices" },
+      { to: "/recurring", label: "Recurring", icon: Repeat, perm: "invoices" },
+      { to: "/discounts", label: "Discount codes", icon: Tag, perm: "invoices" },
+      { to: "/refunds", label: "Refunds", icon: Receipt, perm: "refunds" },
+      { to: "/disputes", label: "Disputes", icon: Gavel, perm: "disputes" },
+    ],
+  },
+  {
+    label: "Money",
+    items: [
+      { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
+      { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
+      { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
+    ],
+  },
+  {
+    label: "Gateways",
+    items: [
+      { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
+      { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
+    ],
+  },
+  {
+    label: "Developers",
+    items: [
+      { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
+      { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
+      { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
+      { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
+      { to: "/api-reference", label: "API reference", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Security",
+    items: [
+      { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
+      { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
+      { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
+      { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Workspace",
+    items: [
+      { to: "/team", label: "Team", icon: Users, perm: "team" },
+      { to: "/notifications", label: "Notifications", icon: Bell },
+      { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
+      { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+      { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
+    ],
+  },
 ];
 
 export function MerchantShell({
