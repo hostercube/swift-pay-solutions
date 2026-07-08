@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
+import { saveTurnstileConfig } from "@/lib/turnstile.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
   head: () => ({ meta: [{ title: "Platform settings · Admin" }] }),
@@ -52,23 +53,39 @@ function SettingsPage() {
   async function save() {
     if (!s) return;
     setSaving(true);
-    const nextSettings = { ...(s.settings ?? {}), turnstile: s.turnstile };
-    const { error } = await supabase
-      .from("platform_settings")
-      .update({
-        brand_name: s.brand_name,
-        default_currency: s.default_currency,
-        default_fee_percent: s.default_fee_percent,
-        default_fee_flat: s.default_fee_flat,
-        support_email: s.support_email,
-        logo_url: s.logo_url,
-        allow_signup: s.allow_signup,
-        settings: nextSettings,
-      })
-      .eq("id", s.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Settings saved");
+    try {
+      // Save turnstile via privileged server fn (bypasses potential RLS role mismatch)
+      await saveTurnstileConfig({
+        data: {
+          enabled: s.turnstile.enabled,
+          site_key: s.turnstile.site_key,
+          secret_key: s.turnstile.secret_key,
+        },
+      });
+
+      const { data: updated, error } = await supabase
+        .from("platform_settings")
+        .update({
+          brand_name: s.brand_name,
+          default_currency: s.default_currency,
+          default_fee_percent: s.default_fee_percent,
+          default_fee_flat: s.default_fee_flat,
+          support_email: s.support_email,
+          logo_url: s.logo_url,
+          allow_signup: s.allow_signup,
+        })
+        .eq("id", s.id)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!updated || updated.length === 0) {
+        throw new Error("Not authorized to update platform settings (super_admin required).");
+      }
+      toast.success("Settings saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!s) {
