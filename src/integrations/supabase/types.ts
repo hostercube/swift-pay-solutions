@@ -654,6 +654,65 @@ export type Database = {
           },
         ]
       }
+      merchant_subscriptions: {
+        Row: {
+          auto_renew: boolean
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          id: string
+          last_renewed_at: string | null
+          merchant_id: string
+          metadata: Json
+          package_id: string
+          started_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          last_renewed_at?: string | null
+          merchant_id: string
+          metadata?: Json
+          package_id: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          last_renewed_at?: string | null
+          merchant_id?: string
+          metadata?: Json
+          package_id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_subscriptions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           body: string | null
@@ -1301,6 +1360,111 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          merchant_id: string
+          meta: Json
+          note: string | null
+          package_id: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          merchant_id: string
+          meta?: Json
+          note?: string | null
+          package_id?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          merchant_id?: string
+          meta?: Json
+          note?: string | null
+          package_id?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_events_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_packages: {
+        Row: {
+          billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          is_public: boolean
+          limits: Json
+          name: string
+          permissions: string[]
+          price: number
+          slug: string
+          sort_order: number
+          trial_days: number
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          limits?: Json
+          name: string
+          permissions?: string[]
+          price?: number
+          slug: string
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          limits?: Json
+          name?: string
+          permissions?: string[]
+          price?: number
+          slug?: string
+          sort_order?: number
+          trial_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           accepted_at: string | null
@@ -1804,6 +1968,18 @@ export type Database = {
           ok: boolean
         }[]
       }
+      assign_subscription: {
+        Args: {
+          _auto_renew?: boolean
+          _merchant_id: string
+          _package_id: string
+        }
+        Returns: string
+      }
+      cancel_subscription: {
+        Args: { _subscription_id: string }
+        Returns: undefined
+      }
       check_fraud_block: {
         Args: {
           _email: string
@@ -1813,6 +1989,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      compute_period_end: {
+        Args: {
+          _cycle: Database["public"]["Enums"]["billing_cycle"]
+          _start: string
+        }
+        Returns: string
+      }
       consume_rate_limit: {
         Args: { _key_id: string; _limit: number; _window_seconds: number }
         Returns: number
@@ -1820,6 +2003,27 @@ export type Database = {
       effective_merchant_role: {
         Args: { _merchant_id: string; _user_id: string }
         Returns: string
+      }
+      expire_due_subscriptions: { Args: never; Returns: number }
+      get_active_subscription: {
+        Args: { _merchant_id: string }
+        Returns: {
+          auto_renew: boolean
+          billing_cycle: Database["public"]["Enums"]["billing_cycle"]
+          currency: string
+          current_period_end: string
+          current_period_start: string
+          features: Json
+          id: string
+          limits: Json
+          package_id: string
+          package_name: string
+          package_slug: string
+          permissions: string[]
+          price: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string
+        }[]
       }
       get_checkout_brand: {
         Args: { _merchant_id: string }
@@ -1963,13 +2167,19 @@ export type Database = {
         Args: { _merchant_id: string; _min_role: string; _user_id: string }
         Returns: boolean
       }
+      merchant_has_package_permission: {
+        Args: { _merchant_id: string; _perm: string }
+        Returns: boolean
+      }
       merchant_has_perm: {
         Args: { _merchant_id: string; _perm: string; _user_id: string }
         Returns: boolean
       }
+      renew_due_subscriptions: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "merchant"
+      billing_cycle: "monthly" | "yearly" | "lifetime"
       invoice_status:
         | "pending"
         | "processing"
@@ -1991,6 +2201,7 @@ export type Database = {
         | "card"
         | "crypto"
         | "other"
+      subscription_status: "trialing" | "active" | "expired" | "cancelled"
       transaction_status: "pending" | "verified" | "rejected"
       webhook_delivery_status: "pending" | "success" | "failed"
     }
@@ -2121,6 +2332,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "merchant"],
+      billing_cycle: ["monthly", "yearly", "lifetime"],
       invoice_status: [
         "pending",
         "processing",
@@ -2144,6 +2356,7 @@ export const Constants = {
         "crypto",
         "other",
       ],
+      subscription_status: ["trialing", "active", "expired", "cancelled"],
       transaction_status: ["pending", "verified", "rejected"],
       webhook_delivery_status: ["pending", "success", "failed"],
     },
