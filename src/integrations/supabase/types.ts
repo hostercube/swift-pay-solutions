@@ -785,6 +785,8 @@ export type Database = {
           credentials: Json
           fee_flat: number
           fee_percent: number
+          gateway_provider: string | null
+          gateway_source: string | null
           id: string
           instructions: string | null
           is_active: boolean
@@ -805,6 +807,8 @@ export type Database = {
           credentials?: Json
           fee_flat?: number
           fee_percent?: number
+          gateway_provider?: string | null
+          gateway_source?: string | null
           id?: string
           instructions?: string | null
           is_active?: boolean
@@ -825,6 +829,8 @@ export type Database = {
           credentials?: Json
           fee_flat?: number
           fee_percent?: number
+          gateway_provider?: string | null
+          gateway_source?: string | null
           id?: string
           instructions?: string | null
           is_active?: boolean
@@ -935,6 +941,48 @@ export type Database = {
           processed_by?: string | null
           reference?: string | null
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      platform_gateways: {
+        Row: {
+          commission_flat: number
+          commission_percent: number
+          created_at: string
+          credentials: Json
+          id: string
+          is_active: boolean
+          is_enabled_for_merchants: boolean
+          mode: string
+          notes: string | null
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          commission_flat?: number
+          commission_percent?: number
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          is_enabled_for_merchants?: boolean
+          mode?: string
+          notes?: string | null
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          commission_flat?: number
+          commission_percent?: number
+          created_at?: string
+          credentials?: Json
+          id?: string
+          is_active?: boolean
+          is_enabled_for_merchants?: boolean
+          mode?: string
+          notes?: string | null
+          provider?: string
           updated_at?: string
         }
         Relationships: []
@@ -1419,6 +1467,76 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_type: string | null
+          headers: Json
+          id: string
+          invoice_id: string | null
+          merchant_id: string | null
+          processed: boolean
+          provider: string
+          provider_event_id: string | null
+          raw_body: string
+          signature_verified: boolean
+          transaction_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          headers?: Json
+          id?: string
+          invoice_id?: string | null
+          merchant_id?: string | null
+          processed?: boolean
+          provider: string
+          provider_event_id?: string | null
+          raw_body: string
+          signature_verified?: boolean
+          transaction_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          headers?: Json
+          id?: string
+          invoice_id?: string | null
+          merchant_id?: string | null
+          processed?: boolean
+          provider?: string
+          provider_event_id?: string | null
+          raw_body?: string
+          signature_verified?: boolean
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_events_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       checkout_brand: {
@@ -1659,6 +1777,8 @@ export type Database = {
           credentials: Json
           fee_flat: number
           fee_percent: number
+          gateway_provider: string | null
+          gateway_source: string | null
           id: string
           instructions: string | null
           is_active: boolean
