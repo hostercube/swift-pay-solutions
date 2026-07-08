@@ -65,7 +65,35 @@ function MerchantsPage() {
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
       if (error) return toast.error(error.message);
       toast.success("Super admin granted");
+  }
+
+  const createFn = useServerFn(adminCreateMerchant);
+  const impersonateFn = useServerFn(adminImpersonate);
+  const [showCreate, setShowCreate] = useState(false);
+  const [c, setC] = useState({ email: "", password: "", business_name: "", full_name: "", verified: true });
+
+  async function createMerchant() {
+    try {
+      await createFn({ data: c });
+      toast.success("Merchant created");
+      setShowCreate(false);
+      setC({ email: "", password: "", business_name: "", full_name: "", verified: true });
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
     }
+  }
+
+  async function impersonate(id: string, email: string) {
+    if (!confirm(`Sign in as ${email}?\nA one-time link will open in a new tab.`)) return;
+    try {
+      const res = await impersonateFn({ data: { target_user_id: id } });
+      if (res.action_link) window.open(res.action_link, "_blank");
+      else toast.error("No link returned");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+  }
     load();
   }
 
