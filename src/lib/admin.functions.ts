@@ -47,7 +47,7 @@ export const adminCreateMerchant = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
@@ -79,7 +79,7 @@ export const adminImpersonate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
     const { data: userRow, error: uErr } = await supabaseAdmin.auth.admin.getUserById(data.target_user_id);
     if (uErr || !userRow.user?.email) throw new Error(uErr?.message ?? "Merchant not found");
@@ -200,7 +200,7 @@ export const adminSendPasswordReset = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { data: u, error: e1 } = await supabaseAdmin.auth.admin.getUserById(data.merchant_id);
     if (e1 || !u.user?.email) throw new Error(e1?.message ?? "Merchant not found");
 
@@ -219,7 +219,7 @@ export const adminDeleteMerchant = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ merchant_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.merchant_id);
     if (error) throw new Error(error.message);
     await logAudit(context, "merchant.deleted", data.merchant_id);

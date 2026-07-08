@@ -31,7 +31,7 @@ export async function authenticateApiKey(request: Request): Promise<
   }
 
   const hash = createHash("sha256").update(header).digest("hex");
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
   const { data, error } = await supabaseAdmin
     .from("api_keys")

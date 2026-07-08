@@ -2,7 +2,7 @@
 // (best-effort) sends Email via Resend + SMS via GatewayAPI when secrets exist.
 // Never throws — notification failures must not break payment flow.
 
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { supabaseAdmin } from "@/lib/supabase-admin.server";
 
 type NotifyInput = {
   merchantId: string;

@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/hooks/run-payout-schedule")({
 });
 
 async function handle() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const nowIso = new Date().toISOString();
 
   const { data: schedules } = await (supabaseAdmin.from as unknown as (t: string) => {

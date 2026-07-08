@@ -14,7 +14,7 @@ const initiateSchema = z.object({
 export const initiateGatewayCheckout = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => initiateSchema.parse(d))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { initiateCheckout } = await import("./adapters.server");
 
     const { data: inv, error: invErr } = await supabaseAdmin
