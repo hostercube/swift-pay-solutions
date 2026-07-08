@@ -169,24 +169,3 @@ function KycRow({
     </Card>
   );
 }
-      <div className="mt-4 grid gap-2 text-sm md:grid-cols-2">
-        <div><span className="text-muted-foreground">ID type: </span>{row.kyc_id_type || "—"}</div>
-        <div><span className="text-muted-foreground">ID number: </span>{row.kyc_id_number || "—"}</div>
-        <div><span className="text-muted-foreground">Business type: </span>{row.kyc_business_type || "—"}</div>
-        <div><span className="text-muted-foreground">Address: </span>{row.kyc_address || "—"}</div>
-      </div>
-      {row.kyc_documents?.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {row.kyc_documents.map((d, i) => (
-            <Button key={i} size="sm" variant="outline" onClick={() => onDoc(d.path)}>{d.name}</Button>
-          ))}
-        </div>
-      )}
-      <Textarea className="mt-3" placeholder="Reviewer note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-      <div className="mt-3 flex justify-end gap-2">
-        <Button variant="outline" onClick={() => onDecide(row.id, "rejected", note)}>Reject</Button>
-        <Button onClick={() => onDecide(row.id, "verified", note)}>Verify</Button>
-      </div>
-    </Card>
-  );
-}
