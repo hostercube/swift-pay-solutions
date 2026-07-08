@@ -218,3 +218,34 @@ function PublicMerchantPage() {
     </div>
   );
 }
+
+function MerchantSeoHead({ merchant }: { merchant: Merchant }) {
+  useEffect(() => {
+    const title = merchant.business_name
+      ? `${merchant.business_name} · PayNOC`
+      : `Pay ${merchant.slug} · PayNOC`;
+    document.title = title;
+    const desc =
+      merchant.seo_meta_description?.trim() ||
+      merchant.public_bio?.trim() ||
+      `Send a payment to ${merchant.business_name ?? merchant.slug} securely via PayNOC.`;
+    setMeta("name", "description", desc);
+    if (merchant.seo_meta_keywords?.trim()) {
+      setMeta("name", "keywords", merchant.seo_meta_keywords.trim());
+    }
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", desc);
+    if (merchant.logo_url) setMeta("property", "og:image", merchant.logo_url);
+  }, [merchant]);
+  return null;
+}
+
+function setMeta(attr: "name" | "property", key: string, value: string) {
+  let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, key);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", value);
+}
