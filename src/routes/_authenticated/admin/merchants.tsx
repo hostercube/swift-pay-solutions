@@ -50,6 +50,19 @@ function MerchantsPage() {
     load();
   }
 
+  async function toggleSuperAdmin(userId: string, currentlyAdmin: boolean) {
+    if (currentlyAdmin) {
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
+      if (error) return toast.error(error.message);
+      toast.success("Super admin revoked");
+    } else {
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
+      if (error) return toast.error(error.message);
+      toast.success("Super admin granted");
+    }
+    load();
+  }
+
   const filtered = rows.filter((r) => {
     const s = q.toLowerCase();
     return (
@@ -104,7 +117,7 @@ function MerchantsPage() {
                   {new Date(r.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <div className="inline-flex gap-2">
+                  <div className="inline-flex flex-wrap justify-end gap-2">
                     {r.status !== "active" && (
                       <button onClick={() => setStatus(r.id, "active")} className="rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand">
                         Activate
@@ -115,6 +128,14 @@ function MerchantsPage() {
                         Suspend
                       </button>
                     )}
+                    <button
+                      onClick={() => toggleSuperAdmin(r.id, !!r.is_super_admin)}
+                      className={`rounded-md border border-glass-border px-2 py-1 text-xs ${
+                        r.is_super_admin ? "text-brand" : "hover:bg-brand/10 hover:text-brand"
+                      }`}
+                    >
+                      {r.is_super_admin ? "Revoke super admin" : "Make super admin"}
+                    </button>
                   </div>
                 </td>
               </tr>
