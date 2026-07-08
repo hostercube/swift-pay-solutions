@@ -6,7 +6,7 @@ type TurnstileSettings = {
   secret_key?: string;
 };
 
-async function loadSettings(): Promise<TurnstileSettings> {
+export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("platform_settings")
@@ -15,18 +15,22 @@ async function loadSettings(): Promise<TurnstileSettings> {
     .limit(1)
     .maybeSingle();
   const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
-  return s.turnstile ?? {};
-}
-
-export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const t = await loadSettings();
+  const t = s.turnstile ?? {};
   return { enabled: !!t.enabled && !!t.site_key, siteKey: t.site_key ?? "" };
 });
 
 export const verifyTurnstile = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
-    const t = await loadSettings();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("platform_settings")
+      .select("settings")
+      .order("id")
+      .limit(1)
+      .maybeSingle();
+    const s = (row?.settings ?? {}) as { turnstile?: TurnstileSettings };
+    const t = s.turnstile ?? {};
     if (!t.enabled) return { ok: true };
     if (!t.secret_key) return { ok: false, error: "Turnstile not configured" };
     if (!data.token) return { ok: false, error: "Missing captcha token" };
