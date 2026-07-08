@@ -308,6 +308,9 @@ function CheckoutPage() {
     );
   }
 
+  const verified = txns.find((t) => t.status === "verified");
+  const pending = txns.find((t) => t.status === "pending");
+
   if (verified) {
     return (
       <Shell brand={brand}>
