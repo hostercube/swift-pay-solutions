@@ -63,28 +63,23 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Gateways",
+    label: "Integrations",
     items: [
-      { to: "/methods", label: "Payment methods", icon: CreditCard, perm: "methods" },
-      { to: "/byo-gateways", label: "BYO Gateways", icon: Plug, perm: "webhooks" },
+      { to: "/integrations", label: "Payment integrations", icon: CreditCard, perm: "methods" },
     ],
   },
   {
     label: "Developers",
     items: [
-      { to: "/api-keys", label: "API keys", icon: KeyRound, perm: "api_keys" },
       { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
       { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
-      { to: "/integrate", label: "Integrate (iframe/link)", icon: Code2, perm: "settings" },
       { to: "/api-reference", label: "API reference", icon: BookOpen },
     ],
   },
   {
     label: "Security",
     items: [
-      { to: "/security", label: "Security (2FA)", icon: ShieldCheck, perm: "settings" },
-      { to: "/ip-whitelist", label: "IP whitelist", icon: Lock, perm: "settings" },
-      { to: "/fraud", label: "Fraud rules", icon: ShieldAlert, perm: "settings" },
+      { to: "/security", label: "Security", icon: ShieldCheck, perm: "settings" },
       { to: "/kyc", label: "Verification (KYC)", icon: ShieldCheck },
     ],
   },
@@ -93,8 +88,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/team", label: "Team", icon: Users, perm: "team" },
       { to: "/notifications", label: "Notifications", icon: Bell },
-      { to: "/notification-settings", label: "Notification settings", icon: Bell, perm: "settings" },
-      { to: "/digest", label: "Email digest", icon: Mail, perm: "settings" },
+
       { to: "/marketing", label: "Marketing & SEO", icon: BarChart3, perm: "settings" },
       { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
     ],

@@ -35,40 +35,41 @@ import { Route as AuthenticatedPayoutsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPayoutScheduleRouteImport } from './routes/_authenticated/payout-schedule'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
-import { Route as AuthenticatedMethodsRouteImport } from './routes/_authenticated/methods'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedIpWhitelistRouteImport } from './routes/_authenticated/ip-whitelist'
 import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
-import { Route as AuthenticatedIntegrateRouteImport } from './routes/_authenticated/integrate'
+import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedFxRouteImport } from './routes/_authenticated/fx'
-import { Route as AuthenticatedFraudRouteImport } from './routes/_authenticated/fraud'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
-import { Route as AuthenticatedDigestRouteImport } from './routes/_authenticated/digest'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedByoGatewaysRouteImport } from './routes/_authenticated/byo-gateways'
 import { Route as AuthenticatedApiLogsRouteImport } from './routes/_authenticated/api-logs'
-import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedSecurityIndexRouteImport } from './routes/_authenticated/security.index'
+import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications.index'
+import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_authenticated/integrations.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedSecurityIpWhitelistRouteImport } from './routes/_authenticated/security.ip-whitelist'
+import { Route as AuthenticatedSecurityFraudRouteImport } from './routes/_authenticated/security.fraud'
+import { Route as AuthenticatedSecurityApiKeysRouteImport } from './routes/_authenticated/security.api-keys'
+import { Route as AuthenticatedNotificationsSettingsRouteImport } from './routes/_authenticated/notifications.settings'
+import { Route as AuthenticatedNotificationsDigestRouteImport } from './routes/_authenticated/notifications.digest'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
-import { Route as AuthenticatedAdminWebhooksHealthRouteImport } from './routes/_authenticated/admin/webhooks-health'
+import { Route as AuthenticatedIntegrationsByoRouteImport } from './routes/_authenticated/integrations.byo'
+import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_authenticated/integrations.api'
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
-import { Route as AuthenticatedAdminPluginsRouteImport } from './routes/_authenticated/admin/plugins'
-import { Route as AuthenticatedAdminPlatformGatewaysRouteImport } from './routes/_authenticated/admin/platform-gateways'
+import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
-import { Route as AuthenticatedAdminIncidentsRouteImport } from './routes/_authenticated/admin/incidents'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminBroadcastRouteImport } from './routes/_authenticated/admin/broadcast'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
+import { Route as AuthenticatedAdminPlatformIndexRouteImport } from './routes/_authenticated/admin/platform.index'
 import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/public/webhooks.$provider'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
@@ -77,6 +78,9 @@ import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksRunPayoutScheduleRouteImport } from './routes/api/public/hooks/run-payout-schedule'
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
+import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
+import { Route as AuthenticatedAdminPlatformPluginsRouteImport } from './routes/_authenticated/admin/platform.plugins'
+import { Route as AuthenticatedAdminPlatformIncidentsRouteImport } from './routes/_authenticated/admin/platform.incidents'
 import { Route as AuthenticatedAdminMerchantsIdRouteImport } from './routes/_authenticated/admin/merchants.$id'
 import { Route as ApiPublicV1InvoicesIdRouteImport } from './routes/api/public/v1/invoices.$id'
 
@@ -212,17 +216,6 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedNotificationSettingsRoute =
-  AuthenticatedNotificationSettingsRouteImport.update({
-    id: '/notification-settings',
-    path: '/notification-settings',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMethodsRoute = AuthenticatedMethodsRouteImport.update({
-  id: '/methods',
-  path: '/methods',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMarketingRoute = AuthenticatedMarketingRouteImport.update({
   id: '/marketing',
   path: '/marketing',
@@ -233,30 +226,20 @@ const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   path: '/kyc',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIpWhitelistRoute =
-  AuthenticatedIpWhitelistRouteImport.update({
-    id: '/ip-whitelist',
-    path: '/ip-whitelist',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
   id: '/invoices',
   path: '/invoices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIntegrateRoute = AuthenticatedIntegrateRouteImport.update({
-  id: '/integrate',
-  path: '/integrate',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+const AuthenticatedIntegrationsRoute =
+  AuthenticatedIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFxRoute = AuthenticatedFxRouteImport.update({
   id: '/fx',
   path: '/fx',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFraudRoute = AuthenticatedFraudRouteImport.update({
-  id: '/fraud',
-  path: '/fraud',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
@@ -269,30 +252,14 @@ const AuthenticatedDiscountsRoute = AuthenticatedDiscountsRouteImport.update({
   path: '/discounts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDigestRoute = AuthenticatedDigestRouteImport.update({
-  id: '/digest',
-  path: '/digest',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedByoGatewaysRoute =
-  AuthenticatedByoGatewaysRouteImport.update({
-    id: '/byo-gateways',
-    path: '/byo-gateways',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedApiLogsRoute = AuthenticatedApiLogsRouteImport.update({
   id: '/api-logs',
   path: '/api-logs',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
-  id: '/api-keys',
-  path: '/api-keys',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
@@ -300,11 +267,59 @@ const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSecurityIndexRoute =
+  AuthenticatedSecurityIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSecurityRoute,
+  } as any)
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedNotificationsRoute,
+  } as any)
+const AuthenticatedIntegrationsIndexRoute =
+  AuthenticatedIntegrationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedIntegrationsRoute,
+  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedSecurityIpWhitelistRoute =
+  AuthenticatedSecurityIpWhitelistRouteImport.update({
+    id: '/ip-whitelist',
+    path: '/ip-whitelist',
+    getParentRoute: () => AuthenticatedSecurityRoute,
+  } as any)
+const AuthenticatedSecurityFraudRoute =
+  AuthenticatedSecurityFraudRouteImport.update({
+    id: '/fraud',
+    path: '/fraud',
+    getParentRoute: () => AuthenticatedSecurityRoute,
+  } as any)
+const AuthenticatedSecurityApiKeysRoute =
+  AuthenticatedSecurityApiKeysRouteImport.update({
+    id: '/api-keys',
+    path: '/api-keys',
+    getParentRoute: () => AuthenticatedSecurityRoute,
+  } as any)
+const AuthenticatedNotificationsSettingsRoute =
+  AuthenticatedNotificationsSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedNotificationsRoute,
+  } as any)
+const AuthenticatedNotificationsDigestRoute =
+  AuthenticatedNotificationsDigestRouteImport.update({
+    id: '/digest',
+    path: '/digest',
+    getParentRoute: () => AuthenticatedNotificationsRoute,
+  } as any)
 const AuthenticatedInvoicesNewRoute =
   AuthenticatedInvoicesNewRouteImport.update({
     id: '/new',
@@ -316,11 +331,17 @@ const AuthenticatedInvoicesIdRoute = AuthenticatedInvoicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedInvoicesRoute,
 } as any)
-const AuthenticatedAdminWebhooksHealthRoute =
-  AuthenticatedAdminWebhooksHealthRouteImport.update({
-    id: '/webhooks-health',
-    path: '/webhooks-health',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
+const AuthenticatedIntegrationsByoRoute =
+  AuthenticatedIntegrationsByoRouteImport.update({
+    id: '/byo',
+    path: '/byo',
+    getParentRoute: () => AuthenticatedIntegrationsRoute,
+  } as any)
+const AuthenticatedIntegrationsApiRoute =
+  AuthenticatedIntegrationsApiRouteImport.update({
+    id: '/api',
+    path: '/api',
+    getParentRoute: () => AuthenticatedIntegrationsRoute,
   } as any)
 const AuthenticatedAdminTransactionsRoute =
   AuthenticatedAdminTransactionsRouteImport.update({
@@ -339,16 +360,10 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminPluginsRoute =
-  AuthenticatedAdminPluginsRouteImport.update({
-    id: '/plugins',
-    path: '/plugins',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminPlatformGatewaysRoute =
-  AuthenticatedAdminPlatformGatewaysRouteImport.update({
-    id: '/platform-gateways',
-    path: '/platform-gateways',
+const AuthenticatedAdminPlatformRoute =
+  AuthenticatedAdminPlatformRouteImport.update({
+    id: '/platform',
+    path: '/platform',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedAdminPayoutsRoute =
@@ -374,12 +389,6 @@ const AuthenticatedAdminInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminIncidentsRoute =
-  AuthenticatedAdminIncidentsRouteImport.update({
-    id: '/incidents',
-    path: '/incidents',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
 const AuthenticatedAdminFxRoute = AuthenticatedAdminFxRouteImport.update({
   id: '/fx',
   path: '/fx',
@@ -396,6 +405,12 @@ const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminPlatformIndexRoute =
+  AuthenticatedAdminPlatformIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
 const ApiPublicWebhooksProviderRoute =
   ApiPublicWebhooksProviderRouteImport.update({
     id: '/api/public/webhooks/$provider',
@@ -441,6 +456,24 @@ const ApiPublicHooksExpireInvoicesRoute =
     path: '/api/public/hooks/expire-invoices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminPlatformWebhooksRoute =
+  AuthenticatedAdminPlatformWebhooksRouteImport.update({
+    id: '/webhooks',
+    path: '/webhooks',
+    getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
+const AuthenticatedAdminPlatformPluginsRoute =
+  AuthenticatedAdminPlatformPluginsRouteImport.update({
+    id: '/plugins',
+    path: '/plugins',
+    getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
+const AuthenticatedAdminPlatformIncidentsRoute =
+  AuthenticatedAdminPlatformIncidentsRouteImport.update({
+    id: '/incidents',
+    path: '/incidents',
+    getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
 const AuthenticatedAdminMerchantsIdRoute =
   AuthenticatedAdminMerchantsIdRouteImport.update({
     id: '/$id',
@@ -466,30 +499,23 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
-  '/api-keys': typeof AuthenticatedApiKeysRoute
   '/api-logs': typeof AuthenticatedApiLogsRoute
-  '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/digest': typeof AuthenticatedDigestRoute
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
-  '/fraud': typeof AuthenticatedFraudRoute
   '/fx': typeof AuthenticatedFxRoute
-  '/integrate': typeof AuthenticatedIntegrateRoute
+  '/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
-  '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
-  '/methods': typeof AuthenticatedMethodsRoute
-  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
-  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/notifications': typeof AuthenticatedNotificationsRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/security': typeof AuthenticatedSecurityRoute
+  '/security': typeof AuthenticatedSecurityRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -499,21 +525,31 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
-  '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
-  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
-  '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
+  '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
-  '/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
+  '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
+  '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
+  '/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
+  '/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/security/fraud': typeof AuthenticatedSecurityFraudRoute
+  '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/integrations/': typeof AuthenticatedIntegrationsIndexRoute
+  '/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/security/': typeof AuthenticatedSecurityIndexRoute
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
+  '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
+  '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -522,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/admin/platform/': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesByTo {
@@ -536,30 +573,20 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
-  '/api-keys': typeof AuthenticatedApiKeysRoute
   '/api-logs': typeof AuthenticatedApiLogsRoute
-  '/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/digest': typeof AuthenticatedDigestRoute
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
-  '/fraud': typeof AuthenticatedFraudRoute
   '/fx': typeof AuthenticatedFxRoute
-  '/integrate': typeof AuthenticatedIntegrateRoute
   '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
-  '/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
-  '/methods': typeof AuthenticatedMethodsRoute
-  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
-  '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
   '/reports': typeof AuthenticatedReportsRoute
-  '/security': typeof AuthenticatedSecurityRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
@@ -569,21 +596,30 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/admin/fx': typeof AuthenticatedAdminFxRoute
-  '/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
-  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
-  '/admin/plugins': typeof AuthenticatedAdminPluginsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
-  '/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
+  '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
+  '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
+  '/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
+  '/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/security/fraud': typeof AuthenticatedSecurityFraudRoute
+  '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/integrations': typeof AuthenticatedIntegrationsIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
+  '/security': typeof AuthenticatedSecurityIndexRoute
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
+  '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
+  '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -592,6 +628,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/admin/platform': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRoutesById {
@@ -609,30 +646,23 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/status': typeof StatusRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
-  '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/api-logs': typeof AuthenticatedApiLogsRoute
-  '/_authenticated/byo-gateways': typeof AuthenticatedByoGatewaysRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/digest': typeof AuthenticatedDigestRoute
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
-  '/_authenticated/fraud': typeof AuthenticatedFraudRoute
   '/_authenticated/fx': typeof AuthenticatedFxRoute
-  '/_authenticated/integrate': typeof AuthenticatedIntegrateRoute
+  '/_authenticated/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
   '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
-  '/_authenticated/ip-whitelist': typeof AuthenticatedIpWhitelistRoute
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
-  '/_authenticated/methods': typeof AuthenticatedMethodsRoute
-  '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
-  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
   '/_authenticated/payouts': typeof AuthenticatedPayoutsRoute
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/refunds': typeof AuthenticatedRefundsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/security': typeof AuthenticatedSecurityRoute
+  '/_authenticated/security': typeof AuthenticatedSecurityRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
@@ -642,21 +672,31 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/broadcast': typeof AuthenticatedAdminBroadcastRoute
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
-  '/_authenticated/admin/incidents': typeof AuthenticatedAdminIncidentsRoute
   '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
-  '/_authenticated/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
-  '/_authenticated/admin/plugins': typeof AuthenticatedAdminPluginsRoute
+  '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
-  '/_authenticated/admin/webhooks-health': typeof AuthenticatedAdminWebhooksHealthRoute
+  '/_authenticated/integrations/api': typeof AuthenticatedIntegrationsApiRoute
+  '/_authenticated/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
+  '/_authenticated/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
+  '/_authenticated/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
+  '/_authenticated/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/_authenticated/security/fraud': typeof AuthenticatedSecurityFraudRoute
+  '/_authenticated/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/integrations/': typeof AuthenticatedIntegrationsIndexRoute
+  '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/_authenticated/security/': typeof AuthenticatedSecurityIndexRoute
   '/_authenticated/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
+  '/_authenticated/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
+  '/_authenticated/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
@@ -665,6 +705,7 @@ export interface FileRoutesById {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/_authenticated/admin/platform/': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
 export interface FileRouteTypes {
@@ -682,22 +723,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/admin'
-    | '/api-keys'
     | '/api-logs'
-    | '/byo-gateways'
     | '/dashboard'
-    | '/digest'
     | '/discounts'
     | '/disputes'
-    | '/fraud'
     | '/fx'
-    | '/integrate'
+    | '/integrations'
     | '/invoices'
-    | '/ip-whitelist'
     | '/kyc'
     | '/marketing'
-    | '/methods'
-    | '/notification-settings'
     | '/notifications'
     | '/onboarding'
     | '/payout-schedule'
@@ -715,21 +749,31 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/broadcast'
     | '/admin/fx'
-    | '/admin/incidents'
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
-    | '/admin/platform-gateways'
-    | '/admin/plugins'
+    | '/admin/platform'
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/transactions'
-    | '/admin/webhooks-health'
+    | '/integrations/api'
+    | '/integrations/byo'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/notifications/digest'
+    | '/notifications/settings'
+    | '/security/api-keys'
+    | '/security/fraud'
+    | '/security/ip-whitelist'
     | '/admin/'
+    | '/integrations/'
+    | '/notifications/'
+    | '/security/'
     | '/admin/merchants/$id'
+    | '/admin/platform/incidents'
+    | '/admin/platform/plugins'
+    | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -738,6 +782,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/admin/platform/'
     | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -752,30 +797,20 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/reset-password'
     | '/status'
-    | '/api-keys'
     | '/api-logs'
-    | '/byo-gateways'
     | '/dashboard'
-    | '/digest'
     | '/discounts'
     | '/disputes'
-    | '/fraud'
     | '/fx'
-    | '/integrate'
     | '/invoices'
-    | '/ip-whitelist'
     | '/kyc'
     | '/marketing'
-    | '/methods'
-    | '/notification-settings'
-    | '/notifications'
     | '/onboarding'
     | '/payout-schedule'
     | '/payouts'
     | '/recurring'
     | '/refunds'
     | '/reports'
-    | '/security'
     | '/settings'
     | '/team'
     | '/transactions'
@@ -785,21 +820,30 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/broadcast'
     | '/admin/fx'
-    | '/admin/incidents'
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
-    | '/admin/platform-gateways'
-    | '/admin/plugins'
     | '/admin/settings'
     | '/admin/staff'
     | '/admin/transactions'
-    | '/admin/webhooks-health'
+    | '/integrations/api'
+    | '/integrations/byo'
     | '/invoices/$id'
     | '/invoices/new'
+    | '/notifications/digest'
+    | '/notifications/settings'
+    | '/security/api-keys'
+    | '/security/fraud'
+    | '/security/ip-whitelist'
     | '/admin'
+    | '/integrations'
+    | '/notifications'
+    | '/security'
     | '/admin/merchants/$id'
+    | '/admin/platform/incidents'
+    | '/admin/platform/plugins'
+    | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -808,6 +852,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/admin/platform'
     | '/api/public/v1/invoices/$id'
   id:
     | '__root__'
@@ -824,22 +869,15 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/status'
     | '/_authenticated/admin'
-    | '/_authenticated/api-keys'
     | '/_authenticated/api-logs'
-    | '/_authenticated/byo-gateways'
     | '/_authenticated/dashboard'
-    | '/_authenticated/digest'
     | '/_authenticated/discounts'
     | '/_authenticated/disputes'
-    | '/_authenticated/fraud'
     | '/_authenticated/fx'
-    | '/_authenticated/integrate'
+    | '/_authenticated/integrations'
     | '/_authenticated/invoices'
-    | '/_authenticated/ip-whitelist'
     | '/_authenticated/kyc'
     | '/_authenticated/marketing'
-    | '/_authenticated/methods'
-    | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
     | '/_authenticated/payout-schedule'
@@ -857,21 +895,31 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/audit'
     | '/_authenticated/admin/broadcast'
     | '/_authenticated/admin/fx'
-    | '/_authenticated/admin/incidents'
     | '/_authenticated/admin/invoices'
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
-    | '/_authenticated/admin/platform-gateways'
-    | '/_authenticated/admin/plugins'
+    | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/transactions'
-    | '/_authenticated/admin/webhooks-health'
+    | '/_authenticated/integrations/api'
+    | '/_authenticated/integrations/byo'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
+    | '/_authenticated/notifications/digest'
+    | '/_authenticated/notifications/settings'
+    | '/_authenticated/security/api-keys'
+    | '/_authenticated/security/fraud'
+    | '/_authenticated/security/ip-whitelist'
     | '/_authenticated/admin/'
+    | '/_authenticated/integrations/'
+    | '/_authenticated/notifications/'
+    | '/_authenticated/security/'
     | '/_authenticated/admin/merchants/$id'
+    | '/_authenticated/admin/platform/incidents'
+    | '/_authenticated/admin/platform/plugins'
+    | '/_authenticated/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-payout-schedule'
@@ -880,6 +928,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/_authenticated/admin/platform/'
     | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
 }
@@ -1092,20 +1141,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/notification-settings': {
-      id: '/_authenticated/notification-settings'
-      path: '/notification-settings'
-      fullPath: '/notification-settings'
-      preLoaderRoute: typeof AuthenticatedNotificationSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/methods': {
-      id: '/_authenticated/methods'
-      path: '/methods'
-      fullPath: '/methods'
-      preLoaderRoute: typeof AuthenticatedMethodsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/marketing': {
       id: '/_authenticated/marketing'
       path: '/marketing'
@@ -1120,13 +1155,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKycRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/ip-whitelist': {
-      id: '/_authenticated/ip-whitelist'
-      path: '/ip-whitelist'
-      fullPath: '/ip-whitelist'
-      preLoaderRoute: typeof AuthenticatedIpWhitelistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/invoices': {
       id: '/_authenticated/invoices'
       path: '/invoices'
@@ -1134,11 +1162,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/integrate': {
-      id: '/_authenticated/integrate'
-      path: '/integrate'
-      fullPath: '/integrate'
-      preLoaderRoute: typeof AuthenticatedIntegrateRouteImport
+    '/_authenticated/integrations': {
+      id: '/_authenticated/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AuthenticatedIntegrationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/fx': {
@@ -1146,13 +1174,6 @@ declare module '@tanstack/react-router' {
       path: '/fx'
       fullPath: '/fx'
       preLoaderRoute: typeof AuthenticatedFxRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/fraud': {
-      id: '/_authenticated/fraud'
-      path: '/fraud'
-      fullPath: '/fraud'
-      preLoaderRoute: typeof AuthenticatedFraudRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/disputes': {
@@ -1169,25 +1190,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiscountsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/digest': {
-      id: '/_authenticated/digest'
-      path: '/digest'
-      fullPath: '/digest'
-      preLoaderRoute: typeof AuthenticatedDigestRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/byo-gateways': {
-      id: '/_authenticated/byo-gateways'
-      path: '/byo-gateways'
-      fullPath: '/byo-gateways'
-      preLoaderRoute: typeof AuthenticatedByoGatewaysRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/api-logs': {
@@ -1197,13 +1204,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApiLogsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/api-keys': {
-      id: '/_authenticated/api-keys'
-      path: '/api-keys'
-      fullPath: '/api-keys'
-      preLoaderRoute: typeof AuthenticatedApiKeysRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -1211,12 +1211,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/security/': {
+      id: '/_authenticated/security/'
+      path: '/'
+      fullPath: '/security/'
+      preLoaderRoute: typeof AuthenticatedSecurityIndexRouteImport
+      parentRoute: typeof AuthenticatedSecurityRoute
+    }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedNotificationsRoute
+    }
+    '/_authenticated/integrations/': {
+      id: '/_authenticated/integrations/'
+      path: '/'
+      fullPath: '/integrations/'
+      preLoaderRoute: typeof AuthenticatedIntegrationsIndexRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/security/ip-whitelist': {
+      id: '/_authenticated/security/ip-whitelist'
+      path: '/ip-whitelist'
+      fullPath: '/security/ip-whitelist'
+      preLoaderRoute: typeof AuthenticatedSecurityIpWhitelistRouteImport
+      parentRoute: typeof AuthenticatedSecurityRoute
+    }
+    '/_authenticated/security/fraud': {
+      id: '/_authenticated/security/fraud'
+      path: '/fraud'
+      fullPath: '/security/fraud'
+      preLoaderRoute: typeof AuthenticatedSecurityFraudRouteImport
+      parentRoute: typeof AuthenticatedSecurityRoute
+    }
+    '/_authenticated/security/api-keys': {
+      id: '/_authenticated/security/api-keys'
+      path: '/api-keys'
+      fullPath: '/security/api-keys'
+      preLoaderRoute: typeof AuthenticatedSecurityApiKeysRouteImport
+      parentRoute: typeof AuthenticatedSecurityRoute
+    }
+    '/_authenticated/notifications/settings': {
+      id: '/_authenticated/notifications/settings'
+      path: '/settings'
+      fullPath: '/notifications/settings'
+      preLoaderRoute: typeof AuthenticatedNotificationsSettingsRouteImport
+      parentRoute: typeof AuthenticatedNotificationsRoute
+    }
+    '/_authenticated/notifications/digest': {
+      id: '/_authenticated/notifications/digest'
+      path: '/digest'
+      fullPath: '/notifications/digest'
+      preLoaderRoute: typeof AuthenticatedNotificationsDigestRouteImport
+      parentRoute: typeof AuthenticatedNotificationsRoute
     }
     '/_authenticated/invoices/new': {
       id: '/_authenticated/invoices/new'
@@ -1232,12 +1288,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvoicesIdRouteImport
       parentRoute: typeof AuthenticatedInvoicesRoute
     }
-    '/_authenticated/admin/webhooks-health': {
-      id: '/_authenticated/admin/webhooks-health'
-      path: '/webhooks-health'
-      fullPath: '/admin/webhooks-health'
-      preLoaderRoute: typeof AuthenticatedAdminWebhooksHealthRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
+    '/_authenticated/integrations/byo': {
+      id: '/_authenticated/integrations/byo'
+      path: '/byo'
+      fullPath: '/integrations/byo'
+      preLoaderRoute: typeof AuthenticatedIntegrationsByoRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsRoute
+    }
+    '/_authenticated/integrations/api': {
+      id: '/_authenticated/integrations/api'
+      path: '/api'
+      fullPath: '/integrations/api'
+      preLoaderRoute: typeof AuthenticatedIntegrationsApiRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsRoute
     }
     '/_authenticated/admin/transactions': {
       id: '/_authenticated/admin/transactions'
@@ -1260,18 +1323,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/plugins': {
-      id: '/_authenticated/admin/plugins'
-      path: '/plugins'
-      fullPath: '/admin/plugins'
-      preLoaderRoute: typeof AuthenticatedAdminPluginsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/platform-gateways': {
-      id: '/_authenticated/admin/platform-gateways'
-      path: '/platform-gateways'
-      fullPath: '/admin/platform-gateways'
-      preLoaderRoute: typeof AuthenticatedAdminPlatformGatewaysRouteImport
+    '/_authenticated/admin/platform': {
+      id: '/_authenticated/admin/platform'
+      path: '/platform'
+      fullPath: '/admin/platform'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/payouts': {
@@ -1302,13 +1358,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminInvoicesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/incidents': {
-      id: '/_authenticated/admin/incidents'
-      path: '/incidents'
-      fullPath: '/admin/incidents'
-      preLoaderRoute: typeof AuthenticatedAdminIncidentsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
     '/_authenticated/admin/fx': {
       id: '/_authenticated/admin/fx'
       path: '/fx'
@@ -1329,6 +1378,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/audit'
       preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/platform/': {
+      id: '/_authenticated/admin/platform/'
+      path: '/'
+      fullPath: '/admin/platform/'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminPlatformRoute
     }
     '/api/public/webhooks/$provider': {
       id: '/api/public/webhooks/$provider'
@@ -1386,6 +1442,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksExpireInvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/platform/webhooks': {
+      id: '/_authenticated/admin/platform/webhooks'
+      path: '/webhooks'
+      fullPath: '/admin/platform/webhooks'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformWebhooksRouteImport
+      parentRoute: typeof AuthenticatedAdminPlatformRoute
+    }
+    '/_authenticated/admin/platform/plugins': {
+      id: '/_authenticated/admin/platform/plugins'
+      path: '/plugins'
+      fullPath: '/admin/platform/plugins'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformPluginsRouteImport
+      parentRoute: typeof AuthenticatedAdminPlatformRoute
+    }
+    '/_authenticated/admin/platform/incidents': {
+      id: '/_authenticated/admin/platform/incidents'
+      path: '/incidents'
+      fullPath: '/admin/platform/incidents'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformIncidentsRouteImport
+      parentRoute: typeof AuthenticatedAdminPlatformRoute
+    }
     '/_authenticated/admin/merchants/$id': {
       id: '/_authenticated/admin/merchants/$id'
       path: '/$id'
@@ -1417,21 +1494,41 @@ const AuthenticatedAdminMerchantsRouteWithChildren =
     AuthenticatedAdminMerchantsRouteChildren,
   )
 
+interface AuthenticatedAdminPlatformRouteChildren {
+  AuthenticatedAdminPlatformIncidentsRoute: typeof AuthenticatedAdminPlatformIncidentsRoute
+  AuthenticatedAdminPlatformPluginsRoute: typeof AuthenticatedAdminPlatformPluginsRoute
+  AuthenticatedAdminPlatformWebhooksRoute: typeof AuthenticatedAdminPlatformWebhooksRoute
+  AuthenticatedAdminPlatformIndexRoute: typeof AuthenticatedAdminPlatformIndexRoute
+}
+
+const AuthenticatedAdminPlatformRouteChildren: AuthenticatedAdminPlatformRouteChildren =
+  {
+    AuthenticatedAdminPlatformIncidentsRoute:
+      AuthenticatedAdminPlatformIncidentsRoute,
+    AuthenticatedAdminPlatformPluginsRoute:
+      AuthenticatedAdminPlatformPluginsRoute,
+    AuthenticatedAdminPlatformWebhooksRoute:
+      AuthenticatedAdminPlatformWebhooksRoute,
+    AuthenticatedAdminPlatformIndexRoute: AuthenticatedAdminPlatformIndexRoute,
+  }
+
+const AuthenticatedAdminPlatformRouteWithChildren =
+  AuthenticatedAdminPlatformRoute._addFileChildren(
+    AuthenticatedAdminPlatformRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminBroadcastRoute: typeof AuthenticatedAdminBroadcastRoute
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
-  AuthenticatedAdminIncidentsRoute: typeof AuthenticatedAdminIncidentsRoute
   AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRouteWithChildren
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
-  AuthenticatedAdminPlatformGatewaysRoute: typeof AuthenticatedAdminPlatformGatewaysRoute
-  AuthenticatedAdminPluginsRoute: typeof AuthenticatedAdminPluginsRoute
+  AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
-  AuthenticatedAdminWebhooksHealthRoute: typeof AuthenticatedAdminWebhooksHealthRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -1440,26 +1537,40 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
     AuthenticatedAdminBroadcastRoute: AuthenticatedAdminBroadcastRoute,
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
-    AuthenticatedAdminIncidentsRoute: AuthenticatedAdminIncidentsRoute,
     AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute:
       AuthenticatedAdminMerchantsRouteWithChildren,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
-    AuthenticatedAdminPlatformGatewaysRoute:
-      AuthenticatedAdminPlatformGatewaysRoute,
-    AuthenticatedAdminPluginsRoute: AuthenticatedAdminPluginsRoute,
+    AuthenticatedAdminPlatformRoute:
+      AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
-    AuthenticatedAdminWebhooksHealthRoute:
-      AuthenticatedAdminWebhooksHealthRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
   AuthenticatedAdminRouteRoute._addFileChildren(
     AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedIntegrationsRouteChildren {
+  AuthenticatedIntegrationsApiRoute: typeof AuthenticatedIntegrationsApiRoute
+  AuthenticatedIntegrationsByoRoute: typeof AuthenticatedIntegrationsByoRoute
+  AuthenticatedIntegrationsIndexRoute: typeof AuthenticatedIntegrationsIndexRoute
+}
+
+const AuthenticatedIntegrationsRouteChildren: AuthenticatedIntegrationsRouteChildren =
+  {
+    AuthenticatedIntegrationsApiRoute: AuthenticatedIntegrationsApiRoute,
+    AuthenticatedIntegrationsByoRoute: AuthenticatedIntegrationsByoRoute,
+    AuthenticatedIntegrationsIndexRoute: AuthenticatedIntegrationsIndexRoute,
+  }
+
+const AuthenticatedIntegrationsRouteWithChildren =
+  AuthenticatedIntegrationsRoute._addFileChildren(
+    AuthenticatedIntegrationsRouteChildren,
   )
 
 interface AuthenticatedInvoicesRouteChildren {
@@ -1477,32 +1588,64 @@ const AuthenticatedInvoicesRouteWithChildren =
     AuthenticatedInvoicesRouteChildren,
   )
 
+interface AuthenticatedNotificationsRouteChildren {
+  AuthenticatedNotificationsDigestRoute: typeof AuthenticatedNotificationsDigestRoute
+  AuthenticatedNotificationsSettingsRoute: typeof AuthenticatedNotificationsSettingsRoute
+  AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
+}
+
+const AuthenticatedNotificationsRouteChildren: AuthenticatedNotificationsRouteChildren =
+  {
+    AuthenticatedNotificationsDigestRoute:
+      AuthenticatedNotificationsDigestRoute,
+    AuthenticatedNotificationsSettingsRoute:
+      AuthenticatedNotificationsSettingsRoute,
+    AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
+  }
+
+const AuthenticatedNotificationsRouteWithChildren =
+  AuthenticatedNotificationsRoute._addFileChildren(
+    AuthenticatedNotificationsRouteChildren,
+  )
+
+interface AuthenticatedSecurityRouteChildren {
+  AuthenticatedSecurityApiKeysRoute: typeof AuthenticatedSecurityApiKeysRoute
+  AuthenticatedSecurityFraudRoute: typeof AuthenticatedSecurityFraudRoute
+  AuthenticatedSecurityIpWhitelistRoute: typeof AuthenticatedSecurityIpWhitelistRoute
+  AuthenticatedSecurityIndexRoute: typeof AuthenticatedSecurityIndexRoute
+}
+
+const AuthenticatedSecurityRouteChildren: AuthenticatedSecurityRouteChildren = {
+  AuthenticatedSecurityApiKeysRoute: AuthenticatedSecurityApiKeysRoute,
+  AuthenticatedSecurityFraudRoute: AuthenticatedSecurityFraudRoute,
+  AuthenticatedSecurityIpWhitelistRoute: AuthenticatedSecurityIpWhitelistRoute,
+  AuthenticatedSecurityIndexRoute: AuthenticatedSecurityIndexRoute,
+}
+
+const AuthenticatedSecurityRouteWithChildren =
+  AuthenticatedSecurityRoute._addFileChildren(
+    AuthenticatedSecurityRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
-  AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
   AuthenticatedApiLogsRoute: typeof AuthenticatedApiLogsRoute
-  AuthenticatedByoGatewaysRoute: typeof AuthenticatedByoGatewaysRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDigestRoute: typeof AuthenticatedDigestRoute
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
-  AuthenticatedFraudRoute: typeof AuthenticatedFraudRoute
   AuthenticatedFxRoute: typeof AuthenticatedFxRoute
-  AuthenticatedIntegrateRoute: typeof AuthenticatedIntegrateRoute
+  AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRouteWithChildren
   AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
-  AuthenticatedIpWhitelistRoute: typeof AuthenticatedIpWhitelistRoute
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
-  AuthenticatedMethodsRoute: typeof AuthenticatedMethodsRoute
-  AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
-  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPayoutScheduleRoute: typeof AuthenticatedPayoutScheduleRoute
   AuthenticatedPayoutsRoute: typeof AuthenticatedPayoutsRoute
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedRefundsRoute: typeof AuthenticatedRefundsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRoute
+  AuthenticatedSecurityRoute: typeof AuthenticatedSecurityRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
@@ -1511,31 +1654,23 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
-  AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
   AuthenticatedApiLogsRoute: AuthenticatedApiLogsRoute,
-  AuthenticatedByoGatewaysRoute: AuthenticatedByoGatewaysRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDigestRoute: AuthenticatedDigestRoute,
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
   AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
-  AuthenticatedFraudRoute: AuthenticatedFraudRoute,
   AuthenticatedFxRoute: AuthenticatedFxRoute,
-  AuthenticatedIntegrateRoute: AuthenticatedIntegrateRoute,
+  AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRouteWithChildren,
   AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
-  AuthenticatedIpWhitelistRoute: AuthenticatedIpWhitelistRoute,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
-  AuthenticatedMethodsRoute: AuthenticatedMethodsRoute,
-  AuthenticatedNotificationSettingsRoute:
-    AuthenticatedNotificationSettingsRoute,
-  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPayoutScheduleRoute: AuthenticatedPayoutScheduleRoute,
   AuthenticatedPayoutsRoute: AuthenticatedPayoutsRoute,
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedRefundsRoute: AuthenticatedRefundsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedSecurityRoute: AuthenticatedSecurityRoute,
+  AuthenticatedSecurityRoute: AuthenticatedSecurityRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,

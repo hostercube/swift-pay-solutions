@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { RefreshCcw } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/webhooks-health")({
+export const Route = createFileRoute("/_authenticated/admin/platform/webhooks")({
   head: () => ({ meta: [{ title: "Webhook health · Admin" }] }),
   component: WhPage,
 });

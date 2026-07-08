@@ -12,7 +12,6 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     label: "Overview",
     items: [
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-      { to: "/admin/incidents", label: "Incidents", icon: Activity },
     ],
   },
   {
@@ -32,11 +31,9 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     ],
   },
   {
-    label: "Infrastructure",
+    label: "Platform Ops",
     items: [
-      { to: "/admin/platform-gateways", label: "Platform gateways", icon: Plug },
-      { to: "/admin/plugins", label: "Plugins & SDKs", icon: Package },
-      { to: "/admin/webhooks-health", label: "Webhook health", icon: Webhook },
+      { to: "/admin/platform", label: "Platform Ops", icon: Plug },
     ],
   },
   {

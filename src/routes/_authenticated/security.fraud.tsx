@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Trash2, ShieldAlert, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/fraud")({
+export const Route = createFileRoute("/_authenticated/security/fraud")({
   head: () => ({ meta: [{ title: "Fraud Rules · PayNOC" }] }),
   component: FraudPage,
 });

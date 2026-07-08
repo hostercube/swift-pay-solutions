@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Trash2, Plug, ExternalLink, Check, Settings2, X } from "lucide-react";
 import { GATEWAYS, getGateway, gatewaysByRegion } from "@/lib/gateways/registry";
 
-export const Route = createFileRoute("/_authenticated/byo-gateways")({
+export const Route = createFileRoute("/_authenticated/integrations/byo")({
   head: () => ({ meta: [{ title: "Payment Gateways · PayNOC" }] }),
   component: ByoPage,
 });

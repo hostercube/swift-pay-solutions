@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/admin/plugins")({
+export const Route = createFileRoute("/_authenticated/admin/platform/plugins")({
   head: () => ({ meta: [{ title: "Plugins · PayNOC Admin" }] }),
   component: AdminPluginsPage,
 });

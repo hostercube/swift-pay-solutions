@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { GATEWAYS } from "@/lib/gateways/registry";
 
-export const Route = createFileRoute("/_authenticated/admin/platform-gateways")({
+export const Route = createFileRoute("/_authenticated/admin/platform/")({
   head: () => ({ meta: [{ title: "Platform Gateways · Admin" }] }),
   component: PlatformGatewaysPage,
 });

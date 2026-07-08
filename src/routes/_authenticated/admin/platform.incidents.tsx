@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/incidents")({
+export const Route = createFileRoute("/_authenticated/admin/platform/incidents")({
   head: () => ({ meta: [{ title: "Admin · Incidents" }] }),
   component: IncidentsPage,
 });

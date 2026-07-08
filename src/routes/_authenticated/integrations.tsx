@@ -1,22 +1,21 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, KeyRound, Lock, ShieldAlert } from "lucide-react";
+import { CreditCard, Plug, Code2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/security")({
-  component: SecurityLayout,
+export const Route = createFileRoute("/_authenticated/integrations")({
+  component: IntegrationsLayout,
 });
 
 const TABS = [
-  { to: "/security", label: "2FA & Sessions", icon: ShieldCheck, exact: true },
-  { to: "/security/api-keys", label: "API keys", icon: KeyRound },
-  { to: "/security/ip-whitelist", label: "IP whitelist", icon: Lock },
-  { to: "/security/fraud", label: "Fraud rules", icon: ShieldAlert },
+  { to: "/integrations", label: "Payment methods", icon: CreditCard, exact: true },
+  { to: "/integrations/byo", label: "BYO Gateways", icon: Plug },
+  { to: "/integrations/api", label: "API / Embed", icon: Code2 },
 ];
 
-function SecurityLayout() {
+function IntegrationsLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-6">
-      <h1 className="font-display text-2xl font-bold mb-4">Security</h1>
+      <h1 className="font-display text-2xl font-bold mb-4">Payment integrations</h1>
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
           const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);

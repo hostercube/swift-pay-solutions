@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-export const Route = createFileRoute("/_authenticated/notification-settings")({
+export const Route = createFileRoute("/_authenticated/notifications/settings")({
   head: () => ({ meta: [{ title: "Notification settings · PayNOC" }] }),
   component: NotifSettingsPage,
 });

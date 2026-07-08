@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Copy, Code2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/integrate")({
+export const Route = createFileRoute("/_authenticated/integrations/api")({
   head: () => ({ meta: [{ title: "Integrate · PayNOC" }] }),
   component: IntegratePage,
 });
