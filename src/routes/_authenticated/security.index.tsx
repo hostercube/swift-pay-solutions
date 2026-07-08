@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/security")({
+export const Route = createFileRoute("/_authenticated/security/")({
   head: () => ({ meta: [{ title: "Security · PayNOC" }] }),
   component: SecurityPage,
 });

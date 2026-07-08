@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/notifications")({
+export const Route = createFileRoute("/_authenticated/notifications/")({
   head: () => ({ meta: [{ title: "Notifications · PayNOC" }] }),
   component: NotificationsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
