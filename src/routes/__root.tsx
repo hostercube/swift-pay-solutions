@@ -97,11 +97,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Own your payment stack. Hosted checkout, APIs, webhooks, and merchant panel — PayNOC never holds merchant funds.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "PayNOC" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@PayNOC" },
+      { name: "application-name", content: "PayNOC" },
+      { name: "apple-mobile-web-app-title", content: "PayNOC" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/paynoc-favicon.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/paynoc-favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
