@@ -94,8 +94,7 @@ function MerchantsPage() {
       toast.error(e instanceof Error ? e.message : "Failed");
     }
   }
-    load();
-  }
+
 
   const filtered = rows.filter((r) => {
     const s = q.toLowerCase();
