@@ -37,7 +37,6 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
-import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedFxRouteImport } from './routes/_authenticated/fx'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
@@ -47,6 +46,7 @@ import { Route as AuthenticatedApiLogsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedSecurityIndexRouteImport } from './routes/_authenticated/security.index'
 import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_authenticated/notifications.index'
+import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
 import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_authenticated/integrations.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedSecurityIpWhitelistRouteImport } from './routes/_authenticated/security.ip-whitelist'
@@ -226,11 +226,6 @@ const AuthenticatedKycRoute = AuthenticatedKycRouteImport.update({
   path: '/kyc',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedIntegrationsRoute =
   AuthenticatedIntegrationsRouteImport.update({
     id: '/integrations',
@@ -279,6 +274,12 @@ const AuthenticatedNotificationsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedNotificationsRoute,
   } as any)
+const AuthenticatedInvoicesIndexRoute =
+  AuthenticatedInvoicesIndexRouteImport.update({
+    id: '/invoices/',
+    path: '/invoices/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedIntegrationsIndexRoute =
   AuthenticatedIntegrationsIndexRouteImport.update({
     id: '/',
@@ -322,14 +323,14 @@ const AuthenticatedNotificationsDigestRoute =
   } as any)
 const AuthenticatedInvoicesNewRoute =
   AuthenticatedInvoicesNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedInvoicesRoute,
+    id: '/invoices/new',
+    path: '/invoices/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedInvoicesIdRoute = AuthenticatedInvoicesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedInvoicesRoute,
+  id: '/invoices/$id',
+  path: '/invoices/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIntegrationsByoRoute =
   AuthenticatedIntegrationsByoRouteImport.update({
@@ -505,7 +506,6 @@ export interface FileRoutesByFullPath {
   '/disputes': typeof AuthenticatedDisputesRoute
   '/fx': typeof AuthenticatedFxRoute
   '/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
-  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/notifications': typeof AuthenticatedNotificationsRouteWithChildren
@@ -544,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/integrations/': typeof AuthenticatedIntegrationsIndexRoute
+  '/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/security/': typeof AuthenticatedSecurityIndexRoute
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
@@ -578,7 +579,6 @@ export interface FileRoutesByTo {
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
   '/fx': typeof AuthenticatedFxRoute
-  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -614,6 +614,7 @@ export interface FileRoutesByTo {
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/integrations': typeof AuthenticatedIntegrationsIndexRoute
+  '/invoices': typeof AuthenticatedInvoicesIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/security': typeof AuthenticatedSecurityIndexRoute
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
@@ -652,7 +653,6 @@ export interface FileRoutesById {
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
   '/_authenticated/fx': typeof AuthenticatedFxRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
-  '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRouteWithChildren
@@ -691,6 +691,7 @@ export interface FileRoutesById {
   '/_authenticated/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/integrations/': typeof AuthenticatedIntegrationsIndexRoute
+  '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/security/': typeof AuthenticatedSecurityIndexRoute
   '/_authenticated/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
@@ -729,7 +730,6 @@ export interface FileRouteTypes {
     | '/disputes'
     | '/fx'
     | '/integrations'
-    | '/invoices'
     | '/kyc'
     | '/marketing'
     | '/notifications'
@@ -768,6 +768,7 @@ export interface FileRouteTypes {
     | '/security/ip-whitelist'
     | '/admin/'
     | '/integrations/'
+    | '/invoices/'
     | '/notifications/'
     | '/security/'
     | '/admin/merchants/$id'
@@ -802,7 +803,6 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/disputes'
     | '/fx'
-    | '/invoices'
     | '/kyc'
     | '/marketing'
     | '/onboarding'
@@ -838,6 +838,7 @@ export interface FileRouteTypes {
     | '/security/ip-whitelist'
     | '/admin'
     | '/integrations'
+    | '/invoices'
     | '/notifications'
     | '/security'
     | '/admin/merchants/$id'
@@ -875,7 +876,6 @@ export interface FileRouteTypes {
     | '/_authenticated/disputes'
     | '/_authenticated/fx'
     | '/_authenticated/integrations'
-    | '/_authenticated/invoices'
     | '/_authenticated/kyc'
     | '/_authenticated/marketing'
     | '/_authenticated/notifications'
@@ -914,6 +914,7 @@ export interface FileRouteTypes {
     | '/_authenticated/security/ip-whitelist'
     | '/_authenticated/admin/'
     | '/_authenticated/integrations/'
+    | '/_authenticated/invoices/'
     | '/_authenticated/notifications/'
     | '/_authenticated/security/'
     | '/_authenticated/admin/merchants/$id'
@@ -1155,13 +1156,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKycRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/invoices': {
-      id: '/_authenticated/invoices'
-      path: '/invoices'
-      fullPath: '/invoices'
-      preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/integrations': {
       id: '/_authenticated/integrations'
       path: '/integrations'
@@ -1225,6 +1219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsIndexRouteImport
       parentRoute: typeof AuthenticatedNotificationsRoute
     }
+    '/_authenticated/invoices/': {
+      id: '/_authenticated/invoices/'
+      path: '/invoices'
+      fullPath: '/invoices/'
+      preLoaderRoute: typeof AuthenticatedInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/integrations/': {
       id: '/_authenticated/integrations/'
       path: '/'
@@ -1276,17 +1277,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/invoices/new': {
       id: '/_authenticated/invoices/new'
-      path: '/new'
+      path: '/invoices/new'
       fullPath: '/invoices/new'
       preLoaderRoute: typeof AuthenticatedInvoicesNewRouteImport
-      parentRoute: typeof AuthenticatedInvoicesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/invoices/$id': {
       id: '/_authenticated/invoices/$id'
-      path: '/$id'
+      path: '/invoices/$id'
       fullPath: '/invoices/$id'
       preLoaderRoute: typeof AuthenticatedInvoicesIdRouteImport
-      parentRoute: typeof AuthenticatedInvoicesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/integrations/byo': {
       id: '/_authenticated/integrations/byo'
@@ -1573,21 +1574,6 @@ const AuthenticatedIntegrationsRouteWithChildren =
     AuthenticatedIntegrationsRouteChildren,
   )
 
-interface AuthenticatedInvoicesRouteChildren {
-  AuthenticatedInvoicesIdRoute: typeof AuthenticatedInvoicesIdRoute
-  AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
-}
-
-const AuthenticatedInvoicesRouteChildren: AuthenticatedInvoicesRouteChildren = {
-  AuthenticatedInvoicesIdRoute: AuthenticatedInvoicesIdRoute,
-  AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
-}
-
-const AuthenticatedInvoicesRouteWithChildren =
-  AuthenticatedInvoicesRoute._addFileChildren(
-    AuthenticatedInvoicesRouteChildren,
-  )
-
 interface AuthenticatedNotificationsRouteChildren {
   AuthenticatedNotificationsDigestRoute: typeof AuthenticatedNotificationsDigestRoute
   AuthenticatedNotificationsSettingsRoute: typeof AuthenticatedNotificationsSettingsRoute
@@ -1635,7 +1621,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
   AuthenticatedFxRoute: typeof AuthenticatedFxRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRouteWithChildren
-  AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRouteWithChildren
@@ -1650,6 +1635,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
   AuthenticatedWebhooksRoute: typeof AuthenticatedWebhooksRoute
+  AuthenticatedInvoicesIdRoute: typeof AuthenticatedInvoicesIdRoute
+  AuthenticatedInvoicesNewRoute: typeof AuthenticatedInvoicesNewRoute
+  AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1660,7 +1648,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
   AuthenticatedFxRoute: AuthenticatedFxRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRouteWithChildren,
-  AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRouteWithChildren,
@@ -1675,6 +1662,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
   AuthenticatedWebhooksRoute: AuthenticatedWebhooksRoute,
+  AuthenticatedInvoicesIdRoute: AuthenticatedInvoicesIdRoute,
+  AuthenticatedInvoicesNewRoute: AuthenticatedInvoicesNewRoute,
+  AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
