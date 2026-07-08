@@ -130,7 +130,9 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "signature_key", label: "Signature Key", type: "password", required: true },
     ],
     docsUrl: "https://aamarpay.com/developer",
+  },
   {
+
     id: "uddoktapay",
     label: "UddoktaPay",
     region: "BD",
