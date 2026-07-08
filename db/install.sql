@@ -715,10 +715,12 @@ GRANT EXECUTE ON FUNCTION public.check_fraud_block(UUID,TEXT,TEXT,TEXT) TO anon,
 
 -- >>> 20260701115251_4337d5a5-5c5c-47f4-a10d-44c337b620fa.sql
 
+DROP POLICY IF EXISTS "Merchants upload own KYC" ON storage.objects;
 CREATE POLICY "Merchants upload own KYC"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'kyc' AND (storage.foldername(name))[1] = auth.uid()::text);
 
+DROP POLICY IF EXISTS "Merchants read own KYC" ON storage.objects;
 CREATE POLICY "Merchants read own KYC"
   ON storage.objects FOR SELECT TO authenticated
   USING (
@@ -728,6 +730,7 @@ CREATE POLICY "Merchants read own KYC"
     )
   );
 
+DROP POLICY IF EXISTS "Merchants delete own KYC" ON storage.objects;
 CREATE POLICY "Merchants delete own KYC"
   ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'kyc' AND (storage.foldername(name))[1] = auth.uid()::text);
@@ -1110,11 +1113,13 @@ GRANT ALL ON public.api_request_logs TO service_role;
 
 ALTER TABLE public.api_request_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Merchant reads own api logs" ON public.api_request_logs;
 CREATE POLICY "Merchant reads own api logs"
 ON public.api_request_logs FOR SELECT
 TO authenticated
 USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
 
+DROP POLICY IF EXISTS "Super admin reads all api logs" ON public.api_request_logs;
 CREATE POLICY "Super admin reads all api logs"
 ON public.api_request_logs FOR SELECT
 TO authenticated
@@ -1190,19 +1195,23 @@ GRANT ALL ON public.recurring_schedules TO service_role;
 
 ALTER TABLE public.recurring_schedules ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Merchant team can view schedules" ON public.recurring_schedules;
 CREATE POLICY "Merchant team can view schedules"
   ON public.recurring_schedules FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
 
+DROP POLICY IF EXISTS "Merchant operators can insert schedules" ON public.recurring_schedules;
 CREATE POLICY "Merchant operators can insert schedules"
   ON public.recurring_schedules FOR INSERT TO authenticated
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'operator'));
 
+DROP POLICY IF EXISTS "Merchant operators can update schedules" ON public.recurring_schedules;
 CREATE POLICY "Merchant operators can update schedules"
   ON public.recurring_schedules FOR UPDATE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'operator'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'operator'));
 
+DROP POLICY IF EXISTS "Merchant admins can delete schedules" ON public.recurring_schedules;
 CREATE POLICY "Merchant admins can delete schedules"
   ON public.recurring_schedules FOR DELETE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'));
