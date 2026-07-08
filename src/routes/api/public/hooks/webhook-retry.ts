@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/public/hooks/webhook-retry")({
   server: {
     handlers: {
       POST: async () => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
         const { data: due, error } = await supabaseAdmin
           .from("webhook_deliveries")

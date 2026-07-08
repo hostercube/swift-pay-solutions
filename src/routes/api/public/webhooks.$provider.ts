@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
         const headers: Record<string, string> = {};
         request.headers.forEach((v, k) => { headers[k.toLowerCase()] = v; });
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
         const { verifyWebhook } = await import("@/lib/gateways/adapters.server");
         const admin = supabaseAdmin as unknown as {
           from: (t: string) => {

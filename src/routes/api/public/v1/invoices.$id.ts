@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/v1/invoices/$id")({
         if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
         const started = Date.now();
 
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
         const { data, error } = await supabaseAdmin
           .from("invoices")
           .select("*")

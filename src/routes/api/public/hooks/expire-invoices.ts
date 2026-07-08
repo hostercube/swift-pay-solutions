@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/public/hooks/expire-invoices")({
   server: {
     handlers: {
       POST: async () => {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
         const nowIso = new Date().toISOString();
 

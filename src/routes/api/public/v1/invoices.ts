@@ -12,7 +12,7 @@ async function handleGet(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const limit = Math.min(Number(url.searchParams.get("limit")) || 25, 100);
 
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const { data, error } = await supabaseAdmin
     .from("invoices")
     .select("id, invoice_number, amount, currency, status, customer_name, customer_email, description, created_at, paid_at")
@@ -52,7 +52,7 @@ async function handlePost(request: Request): Promise<Response> {
   const idemKey = request.headers.get("idempotency-key")?.trim() || null;
   const url = new URL(request.url);
   const requestHash = createHash("sha256").update(rawBody).digest("hex");
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
   if (idemKey) {
     const { data: existing } = await supabaseAdmin

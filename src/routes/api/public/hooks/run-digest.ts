@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/public/hooks/run-digest")({
 });
 
 async function handle() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const { notify } = await import("@/lib/notifications.server");
 
   const now = Date.now();

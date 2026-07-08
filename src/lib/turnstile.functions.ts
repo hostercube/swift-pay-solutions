@@ -8,7 +8,7 @@ type TurnstileSettings = {
 };
 
 export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const { data } = await supabaseAdmin
     .from("platform_settings")
     .select("settings")
@@ -23,7 +23,7 @@ export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(asyn
 export const verifyTurnstile = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { data: row } = await supabaseAdmin
       .from("platform_settings")
       .select("settings")
@@ -58,7 +58,7 @@ export const saveTurnstileConfig = createServerFn({ method: "POST" })
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { data: row } = await supabaseAdmin
       .from("platform_settings")
       .select("id, settings")

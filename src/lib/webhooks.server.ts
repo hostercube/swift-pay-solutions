@@ -23,7 +23,7 @@ export async function dispatchWebhooks(opts: {
   data: Record<string, unknown>;
   mode?: "live" | "test";
 }) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
   const mode = opts.mode ?? "live";
 
   const { data: endpoints } = await supabaseAdmin

@@ -7,7 +7,7 @@ export async function logApiRequest(params: {
   errorMessage?: string | null;
 }) {
   try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const url = new URL(params.request.url);
     const ip =
       params.request.headers.get("cf-connecting-ip") ||
