@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Turnstile } from "@/components/turnstile";
+import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -23,7 +25,6 @@ async function isAdminUser(userId: string): Promise<boolean> {
   return !!data && data.length > 0;
 }
 
-
 type Mode = "signin" | "signup";
 
 function AuthPage() {
@@ -35,10 +36,16 @@ function AuthPage() {
   const [businessName, setBusinessName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // MFA challenge state
+  const [captcha, setCaptcha] = useState<{ enabled: boolean; siteKey: string } | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
+
+  useEffect(() => {
+    getTurnstileConfig().then(setCaptcha).catch(() => setCaptcha({ enabled: false, siteKey: "" }));
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -63,6 +70,19 @@ function AuthPage() {
     return (await isAdminUser(userId)) ? "/admin" : "/dashboard";
   }
 
+  async function checkCaptcha(): Promise<boolean> {
+    if (!captcha?.enabled) return true;
+    if (!captchaToken) {
+      toast.error("Please complete the captcha");
+      return false;
+    }
+    const res = await verifyTurnstile({ data: { token: captchaToken } });
+    if (!res.ok) {
+      toast.error("Captcha verification failed");
+      return false;
+    }
+    return true;
+  }
 
   async function verifyMfa(e: React.FormEvent) {
     e.preventDefault();
@@ -80,11 +100,14 @@ function AuthPage() {
     navigate({ to: u.user ? await landingFor(u.user.id) : "/dashboard" });
   }
 
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
+      if (!(await checkCaptcha())) {
+        setLoading(false);
+        return;
+      }
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -119,7 +142,6 @@ function AuthPage() {
         navigate({ to: sd.user ? await landingFor(sd.user.id) : "/dashboard" });
       }
     } catch (err) {
-
       const msg = err instanceof Error ? err.message : "Authentication failed";
       toast.error(msg);
     } finally {
@@ -133,12 +155,21 @@ function AuthPage() {
     <div className="relative min-h-screen bg-background">
       <div className="grid-radial absolute inset-0 opacity-40" />
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-        <Link to="/" className="mb-8 flex items-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow">
-            <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
-          </span>
-          <span className="font-display text-xl font-bold">PayNOC</span>
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow">
+              <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
+            </span>
+            <span className="font-display text-xl font-bold">PayNOC</span>
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-glass-border bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to home
+          </Link>
+        </div>
 
         <div className="glass rounded-2xl border border-glass-border p-8">
           {showMfa ? (
@@ -204,6 +235,18 @@ function AuthPage() {
                   required
                   minLength={8}
                 />
+
+                {mode === "signin" && (
+                  <div className="text-right">
+                    <Link to="/forgot-password" className="text-xs text-brand hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                )}
+
+                {captcha?.enabled && captcha.siteKey && (
+                  <Turnstile siteKey={captcha.siteKey} onToken={setCaptchaToken} />
+                )}
 
                 <button
                   type="submit"
