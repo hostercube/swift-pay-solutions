@@ -16,6 +16,7 @@ type Row = {
   business_name: string | null;
   status: string;
   created_at: string;
+  is_super_admin?: boolean;
 };
 
 function MerchantsPage() {
@@ -25,12 +26,16 @@ function MerchantsPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, email, full_name, business_name, status, created_at")
-      .order("created_at", { ascending: false });
+    const [{ data, error }, { data: adminRoles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, email, full_name, business_name, status, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id").eq("role", "super_admin"),
+    ]);
     if (error) toast.error(error.message);
-    setRows((data ?? []) as Row[]);
+    const admins = new Set((adminRoles ?? []).map((r) => r.user_id));
+    setRows(((data ?? []) as Row[]).map((r) => ({ ...r, is_super_admin: admins.has(r.id) })));
     setLoading(false);
   }
 
