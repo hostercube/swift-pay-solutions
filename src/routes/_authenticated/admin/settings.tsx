@@ -119,6 +119,53 @@ function SettingsPage() {
         </label>
       </div>
 
+      <div className="glass mt-6 rounded-2xl border border-glass-border p-6">
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Cloudflare Turnstile CAPTCHA</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Protect sign-in, sign-up, and password reset with Cloudflare Turnstile.
+              Get keys at{" "}
+              <a
+                href="https://dash.cloudflare.com/?to=/:account/turnstile"
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand hover:underline"
+              >
+                dash.cloudflare.com/turnstile
+              </a>
+              .
+            </p>
+          </div>
+          <label className="inline-flex shrink-0 items-center gap-2">
+            <input
+              type="checkbox"
+              checked={s.turnstile.enabled}
+              onChange={(e) => setS({ ...s, turnstile: { ...s.turnstile, enabled: e.target.checked } })}
+              className="h-4 w-4 rounded border-glass-border"
+            />
+            <span className="text-sm font-medium">Enabled</span>
+          </label>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Field label="Site key">
+            <Input
+              value={s.turnstile.site_key}
+              onChange={(v) => setS({ ...s, turnstile: { ...s.turnstile, site_key: v } })}
+            />
+          </Field>
+          <Field label="Secret key">
+            <Input
+              type="password"
+              value={s.turnstile.secret_key}
+              onChange={(v) => setS({ ...s, turnstile: { ...s.turnstile, secret_key: v } })}
+            />
+          </Field>
+        </div>
+      </div>
+
+
+
       <div className="mt-6 flex justify-end">
         <button
           onClick={save}
