@@ -54,6 +54,7 @@ import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedAdminPlatformGatewaysRouteImport } from './routes/_authenticated/admin/platform-gateways'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
@@ -302,6 +303,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminPlatformGatewaysRoute =
+  AuthenticatedAdminPlatformGatewaysRouteImport.update({
+    id: '/platform-gateways',
+    path: '/platform-gateways',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminPayoutsRoute =
   AuthenticatedAdminPayoutsRouteImport.update({
     id: '/payouts',
@@ -432,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -492,6 +500,7 @@ export interface FileRoutesByTo {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -555,6 +564,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
+  '/_authenticated/admin/platform-gateways': typeof AuthenticatedAdminPlatformGatewaysRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
@@ -618,6 +628,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
+    | '/admin/platform-gateways'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/merchants'
     | '/admin/payouts'
+    | '/admin/platform-gateways'
     | '/admin/settings'
     | '/admin/staff'
     | '/invoices/$id'
@@ -740,6 +752,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/payouts'
+    | '/_authenticated/admin/platform-gateways'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/staff'
     | '/_authenticated/invoices/$id'
@@ -1096,6 +1109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/platform-gateways': {
+      id: '/_authenticated/admin/platform-gateways'
+      path: '/platform-gateways'
+      fullPath: '/admin/platform-gateways'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformGatewaysRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/payouts': {
       id: '/_authenticated/admin/payouts'
       path: '/payouts'
@@ -1211,6 +1231,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
+  AuthenticatedAdminPlatformGatewaysRoute: typeof AuthenticatedAdminPlatformGatewaysRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1224,6 +1245,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminMerchantsRoute: AuthenticatedAdminMerchantsRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
+    AuthenticatedAdminPlatformGatewaysRoute:
+      AuthenticatedAdminPlatformGatewaysRoute,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
