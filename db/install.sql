@@ -10,10 +10,12 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- >>> 20260701094349_6b6345da-add4-449b-bbce-24f19d80f394.sql
 
 -- Roles enum
-CREATE TYPE public.app_role AS ENUM ('super_admin', 'admin', 'merchant');
+DO $$ BEGIN
+  CREATE TYPE public.app_role AS ENUM ('super_admin', 'admin', 'merchant');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Profiles table
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT,
@@ -30,7 +32,7 @@ GRANT ALL ON public.profiles TO service_role;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- User roles table
-CREATE TABLE public.user_roles (
+CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role app_role NOT NULL,
@@ -54,28 +56,34 @@ AS $$
 $$;
 
 -- Policies: profiles
+DROP POLICY IF EXISTS "Users view own profile" ON public.profiles;
 CREATE POLICY "Users view own profile" ON public.profiles
   FOR SELECT TO authenticated
   USING (auth.uid() = id OR public.has_role(auth.uid(), 'super_admin'));
 
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
 CREATE POLICY "Users update own profile" ON public.profiles
   FOR UPDATE TO authenticated
   USING (auth.uid() = id OR public.has_role(auth.uid(), 'super_admin'))
   WITH CHECK (auth.uid() = id OR public.has_role(auth.uid(), 'super_admin'));
 
+DROP POLICY IF EXISTS "Users insert own profile" ON public.profiles;
 CREATE POLICY "Users insert own profile" ON public.profiles
   FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Super admins delete profiles" ON public.profiles;
 CREATE POLICY "Super admins delete profiles" ON public.profiles
   FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(), 'super_admin'));
 
 -- Policies: user_roles
+DROP POLICY IF EXISTS "Users view own roles" ON public.user_roles;
 CREATE POLICY "Users view own roles" ON public.user_roles
   FOR SELECT TO authenticated
   USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'super_admin'));
 
+DROP POLICY IF EXISTS "Super admins manage roles" ON public.user_roles;
 CREATE POLICY "Super admins manage roles" ON public.user_roles
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'super_admin'))
@@ -93,6 +101,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -118,6 +127,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -138,18 +148,28 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authentic
 -- >>> 20260701094811_f53ac500-fffc-4d6e-81f5-09a05dd45f82.sql
 
 -- ============ ENUMS ============
-CREATE TYPE public.payment_method_type AS ENUM (
+DO $$ BEGIN
+  CREATE TYPE public.payment_method_type AS ENUM (
   'bkash','nagad','rocket','upay','tap','mcash','sure_cash','bank_transfer','card','crypto','other'
 );
-CREATE TYPE public.payment_method_mode AS ENUM ('manual','api');
-CREATE TYPE public.invoice_status AS ENUM (
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE public.payment_method_mode AS ENUM ('manual','api');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE public.invoice_status AS ENUM (
   'pending','processing','completed','failed','expired','refunded','cancelled'
 );
-CREATE TYPE public.transaction_status AS ENUM ('pending','verified','rejected');
-CREATE TYPE public.webhook_delivery_status AS ENUM ('pending','success','failed');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE public.transaction_status AS ENUM ('pending','verified','rejected');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN
+  CREATE TYPE public.webhook_delivery_status AS ENUM ('pending','success','failed');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ============ PAYMENT METHODS ============
-CREATE TABLE public.payment_methods (
+CREATE TABLE IF NOT EXISTS public.payment_methods (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   type public.payment_method_type NOT NULL,
@@ -172,13 +192,14 @@ CREATE TABLE public.payment_methods (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.payment_methods TO authenticated;
 GRANT ALL ON public.payment_methods TO service_role;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant manage own methods" ON public.payment_methods;
 CREATE POLICY "Merchant manage own methods" ON public.payment_methods
   FOR ALL TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
 
 -- ============ API KEYS ============
-CREATE TABLE public.api_keys (
+CREATE TABLE IF NOT EXISTS public.api_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -193,13 +214,14 @@ CREATE TABLE public.api_keys (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.api_keys TO authenticated;
 GRANT ALL ON public.api_keys TO service_role;
 ALTER TABLE public.api_keys ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant manage own api keys" ON public.api_keys;
 CREATE POLICY "Merchant manage own api keys" ON public.api_keys
   FOR ALL TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
 
 -- ============ WEBHOOK ENDPOINTS ============
-CREATE TABLE public.webhook_endpoints (
+CREATE TABLE IF NOT EXISTS public.webhook_endpoints (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
@@ -212,13 +234,14 @@ CREATE TABLE public.webhook_endpoints (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.webhook_endpoints TO authenticated;
 GRANT ALL ON public.webhook_endpoints TO service_role;
 ALTER TABLE public.webhook_endpoints ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant manage own webhooks" ON public.webhook_endpoints;
 CREATE POLICY "Merchant manage own webhooks" ON public.webhook_endpoints
   FOR ALL TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
 
 -- ============ INVOICES ============
-CREATE TABLE public.invoices (
+CREATE TABLE IF NOT EXISTS public.invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   invoice_number TEXT NOT NULL UNIQUE,
@@ -241,27 +264,31 @@ CREATE TABLE public.invoices (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX invoices_merchant_created_idx ON public.invoices(merchant_id, created_at DESC);
-CREATE INDEX invoices_status_idx ON public.invoices(status);
+CREATE INDEX IF NOT EXISTS invoices_merchant_created_idx ON public.invoices(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS invoices_status_idx ON public.invoices(status);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.invoices TO authenticated;
 GRANT ALL ON public.invoices TO service_role;
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant read own invoices" ON public.invoices;
 CREATE POLICY "Merchant read own invoices" ON public.invoices
   FOR SELECT TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
+DROP POLICY IF EXISTS "Merchant insert own invoices" ON public.invoices;
 CREATE POLICY "Merchant insert own invoices" ON public.invoices
   FOR INSERT TO authenticated
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
+DROP POLICY IF EXISTS "Merchant update own invoices" ON public.invoices;
 CREATE POLICY "Merchant update own invoices" ON public.invoices
   FOR UPDATE TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
+DROP POLICY IF EXISTS "Super admin delete invoices" ON public.invoices;
 CREATE POLICY "Super admin delete invoices" ON public.invoices
   FOR DELETE TO authenticated
   USING (public.has_role(auth.uid(),'super_admin'));
 
 -- ============ TRANSACTIONS ============
-CREATE TABLE public.transactions (
+CREATE TABLE IF NOT EXISTS public.transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id UUID NOT NULL REFERENCES public.invoices(id) ON DELETE CASCADE,
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -281,18 +308,19 @@ CREATE TABLE public.transactions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX transactions_merchant_created_idx ON public.transactions(merchant_id, created_at DESC);
-CREATE INDEX transactions_invoice_idx ON public.transactions(invoice_id);
+CREATE INDEX IF NOT EXISTS transactions_merchant_created_idx ON public.transactions(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS transactions_invoice_idx ON public.transactions(invoice_id);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.transactions TO authenticated;
 GRANT ALL ON public.transactions TO service_role;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant manage own transactions" ON public.transactions;
 CREATE POLICY "Merchant manage own transactions" ON public.transactions
   FOR ALL TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
 
 -- ============ WEBHOOK DELIVERIES ============
-CREATE TABLE public.webhook_deliveries (
+CREATE TABLE IF NOT EXISTS public.webhook_deliveries (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   endpoint_id UUID REFERENCES public.webhook_endpoints(id) ON DELETE SET NULL,
@@ -309,20 +337,22 @@ CREATE TABLE public.webhook_deliveries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX webhook_deliveries_merchant_idx ON public.webhook_deliveries(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS webhook_deliveries_merchant_idx ON public.webhook_deliveries(merchant_id, created_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.webhook_deliveries TO authenticated;
 GRANT ALL ON public.webhook_deliveries TO service_role;
 ALTER TABLE public.webhook_deliveries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant read own deliveries" ON public.webhook_deliveries;
 CREATE POLICY "Merchant read own deliveries" ON public.webhook_deliveries
   FOR SELECT TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
+DROP POLICY IF EXISTS "Super admin manage deliveries" ON public.webhook_deliveries;
 CREATE POLICY "Super admin manage deliveries" ON public.webhook_deliveries
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (public.has_role(auth.uid(),'super_admin'));
 
 -- ============ AUDIT LOGS ============
-CREATE TABLE public.audit_logs (
+CREATE TABLE IF NOT EXISTS public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   merchant_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -334,19 +364,21 @@ CREATE TABLE public.audit_logs (
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX audit_logs_actor_idx ON public.audit_logs(actor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS audit_logs_actor_idx ON public.audit_logs(actor_id, created_at DESC);
 GRANT SELECT, INSERT ON public.audit_logs TO authenticated;
 GRANT ALL ON public.audit_logs TO service_role;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Actor read own logs" ON public.audit_logs;
 CREATE POLICY "Actor read own logs" ON public.audit_logs
   FOR SELECT TO authenticated
   USING (actor_id = auth.uid() OR merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
+DROP POLICY IF EXISTS "Signed in insert audit" ON public.audit_logs;
 CREATE POLICY "Signed in insert audit" ON public.audit_logs
   FOR INSERT TO authenticated
   WITH CHECK (actor_id = auth.uid());
 
 -- ============ PLATFORM SETTINGS ============
-CREATE TABLE public.platform_settings (
+CREATE TABLE IF NOT EXISTS public.platform_settings (
   id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   brand_name TEXT NOT NULL DEFAULT 'PayNOC',
   support_email TEXT,
@@ -361,8 +393,10 @@ CREATE TABLE public.platform_settings (
 GRANT SELECT ON public.platform_settings TO authenticated;
 GRANT ALL ON public.platform_settings TO service_role;
 ALTER TABLE public.platform_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone signed in read settings" ON public.platform_settings;
 CREATE POLICY "Anyone signed in read settings" ON public.platform_settings
   FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Super admin write settings" ON public.platform_settings;
 CREATE POLICY "Super admin write settings" ON public.platform_settings
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'super_admin'))
@@ -371,7 +405,7 @@ CREATE POLICY "Super admin write settings" ON public.platform_settings
 INSERT INTO public.platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 -- ============ IP WHITELIST ============
-CREATE TABLE public.ip_whitelist (
+CREATE TABLE IF NOT EXISTS public.ip_whitelist (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   ip_address TEXT NOT NULL,
@@ -382,55 +416,66 @@ CREATE TABLE public.ip_whitelist (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.ip_whitelist TO authenticated;
 GRANT ALL ON public.ip_whitelist TO service_role;
 ALTER TABLE public.ip_whitelist ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchant manage own ips" ON public.ip_whitelist;
 CREATE POLICY "Merchant manage own ips" ON public.ip_whitelist
   FOR ALL TO authenticated
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'))
   WITH CHECK (merchant_id = auth.uid() OR public.has_role(auth.uid(),'super_admin'));
 
 -- ============ updated_at TRIGGERS ============
+DROP TRIGGER IF EXISTS trg_payment_methods_upd ON public.payment_methods;
 CREATE TRIGGER trg_payment_methods_upd BEFORE UPDATE ON public.payment_methods
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_api_keys_upd ON public.api_keys;
 CREATE TRIGGER trg_api_keys_upd BEFORE UPDATE ON public.api_keys
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_webhook_endpoints_upd ON public.webhook_endpoints;
 CREATE TRIGGER trg_webhook_endpoints_upd BEFORE UPDATE ON public.webhook_endpoints
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_invoices_upd ON public.invoices;
 CREATE TRIGGER trg_invoices_upd BEFORE UPDATE ON public.invoices
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_transactions_upd ON public.transactions;
 CREATE TRIGGER trg_transactions_upd BEFORE UPDATE ON public.transactions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_webhook_deliveries_upd ON public.webhook_deliveries;
 CREATE TRIGGER trg_webhook_deliveries_upd BEFORE UPDATE ON public.webhook_deliveries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_platform_settings_upd ON public.platform_settings;
 CREATE TRIGGER trg_platform_settings_upd BEFORE UPDATE ON public.platform_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 -- >>> 20260701095601_f9913049-313e-4888-b30b-d162cdb644fb.sql
 
-CREATE VIEW public.checkout_methods AS
+CREATE OR REPLACE VIEW public.checkout_methods AS
 SELECT id, merchant_id, type, label, mode, account_number, account_name,
        instructions, logo_url, fee_percent, fee_flat, min_amount, max_amount, sort_order, is_active
 FROM public.payment_methods
 WHERE is_active = true;
 GRANT SELECT ON public.checkout_methods TO anon, authenticated;
 
-CREATE VIEW public.checkout_invoices AS
+CREATE OR REPLACE VIEW public.checkout_invoices AS
 SELECT id, merchant_id, invoice_number, amount, currency, status, method_id, method_type,
        customer_name, customer_email, customer_phone, description, redirect_url,
        fee_amount, net_amount, expires_at, created_at
 FROM public.invoices;
 GRANT SELECT ON public.checkout_invoices TO anon, authenticated;
 
+DROP POLICY IF EXISTS "Public read pending invoices" ON public.invoices;
 CREATE POLICY "Public read pending invoices" ON public.invoices
   FOR SELECT TO anon
   USING (status IN ('pending','processing'));
 GRANT SELECT ON public.invoices TO anon;
 
+DROP POLICY IF EXISTS "Public start payment" ON public.invoices;
 CREATE POLICY "Public start payment" ON public.invoices
   FOR UPDATE TO anon
   USING (status = 'pending')
   WITH CHECK (status IN ('pending','processing'));
 GRANT UPDATE ON public.invoices TO anon;
 
+DROP POLICY IF EXISTS "Public submit transactions" ON public.transactions;
 CREATE POLICY "Public submit transactions" ON public.transactions
   FOR INSERT TO anon
   WITH CHECK (
@@ -444,6 +489,7 @@ CREATE POLICY "Public submit transactions" ON public.transactions
   );
 GRANT INSERT ON public.transactions TO anon;
 
+DROP POLICY IF EXISTS "Public read invoice transactions" ON public.transactions;
 CREATE POLICY "Public read invoice transactions" ON public.transactions
   FOR SELECT TO anon
   USING (
@@ -464,7 +510,7 @@ ALTER VIEW public.checkout_invoices SET (security_invoker = true);
 -- >>> 20260701100410_ebdf339c-4001-44fc-a0e7-2ff00087f675.sql
 
 -- notifications (in-app)
-CREATE TABLE public.notifications (
+CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   event TEXT NOT NULL,
@@ -474,19 +520,22 @@ CREATE TABLE public.notifications (
   read_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_notifications_merchant ON public.notifications(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_merchant ON public.notifications(merchant_id, created_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
 GRANT ALL ON public.notifications TO service_role;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchants view own notifications" ON public.notifications;
 CREATE POLICY "Merchants view own notifications" ON public.notifications FOR SELECT
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "Merchants update own notifications" ON public.notifications;
 CREATE POLICY "Merchants update own notifications" ON public.notifications FOR UPDATE
   USING (merchant_id = auth.uid());
+DROP POLICY IF EXISTS "Service manages notifications" ON public.notifications;
 CREATE POLICY "Service manages notifications" ON public.notifications FOR ALL
   TO service_role USING (true) WITH CHECK (true);
 
 -- notification settings
-CREATE TABLE public.notification_settings (
+CREATE TABLE IF NOT EXISTS public.notification_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   email_enabled BOOLEAN NOT NULL DEFAULT true,
@@ -501,13 +550,15 @@ CREATE TABLE public.notification_settings (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notification_settings TO authenticated;
 GRANT ALL ON public.notification_settings TO service_role;
 ALTER TABLE public.notification_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchants manage own notif settings" ON public.notification_settings;
 CREATE POLICY "Merchants manage own notif settings" ON public.notification_settings FOR ALL
   USING (merchant_id = auth.uid()) WITH CHECK (merchant_id = auth.uid());
+DROP TRIGGER IF EXISTS update_notification_settings_updated_at ON public.notification_settings;
 CREATE TRIGGER update_notification_settings_updated_at BEFORE UPDATE ON public.notification_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- notification delivery log
-CREATE TABLE public.notification_log (
+CREATE TABLE IF NOT EXISTS public.notification_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   channel TEXT NOT NULL, -- email | sms
@@ -521,12 +572,14 @@ CREATE TABLE public.notification_log (
   error TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_notif_log_merchant ON public.notification_log(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_log_merchant ON public.notification_log(merchant_id, created_at DESC);
 GRANT SELECT ON public.notification_log TO authenticated;
 GRANT ALL ON public.notification_log TO service_role;
 ALTER TABLE public.notification_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Merchants view own notif log" ON public.notification_log;
 CREATE POLICY "Merchants view own notif log" ON public.notification_log FOR SELECT
   USING (merchant_id = auth.uid() OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "Service writes notif log" ON public.notification_log;
 CREATE POLICY "Service writes notif log" ON public.notification_log FOR ALL
   TO service_role USING (true) WITH CHECK (true);
 
@@ -534,7 +587,7 @@ CREATE POLICY "Service writes notif log" ON public.notification_log FOR ALL
 -- >>> 20260701101206_6ca62692-bbe9-49ca-acb3-7c27d66a6de7.sql
 
 -- ============ PAYOUTS / WITHDRAWALS ============
-CREATE TABLE public.payouts (
+CREATE TABLE IF NOT EXISTS public.payouts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   amount NUMERIC(14,2) NOT NULL CHECK (amount > 0),
@@ -553,18 +606,22 @@ CREATE TABLE public.payouts (
 GRANT SELECT, INSERT, UPDATE ON public.payouts TO authenticated;
 GRANT ALL ON public.payouts TO service_role;
 ALTER TABLE public.payouts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchants read own payouts" ON public.payouts;
 CREATE POLICY "merchants read own payouts" ON public.payouts FOR SELECT TO authenticated
   USING (auth.uid() = merchant_id OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "merchants create own payouts" ON public.payouts;
 CREATE POLICY "merchants create own payouts" ON public.payouts FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = merchant_id);
+DROP POLICY IF EXISTS "super admin manage payouts" ON public.payouts;
 CREATE POLICY "super admin manage payouts" ON public.payouts FOR UPDATE TO authenticated
   USING (public.has_role(auth.uid(), 'super_admin'));
+DROP TRIGGER IF EXISTS trg_payouts_updated ON public.payouts;
 CREATE TRIGGER trg_payouts_updated BEFORE UPDATE ON public.payouts
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_payouts_merchant ON public.payouts(merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_payouts_merchant ON public.payouts(merchant_id, created_at DESC);
 
 -- ============ TEAM MEMBERS ============
-CREATE TABLE public.team_members (
+CREATE TABLE IF NOT EXISTS public.team_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   member_email TEXT NOT NULL,
@@ -578,12 +635,13 @@ CREATE TABLE public.team_members (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_members TO authenticated;
 GRANT ALL ON public.team_members TO service_role;
 ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchant owns team" ON public.team_members;
 CREATE POLICY "merchant owns team" ON public.team_members FOR ALL TO authenticated
   USING (auth.uid() = merchant_id OR public.has_role(auth.uid(), 'super_admin'))
   WITH CHECK (auth.uid() = merchant_id OR public.has_role(auth.uid(), 'super_admin'));
 
 -- ============ FRAUD RULES / BLOCKLIST ============
-CREATE TABLE public.fraud_blocklist (
+CREATE TABLE IF NOT EXISTS public.fraud_blocklist (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   block_type TEXT NOT NULL, -- email | phone | ip | sender_number
@@ -595,11 +653,12 @@ CREATE TABLE public.fraud_blocklist (
 GRANT SELECT, INSERT, DELETE ON public.fraud_blocklist TO authenticated;
 GRANT ALL ON public.fraud_blocklist TO service_role;
 ALTER TABLE public.fraud_blocklist ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchant owns blocklist" ON public.fraud_blocklist;
 CREATE POLICY "merchant owns blocklist" ON public.fraud_blocklist FOR ALL TO authenticated
   USING (auth.uid() = merchant_id) WITH CHECK (auth.uid() = merchant_id);
 
 -- ============ FX RATES ============
-CREATE TABLE public.fx_rates (
+CREATE TABLE IF NOT EXISTS public.fx_rates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   base_currency TEXT NOT NULL,
   quote_currency TEXT NOT NULL,
@@ -610,7 +669,9 @@ CREATE TABLE public.fx_rates (
 GRANT SELECT ON public.fx_rates TO authenticated, anon;
 GRANT ALL ON public.fx_rates TO service_role;
 ALTER TABLE public.fx_rates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read fx" ON public.fx_rates;
 CREATE POLICY "read fx" ON public.fx_rates FOR SELECT TO authenticated, anon USING (true);
+DROP POLICY IF EXISTS "admin write fx" ON public.fx_rates;
 CREATE POLICY "admin write fx" ON public.fx_rates FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'super_admin'))
   WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
@@ -681,6 +742,7 @@ CREATE TABLE IF NOT EXISTS public.rate_limit_buckets (
 );
 GRANT ALL ON public.rate_limit_buckets TO service_role;
 ALTER TABLE public.rate_limit_buckets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service only" ON public.rate_limit_buckets;
 CREATE POLICY "service only" ON public.rate_limit_buckets FOR ALL USING (false) WITH CHECK (false);
 
 -- Atomic rate-limit RPC: returns remaining count; -1 if blocked
@@ -725,9 +787,11 @@ CREATE TABLE IF NOT EXISTS public.byo_gateways (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.byo_gateways TO authenticated;
 GRANT ALL ON public.byo_gateways TO service_role;
 ALTER TABLE public.byo_gateways ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "merchant own byo" ON public.byo_gateways;
 CREATE POLICY "merchant own byo" ON public.byo_gateways FOR ALL
   USING (auth.uid() = merchant_id) WITH CHECK (auth.uid() = merchant_id);
 
+DROP TRIGGER IF EXISTS byo_gateways_updated_at ON public.byo_gateways;
 CREATE TRIGGER byo_gateways_updated_at BEFORE UPDATE ON public.byo_gateways
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -793,34 +857,46 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
   END;
 $$;
 
+DROP POLICY IF EXISTS "team can view invoices" ON public.invoices;
 CREATE POLICY "team can view invoices"          ON public.invoices          FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
+DROP POLICY IF EXISTS "team can view transactions" ON public.transactions;
 CREATE POLICY "team can view transactions"      ON public.transactions      FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
+DROP POLICY IF EXISTS "team can view payment_methods" ON public.payment_methods;
 CREATE POLICY "team can view payment_methods"   ON public.payment_methods   FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
+DROP POLICY IF EXISTS "team can view payouts" ON public.payouts;
 CREATE POLICY "team can view payouts"           ON public.payouts           FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
+DROP POLICY IF EXISTS "team can view webhook_endpoints" ON public.webhook_endpoints;
 CREATE POLICY "team can view webhook_endpoints" ON public.webhook_endpoints FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'viewer'));
+DROP POLICY IF EXISTS "team can view api_keys" ON public.api_keys;
 CREATE POLICY "team can view api_keys"          ON public.api_keys          FOR SELECT TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'));
 
+DROP POLICY IF EXISTS "operators update transactions" ON public.transactions;
 CREATE POLICY "operators update transactions" ON public.transactions FOR UPDATE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'operator'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'operator'));
+DROP POLICY IF EXISTS "operators update invoices" ON public.invoices;
 CREATE POLICY "operators update invoices"     ON public.invoices     FOR UPDATE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'operator'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'operator'));
+DROP POLICY IF EXISTS "operators insert invoices" ON public.invoices;
 CREATE POLICY "operators insert invoices"     ON public.invoices     FOR INSERT TO authenticated
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'operator'));
 
+DROP POLICY IF EXISTS "admins manage methods" ON public.payment_methods;
 CREATE POLICY "admins manage methods"    ON public.payment_methods   FOR ALL TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'admin'));
+DROP POLICY IF EXISTS "admins manage webhooks" ON public.webhook_endpoints;
 CREATE POLICY "admins manage webhooks"   ON public.webhook_endpoints FOR ALL TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'admin'));
+DROP POLICY IF EXISTS "admins manage api_keys" ON public.api_keys;
 CREATE POLICY "admins manage api_keys"   ON public.api_keys          FOR ALL TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'))
   WITH CHECK (public.merchant_can(auth.uid(), merchant_id, 'admin'));
@@ -828,7 +904,7 @@ CREATE POLICY "admins manage api_keys"   ON public.api_keys          FOR ALL TO 
 
 -- >>> 20260701121533_9df1dcd3-8e22-4934-9b58-9ec07882b67c.sql
 
-CREATE TABLE public.idempotency_keys (
+CREATE TABLE IF NOT EXISTS public.idempotency_keys (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   merchant_id UUID NOT NULL,
   key TEXT NOT NULL,
@@ -845,9 +921,10 @@ GRANT ALL ON public.idempotency_keys TO service_role;
 
 ALTER TABLE public.idempotency_keys ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "no client access" ON public.idempotency_keys;
 CREATE POLICY "no client access" ON public.idempotency_keys FOR ALL USING (false) WITH CHECK (false);
 
-CREATE INDEX idempotency_keys_created_idx ON public.idempotency_keys (created_at);
+CREATE INDEX IF NOT EXISTS idempotency_keys_created_idx ON public.idempotency_keys (created_at);
 
 
 -- >>> 20260701122009_0bf415a9-c48c-462b-9547-cec777778e4e.sql
@@ -881,7 +958,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_merchant_mode ON public.invoices(merchan
 CREATE INDEX IF NOT EXISTS idx_transactions_merchant_mode ON public.transactions(merchant_id, mode);
 
 DROP VIEW IF EXISTS public.checkout_invoices CASCADE;
-CREATE VIEW public.checkout_invoices
+CREATE OR REPLACE VIEW public.checkout_invoices
 WITH (security_invoker = true)
 AS
 SELECT id, merchant_id, invoice_number, amount, currency, status, customer_name,
@@ -894,7 +971,7 @@ GRANT SELECT ON public.checkout_invoices TO anon, authenticated;
 -- >>> 20260701122326_144d5286-4c2b-446d-b6df-a5e765807684.sql
 
 DROP VIEW IF EXISTS public.checkout_invoices CASCADE;
-CREATE VIEW public.checkout_invoices
+CREATE OR REPLACE VIEW public.checkout_invoices
 WITH (security_invoker = true)
 AS
 SELECT id, merchant_id, invoice_number, amount, currency, status,
@@ -994,11 +1071,14 @@ GRANT ALL ON public.incidents TO service_role;
 
 ALTER TABLE public.incidents ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Incidents are public" ON public.incidents;
 CREATE POLICY "Incidents are public" ON public.incidents FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Super admins manage incidents" ON public.incidents;
 CREATE POLICY "Super admins manage incidents" ON public.incidents FOR ALL
   USING (public.has_role(auth.uid(), 'super_admin'))
   WITH CHECK (public.has_role(auth.uid(), 'super_admin'));
 
+DROP TRIGGER IF EXISTS update_incidents_updated_at ON public.incidents;
 CREATE TRIGGER update_incidents_updated_at BEFORE UPDATE ON public.incidents
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -1007,7 +1087,7 @@ CREATE INDEX IF NOT EXISTS idx_incidents_started ON public.incidents(started_at 
 
 -- >>> 20260701124254_e0f75570-ff94-4cc7-bcfd-bf04e0b30512.sql
 
-CREATE TABLE public.api_request_logs (
+CREATE TABLE IF NOT EXISTS public.api_request_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id uuid NOT NULL,
   api_key_id uuid,
@@ -1020,7 +1100,7 @@ CREATE TABLE public.api_request_logs (
   error_message text,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX api_request_logs_merchant_created_idx ON public.api_request_logs (merchant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS api_request_logs_merchant_created_idx ON public.api_request_logs (merchant_id, created_at DESC);
 
 GRANT SELECT ON public.api_request_logs TO authenticated;
 GRANT ALL ON public.api_request_logs TO service_role;
@@ -1080,7 +1160,7 @@ GRANT EXECUTE ON FUNCTION public.get_customer_invoices(text, text) TO anon, auth
 
 -- >>> 20260701124840_1a60a1d3-2e82-413d-9e03-b0e975336838.sql
 
-CREATE TABLE public.recurring_schedules (
+CREATE TABLE IF NOT EXISTS public.recurring_schedules (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_id uuid NOT NULL,
   name text NOT NULL,
@@ -1124,11 +1204,12 @@ CREATE POLICY "Merchant admins can delete schedules"
   ON public.recurring_schedules FOR DELETE TO authenticated
   USING (public.merchant_can(auth.uid(), merchant_id, 'admin'));
 
+DROP TRIGGER IF EXISTS update_recurring_schedules_updated_at ON public.recurring_schedules;
 CREATE TRIGGER update_recurring_schedules_updated_at
   BEFORE UPDATE ON public.recurring_schedules
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_recurring_due
+CREATE INDEX IF NOT EXISTS idx_recurring_due
   ON public.recurring_schedules (next_run_at)
   WHERE is_active = true;
 
@@ -1164,6 +1245,7 @@ CREATE TABLE IF NOT EXISTS public.digest_settings (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.digest_settings TO authenticated;
 GRANT ALL ON public.digest_settings TO service_role;
 ALTER TABLE public.digest_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "own digest" ON public.digest_settings;
 CREATE POLICY "own digest" ON public.digest_settings FOR ALL
   USING (auth.uid() = merchant_id) WITH CHECK (auth.uid() = merchant_id);
 
@@ -1186,6 +1268,7 @@ CREATE TABLE IF NOT EXISTS public.payout_schedules (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.payout_schedules TO authenticated;
 GRANT ALL ON public.payout_schedules TO service_role;
 ALTER TABLE public.payout_schedules ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "own payout schedule" ON public.payout_schedules;
 CREATE POLICY "own payout schedule" ON public.payout_schedules FOR ALL
   USING (auth.uid() = merchant_id) WITH CHECK (auth.uid() = merchant_id);
 
@@ -1207,6 +1290,7 @@ CREATE TABLE IF NOT EXISTS public.discount_codes (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.discount_codes TO authenticated;
 GRANT ALL ON public.discount_codes TO service_role;
 ALTER TABLE public.discount_codes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "own discount codes" ON public.discount_codes;
 CREATE POLICY "own discount codes" ON public.discount_codes FOR ALL
   USING (auth.uid() = merchant_id) WITH CHECK (auth.uid() = merchant_id);
 
@@ -1264,19 +1348,24 @@ CREATE TABLE IF NOT EXISTS public.disputes (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.disputes TO authenticated;
 GRANT ALL ON public.disputes TO service_role;
 ALTER TABLE public.disputes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "disputes view" ON public.disputes;
 CREATE POLICY "disputes view" ON public.disputes FOR SELECT
   USING (auth.uid() = merchant_id OR public.has_role(auth.uid(), 'super_admin'));
+DROP POLICY IF EXISTS "disputes insert" ON public.disputes;
 CREATE POLICY "disputes insert" ON public.disputes FOR INSERT
   WITH CHECK (auth.uid() = merchant_id);
+DROP POLICY IF EXISTS "disputes update" ON public.disputes;
 CREATE POLICY "disputes update" ON public.disputes FOR UPDATE
   USING (auth.uid() = merchant_id OR public.has_role(auth.uid(), 'super_admin'));
 
 -- Storage policies for disputes bucket
 DO $$ BEGIN
+  DROP POLICY IF EXISTS "own dispute upload" ON storage.objects;
   CREATE POLICY "own dispute upload" ON storage.objects FOR INSERT TO authenticated
     WITH CHECK (bucket_id = 'disputes' AND auth.uid()::text = (storage.foldername(name))[1]);
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
+  DROP POLICY IF EXISTS "own dispute read" ON storage.objects;
   CREATE POLICY "own dispute read" ON storage.objects FOR SELECT TO authenticated
     USING (bucket_id = 'disputes' AND (auth.uid()::text = (storage.foldername(name))[1]
       OR public.has_role(auth.uid(), 'super_admin')));
@@ -1289,18 +1378,22 @@ ALTER TABLE public.notification_settings
 
 -- 7. updated_at triggers
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_digest_updated ON public.digest_settings;
   CREATE TRIGGER trg_digest_updated BEFORE UPDATE ON public.digest_settings
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_payout_sched_updated ON public.payout_schedules;
   CREATE TRIGGER trg_payout_sched_updated BEFORE UPDATE ON public.payout_schedules
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_discount_updated ON public.discount_codes;
   CREATE TRIGGER trg_discount_updated BEFORE UPDATE ON public.discount_codes
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_disputes_updated ON public.disputes;
   CREATE TRIGGER trg_disputes_updated BEFORE UPDATE ON public.disputes
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -1362,6 +1455,7 @@ DROP POLICY IF EXISTS "public read merchant fx" ON public.merchant_fx_rates;
 CREATE POLICY "public read merchant fx" ON public.merchant_fx_rates
   FOR SELECT TO anon USING (true);
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_merchant_fx_updated ON public.merchant_fx_rates;
   CREATE TRIGGER trg_merchant_fx_updated BEFORE UPDATE ON public.merchant_fx_rates
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -1410,6 +1504,7 @@ CREATE POLICY "staff read own row" ON public.admin_staff
   FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_admin_staff_updated ON public.admin_staff;
   CREATE TRIGGER trg_admin_staff_updated BEFORE UPDATE ON public.admin_staff
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
@@ -1564,6 +1659,7 @@ CREATE POLICY "merchants view enabled platform gateways"
   ON public.platform_gateways FOR SELECT TO authenticated
   USING (is_enabled_for_merchants = true AND is_active = true);
 DO $$ BEGIN
+DROP TRIGGER IF EXISTS trg_platform_gateways_upd ON public.platform_gateways;
   CREATE TRIGGER trg_platform_gateways_upd BEFORE UPDATE ON public.platform_gateways
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
