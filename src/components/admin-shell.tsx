@@ -9,10 +9,9 @@ import type { ReactNode } from "react";
 
 const navGroups: Array<{ label: string; items: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> }> = [
   {
-    label: "Platform",
+    label: "Overview",
     items: [
-      { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-      { to: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
+      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/admin/incidents", label: "Incidents", icon: Activity },
     ],
   },
@@ -21,24 +20,35 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     items: [
       { to: "/admin/merchants", label: "Merchants", icon: Users },
       { to: "/admin/kyc", label: "KYC review", icon: ShieldCheck },
-      { to: "/admin/staff", label: "Admin staff", icon: UserCog },
     ],
   },
   {
-    label: "Operations",
+    label: "Money movement",
     items: [
       { to: "/admin/transactions", label: "Transactions", icon: ArrowRightLeft },
       { to: "/admin/invoices", label: "Invoices", icon: Receipt },
-      { to: "/admin/webhooks-health", label: "Webhook health", icon: Webhook },
       { to: "/admin/payouts", label: "Payouts", icon: Wallet },
       { to: "/admin/fx", label: "FX rates", icon: DollarSign },
     ],
   },
   {
-    label: "Config",
+    label: "Infrastructure",
     items: [
       { to: "/admin/platform-gateways", label: "Platform gateways", icon: Plug },
       { to: "/admin/plugins", label: "Plugins & SDKs", icon: Package },
+      { to: "/admin/webhooks-health", label: "Webhook health", icon: Webhook },
+    ],
+  },
+  {
+    label: "Team & comms",
+    items: [
+      { to: "/admin/staff", label: "Admin staff", icon: UserCog },
+      { to: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
+    ],
+  },
+  {
+    label: "System",
+    items: [
       { to: "/admin/settings", label: "Platform settings", icon: Settings },
       { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
     ],
