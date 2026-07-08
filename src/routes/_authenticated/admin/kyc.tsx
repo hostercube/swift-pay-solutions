@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/admin/kyc")({
   component: KycPage,
 });
 
+type Doc = { name: string; path: string; type?: string };
 type Row = {
   id: string;
   email: string;
@@ -25,7 +26,7 @@ type Row = {
   kyc_id_number: string | null;
   kyc_business_type: string | null;
   kyc_address: string | null;
-  kyc_documents: Array<{ name: string; path: string }>;
+  kyc_documents: Doc[];
   kyc_submitted_at: string | null;
 };
 
@@ -102,6 +103,22 @@ function KycRow({
   row, onDecide, onDoc,
 }: { row: Row; onDecide: (id: string, d: "verified" | "rejected", note: string) => void; onDoc: (p: string) => void }) {
   const [note, setNote] = useState("");
+  const [urls, setUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    (async () => {
+      const entries = await Promise.all(
+        (row.kyc_documents ?? []).map(async (d) => {
+          const { data } = await supabase.storage.from("kyc").createSignedUrl(d.path, 600);
+          return [d.path, data?.signedUrl ?? ""] as const;
+        }),
+      );
+      setUrls(Object.fromEntries(entries));
+    })();
+  }, [row.id]);
+
+  const isImage = (name: string) => /\.(png|jpe?g|webp|gif|bmp|heic|heif)$/i.test(name);
+
   return (
     <Card className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -118,10 +135,30 @@ function KycRow({
         <div><span className="text-muted-foreground">Address: </span>{row.kyc_address || "—"}</div>
       </div>
       {row.kyc_documents?.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {row.kyc_documents.map((d, i) => (
-            <Button key={i} size="sm" variant="outline" onClick={() => onDoc(d.path)}>{d.name}</Button>
-          ))}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+          {row.kyc_documents.map((d, i) => {
+            const url = urls[d.path];
+            return (
+              <div key={i} className="rounded-lg border border-glass-border p-2">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <Badge variant="outline" className="text-[10px]">{d.type ?? "Document"}</Badge>
+                  <button className="text-xs text-brand hover:underline" onClick={() => onDoc(d.path)}>Open</button>
+                </div>
+                {url && isImage(d.name) ? (
+                  <a href={url} target="_blank" rel="noreferrer">
+                    <img src={url} alt={d.name} className="h-40 w-full rounded-md object-cover" />
+                  </a>
+                ) : url ? (
+                  <a href={url} target="_blank" rel="noreferrer" className="block truncate rounded-md bg-muted/50 p-6 text-center text-xs text-muted-foreground">
+                    {d.name}
+                  </a>
+                ) : (
+                  <div className="h-40 animate-pulse rounded-md bg-muted/40" />
+                )}
+                <div className="mt-1 truncate text-[11px] text-muted-foreground">{d.name}</div>
+              </div>
+            );
+          })}
         </div>
       )}
       <Textarea className="mt-3" placeholder="Reviewer note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
