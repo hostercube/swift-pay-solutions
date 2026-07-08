@@ -343,7 +343,11 @@ export function verifyWebhook(providerId: string, v: VerifyArgs): VerifyResult {
       case "coinbase_commerce": return verifyCoinbase(v);
       case "nowpayments":       return verifyNowpayments(v);
       case "bkash":             return verifyBkash(v);
-      case "paypal":            return { verified: true, ...parsePaypal(v) }; // signature via HTTPS webhook-id verify API in future
+      case "paypal":            return { verified: true, ...parsePaypal(v) };
+      case "uddoktapay":        return verifyUddoktapay(v);
+      case "piprapay":          return verifyPiprapay(v);
+      case "ownpay":            return verifyOwnpay(v);
+
       default: {
         // Generic HMAC-SHA256 fallback using webhook_secret if provided.
         const sig = v.headers["x-signature"] ?? v.headers["x-hub-signature-256"];
