@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useMerchantPerms } from "@/hooks/use-merchant-perms";
+import type { MerchantPerm } from "@/lib/permissions";
 
 const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
   { to: "/onboarding", label: "Get started", icon: Rocket },
