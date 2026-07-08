@@ -90,26 +90,35 @@ function CheckoutPage() {
   const [displayCurrency, setDisplayCurrency] = useState<string | null>(null);
   const [fxRate, setFxRate] = useState<number | null>(null);
 
+  const [loadError, setLoadError] = useState<string | null>(null);
   const load = useCallback(async () => {
     const rpc = supabase.rpc as unknown as (
       fn: string, args: Record<string, unknown>,
     ) => Promise<{ data: unknown; error: { message: string } | null }>;
-    const { data: invRows } = await rpc("get_checkout_invoice", { _id: invoiceId });
-    const i = Array.isArray(invRows) ? (invRows[0] ?? null) : null;
-    setInv((i ?? null) as Invoice | null);
-    if (i) {
-      const merchantId = (i as Invoice).merchant_id;
-      const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
-        rpc("get_checkout_methods", { _merchant_id: merchantId }),
-        rpc("get_checkout_transactions", { _invoice_id: invoiceId }),
-        rpc("get_checkout_brand", { _merchant_id: merchantId }),
-      ]);
-      setMethods(((m as Method[]) ?? []));
-      setTxns(((t as Txn[]) ?? []));
-      const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
-      setBrand((brandRow ?? null) as Brand | null);
+    try {
+      const { data: invRows, error: invErr } = await rpc("get_checkout_invoice", { _id: invoiceId });
+      if (invErr) throw new Error(invErr.message);
+      const i = Array.isArray(invRows) ? (invRows[0] ?? null) : null;
+      setInv((i ?? null) as Invoice | null);
+      if (i) {
+        const merchantId = (i as Invoice).merchant_id;
+        const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
+          rpc("get_checkout_methods", { _merchant_id: merchantId }),
+          rpc("get_checkout_transactions", { _invoice_id: invoiceId }),
+          rpc("get_checkout_brand", { _merchant_id: merchantId }),
+        ]);
+        setMethods(((m as Method[]) ?? []));
+        setTxns(((t as Txn[]) ?? []));
+        const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
+        setBrand((brandRow ?? null) as Brand | null);
+      }
+      setLoadError(null);
+    } catch (e) {
+      console.error("[checkout] load failed", e);
+      setLoadError(e instanceof Error ? e.message : "Failed to load checkout");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [invoiceId]);
 
   useEffect(() => { load(); }, [load]);
@@ -282,8 +291,18 @@ function CheckoutPage() {
           <XCircle className="mx-auto h-10 w-10 text-destructive" />
           <h1 className="mt-3 font-display text-xl font-bold">Invoice unavailable</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            This invoice does not exist, has expired, or has already been settled.
+            {loadError
+              ? `Couldn't reach payments backend: ${loadError}`
+              : "This invoice does not exist, has expired, or has already been settled."}
           </p>
+          {loadError && (
+            <button
+              onClick={() => { setLoading(true); load(); }}
+              className="mt-4 inline-flex rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </Shell>
     );
