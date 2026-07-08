@@ -1,0 +1,112 @@
+-- Tighten broad anonymous grants left by older installs.
+-- Safe to re-run.
+
+-- Start from no anonymous table access on every app table.
+REVOKE ALL ON public.admin_staff FROM PUBLIC, anon;
+REVOKE ALL ON public.api_keys FROM PUBLIC, anon;
+REVOKE ALL ON public.api_request_logs FROM PUBLIC, anon;
+REVOKE ALL ON public.audit_logs FROM PUBLIC, anon;
+REVOKE ALL ON public.byo_gateways FROM PUBLIC, anon;
+REVOKE ALL ON public.digest_settings FROM PUBLIC, anon;
+REVOKE ALL ON public.discount_codes FROM PUBLIC, anon;
+REVOKE ALL ON public.disputes FROM PUBLIC, anon;
+REVOKE ALL ON public.fraud_blocklist FROM PUBLIC, anon;
+REVOKE ALL ON public.fx_rates FROM PUBLIC, anon;
+REVOKE ALL ON public.idempotency_keys FROM PUBLIC, anon;
+REVOKE ALL ON public.impersonation_events FROM PUBLIC, anon;
+REVOKE ALL ON public.incidents FROM PUBLIC, anon;
+REVOKE ALL ON public.invoices FROM PUBLIC, anon;
+REVOKE ALL ON public.ip_whitelist FROM PUBLIC, anon;
+REVOKE ALL ON public.merchant_fx_rates FROM PUBLIC, anon;
+REVOKE ALL ON public.notification_log FROM PUBLIC, anon;
+REVOKE ALL ON public.notification_settings FROM PUBLIC, anon;
+REVOKE ALL ON public.notifications FROM PUBLIC, anon;
+REVOKE ALL ON public.payment_methods FROM PUBLIC, anon;
+REVOKE ALL ON public.payout_schedules FROM PUBLIC, anon;
+REVOKE ALL ON public.payouts FROM PUBLIC, anon;
+REVOKE ALL ON public.platform_gateways FROM PUBLIC, anon;
+REVOKE ALL ON public.platform_settings FROM PUBLIC, anon;
+REVOKE ALL ON public.profiles FROM PUBLIC, anon;
+REVOKE ALL ON public.rate_limit_buckets FROM PUBLIC, anon;
+REVOKE ALL ON public.recurring_schedules FROM PUBLIC, anon;
+REVOKE ALL ON public.team_members FROM PUBLIC, anon;
+REVOKE ALL ON public.transactions FROM PUBLIC, anon;
+REVOKE ALL ON public.user_roles FROM PUBLIC, anon;
+REVOKE ALL ON public.webhook_deliveries FROM PUBLIC, anon;
+REVOKE ALL ON public.webhook_endpoints FROM PUBLIC, anon;
+REVOKE ALL ON public.webhook_events FROM PUBLIC, anon;
+
+-- Re-grant only the deliberately public Data API access.
+GRANT SELECT ON public.fx_rates TO anon;
+GRANT SELECT ON public.merchant_fx_rates TO anon;
+GRANT SELECT ON public.incidents TO anon;
+GRANT INSERT, UPDATE ON public.invoices TO anon;
+GRANT INSERT ON public.transactions TO anon;
+
+-- Signed-in app access remains explicit and RLS-scoped.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.admin_staff TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.api_keys TO authenticated;
+GRANT SELECT ON public.api_request_logs TO authenticated;
+GRANT SELECT, INSERT ON public.audit_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.byo_gateways TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.digest_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.discount_codes TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.disputes TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.fraud_blocklist TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.fx_rates TO authenticated;
+GRANT SELECT, INSERT ON public.impersonation_events TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.incidents TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.invoices TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ip_whitelist TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.merchant_fx_rates TO authenticated;
+GRANT SELECT ON public.notification_log TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.notification_settings TO authenticated;
+GRANT SELECT, UPDATE ON public.notifications TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payment_methods TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payout_schedules TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.payouts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_gateways TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.recurring_schedules TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.team_members TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.transactions TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_roles TO authenticated;
+GRANT SELECT ON public.webhook_deliveries TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.webhook_endpoints TO authenticated;
+GRANT SELECT ON public.webhook_events TO authenticated;
+
+-- Service access for backend jobs/webhooks.
+GRANT ALL ON public.admin_staff TO service_role;
+GRANT ALL ON public.api_keys TO service_role;
+GRANT ALL ON public.api_request_logs TO service_role;
+GRANT ALL ON public.audit_logs TO service_role;
+GRANT ALL ON public.byo_gateways TO service_role;
+GRANT ALL ON public.digest_settings TO service_role;
+GRANT ALL ON public.discount_codes TO service_role;
+GRANT ALL ON public.disputes TO service_role;
+GRANT ALL ON public.fraud_blocklist TO service_role;
+GRANT ALL ON public.fx_rates TO service_role;
+GRANT ALL ON public.idempotency_keys TO service_role;
+GRANT ALL ON public.impersonation_events TO service_role;
+GRANT ALL ON public.incidents TO service_role;
+GRANT ALL ON public.invoices TO service_role;
+GRANT ALL ON public.ip_whitelist TO service_role;
+GRANT ALL ON public.merchant_fx_rates TO service_role;
+GRANT ALL ON public.notification_log TO service_role;
+GRANT ALL ON public.notification_settings TO service_role;
+GRANT ALL ON public.notifications TO service_role;
+GRANT ALL ON public.payment_methods TO service_role;
+GRANT ALL ON public.payout_schedules TO service_role;
+GRANT ALL ON public.payouts TO service_role;
+GRANT ALL ON public.platform_gateways TO service_role;
+GRANT ALL ON public.platform_settings TO service_role;
+GRANT ALL ON public.profiles TO service_role;
+GRANT ALL ON public.rate_limit_buckets TO service_role;
+GRANT ALL ON public.recurring_schedules TO service_role;
+GRANT ALL ON public.team_members TO service_role;
+GRANT ALL ON public.transactions TO service_role;
+GRANT ALL ON public.user_roles TO service_role;
+GRANT ALL ON public.webhook_deliveries TO service_role;
+GRANT ALL ON public.webhook_endpoints TO service_role;
+GRANT ALL ON public.webhook_events TO service_role;
