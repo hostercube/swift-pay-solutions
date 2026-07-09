@@ -145,63 +145,56 @@ function DisputesPage() {
         </Button>
       </Card>
 
-      <div className="mt-6 space-y-3">
-        {rows.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">No disputes logged.</Card>
-        ) : (
-          rows.map((r) => (
-            <Card key={r.id} className="p-5">
+      <div className="mt-6">
+        <FilteredList
+          rows={rows}
+          rowKey={(r) => r.id}
+          searchable={(r) => `${r.invoice_id} ${r.reason} ${r.merchant_note ?? ""} ${r.admin_note ?? ""}`}
+          dateField={(r) => r.created_at}
+          filters={[
+            {
+              key: "status",
+              label: "All statuses",
+              options: [
+                { value: "open", label: "Open" },
+                { value: "under_review", label: "Under review" },
+                { value: "won", label: "Won" },
+                { value: "lost", label: "Lost" },
+                { value: "withdrawn", label: "Withdrawn" },
+              ],
+              match: (r, v) => r.status === v,
+            } as CardFilter<Row>,
+          ]}
+          emptyMessage="No disputes logged."
+          render={(r) => (
+            <Card className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs font-mono text-muted-foreground">
-                    Invoice: {r.invoice_id}
-                  </div>
+                  <div className="text-xs font-mono text-muted-foreground">Invoice: {r.invoice_id}</div>
                   <div className="mt-1 font-medium">{r.reason}</div>
-                  {r.merchant_note && (
-                    <div className="mt-1 text-sm text-muted-foreground">{r.merchant_note}</div>
-                  )}
-                  {r.admin_note && (
-                    <div className="mt-1 text-sm text-brand">Admin: {r.admin_note}</div>
-                  )}
+                  {r.merchant_note && <div className="mt-1 text-sm text-muted-foreground">{r.merchant_note}</div>}
+                  {r.admin_note && <div className="mt-1 text-sm text-brand">Admin: {r.admin_note}</div>}
                 </div>
                 <Badge className={COLOR[r.status] ?? ""}>{r.status}</Badge>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-                <span className="text-muted-foreground">
-                  {new Date(r.created_at).toLocaleString()}
-                </span>
+                <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
                 {r.evidence_url && (
-                  <button
-                    onClick={() => view(r.evidence_url!)}
-                    className="text-brand hover:underline"
-                  >
-                    View evidence
-                  </button>
+                  <button onClick={() => view(r.evidence_url!)} className="text-brand hover:underline">View evidence</button>
                 )}
                 <label className="cursor-pointer text-brand hover:underline">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) upload(r.id, f);
-                    }}
-                  />
+                  <input type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(r.id, f); }} />
                   Upload evidence
                 </label>
                 {r.status !== "withdrawn" && (
-                  <button
-                    onClick={() => withdraw(r.id)}
-                    className="text-destructive hover:underline"
-                  >
-                    Withdraw
-                  </button>
+                  <button onClick={() => withdraw(r.id)} className="text-destructive hover:underline">Withdraw</button>
                 )}
               </div>
             </Card>
-          ))
-        )}
+          )}
+        />
       </div>
     </MerchantShell>
   );
 }
+
