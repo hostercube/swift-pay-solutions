@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { GATEWAYS } from "@/lib/gateways/registry";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/admin/platform/")({
   head: () => ({ meta: [{ title: "Platform Gateways · Admin" }] }),
