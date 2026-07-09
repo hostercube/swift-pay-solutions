@@ -89,16 +89,16 @@ async function handlePost(request: Request): Promise<Response> {
       const hi = amount + 1;
       let q = supabaseAdmin
         .from("transactions")
-        .select("id, invoice_id, merchant_id, method_type, gross_amount, fee_amount, net_amount, status, payer_number, created_at")
+        .select("id, invoice_id, merchant_id, method_type, gross_amount, fee_amount, net_amount, status, sender_number, created_at")
         .eq("merchant_id", auth.merchantId)
         .eq("status", "pending")
         .gte("gross_amount", lo)
         .lte("gross_amount", hi)
         .order("created_at", { ascending: false })
         .limit(5);
-      if (senderTail.length >= 10) q = q.ilike("payer_number", `%${senderTail}`);
+      if (senderTail.length >= 10) q = q.ilike("sender_number", `%${senderTail}`);
       const { data: candidates } = await q;
-      if (candidates && candidates.length === 1) txn = candidates[0] as typeof txn;
+      if (candidates && candidates.length === 1) txn = candidates[0] as unknown as typeof txn;
     }
 
     if (!txn) {
