@@ -907,8 +907,8 @@ function ManualForm({
         </div>
 
         {(() => {
-          const fallback = defaultQrFor(method);
-          if (!method.qr_code_url && !fallback) return null;
+          const hasFallback = qrFallbackEligible(method);
+          if (!method.qr_code_url && !hasFallback) return null;
           return (
             <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -916,7 +916,7 @@ function ManualForm({
               </div>
               {method.qr_code_url
                 ? <PayQr path={method.qr_code_url} />
-                : <img src={fallback!} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />}
+                : <LocalQr text={method.account_number!} />}
               <div className="text-[11px] text-muted-foreground">
                 {method.qr_code_url
                   ? "Open your mobile banking app and scan the QR"
