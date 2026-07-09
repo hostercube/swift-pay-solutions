@@ -697,12 +697,15 @@ function ApiReferencePage() {
                 <Field name="expires_in_hours" type="integer" desc="Invoice lifetime in hours. Default 24." />
                 <Field name="metadata" type="object" desc="Arbitrary JSON returned unchanged in every webhook." />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Code lang="cURL" code={CURL_CREATE} />
-                <Code lang="JavaScript" code={JS_CREATE} />
-                <Code lang="PHP" code={PHP_CREATE} />
-                <Code lang="Python" code={PY_CREATE} />
-              </div>
+              <CodeTabs
+                tabs={[
+                  { label: "cURL", code: CURL_CREATE },
+                  { label: "JavaScript", code: JS_CREATE },
+                  { label: "PHP", code: PHP_CREATE },
+                  { label: "Python", code: PY_CREATE },
+                ]}
+              />
+
               <Code lang="201 Created" code={RESP_INVOICE} />
             </Section>
 
