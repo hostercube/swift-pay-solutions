@@ -57,12 +57,13 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
 
         // Idempotency: skip duplicate provider events (retries).
         if (result?.verified && result.providerEventId) {
-          const dupRes = await admin.from("webhook_events")
+          const { data: dupRow } = await supabaseAdmin
+            .from("webhook_events")
             .select("id")
             .eq("provider", provider)
             .eq("provider_event_id", result.providerEventId)
             .maybeSingle();
-          if (dupRes.data) {
+          if (dupRow) {
             return Response.json({ ok: true, duplicate: true });
           }
         }
