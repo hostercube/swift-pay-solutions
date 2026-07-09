@@ -44,7 +44,12 @@ function AuthPage() {
   const [mfaCode, setMfaCode] = useState("");
 
   useEffect(() => {
-    getTurnstileConfig().then(setCaptcha).catch(() => setCaptcha({ enabled: false, siteKey: "" }));
+    getTurnstileConfig()
+      .then(setCaptcha)
+      .catch((e) => {
+        console.error("[turnstile] getTurnstileConfig failed:", e);
+        setCaptcha({ enabled: false, siteKey: "" });
+      });
   }, []);
 
   useEffect(() => {
