@@ -15,31 +15,50 @@ const pickEnv = (...names: string[]) => {
   return undefined;
 };
 
-const PAYNOC_SUPABASE_URL =
-  pickEnv(
-    "PAYNOC_SUPABASE_URL",
-    "PAYNOC_PRODUCTION_SUPABASE_URL",
-    "PAYNOC_PROD_SUPABASE_URL",
-    "SERVICE_URL_SUPABASEKONG",
-    "SERVICE_URL_SUPABASEKONG_8000",
-  ) ?? "https://db.paynoc.bd";
+const PAYNOC_SUPABASE_URL = pickEnv(
+  "PAYNOC_SUPABASE_URL",
+  "PAYNOC_PRODUCTION_SUPABASE_URL",
+  "PAYNOC_PROD_SUPABASE_URL",
+  "SERVICE_URL_SUPABASEKONG",
+  "SERVICE_URL_SUPABASEKONG_8000",
+  "VITE_SUPABASE_URL",
+  "SUPABASE_URL",
+);
 
-const PAYNOC_SUPABASE_ANON_KEY =
-  pickEnv(
-    "PAYNOC_SUPABASE_ANON_KEY",
-    "PAYNOC_SUPABASE_PUBLISHABLE_KEY",
-    "PAYNOC_PRODUCTION_SUPABASE_ANON_KEY",
-    "PAYNOC_PROD_SUPABASE_ANON_KEY",
-    "SERVICE_SUPABASEANON_KEY",
-  ) ??
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4MzQ5NzU0MCwiZXhwIjo0OTM5MTcxMTQwLCJyb2xlIjoiYW5vbiJ9.yLlo7Ol38TufIT2ptVNz27dTI8ot9K_dzGwVTQR6QXE";
+const PAYNOC_SUPABASE_ANON_KEY = pickEnv(
+  "PAYNOC_SUPABASE_ANON_KEY",
+  "PAYNOC_SUPABASE_PUBLISHABLE_KEY",
+  "PAYNOC_PRODUCTION_SUPABASE_ANON_KEY",
+  "PAYNOC_PROD_SUPABASE_ANON_KEY",
+  "SERVICE_SUPABASEANON_KEY",
+  "VITE_SUPABASE_PUBLISHABLE_KEY",
+  "VITE_SUPABASE_ANON_KEY",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_ANON_KEY",
+);
 
 const PAYNOC_SUPABASE_PROJECT_ID =
   pickEnv(
     "PAYNOC_SUPABASE_PROJECT_ID",
     "PAYNOC_PRODUCTION_SUPABASE_PROJECT_ID",
     "PAYNOC_PROD_SUPABASE_PROJECT_ID",
+    "VITE_SUPABASE_PROJECT_ID",
+    "SUPABASE_PROJECT_ID",
   ) ?? "paynoc";
+
+// Only override Vite's own VITE_* env injection when we resolved a real value
+// from a non-VITE source (i.e. an operator explicitly set PAYNOC_* / SERVICE_*).
+// Falling back to a hardcoded host caused prod to hit an unreachable Supabase
+// and fail login with "Failed to fetch".
+const supabaseDefines: Record<string, string> = {};
+if (PAYNOC_SUPABASE_URL) {
+  supabaseDefines["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(PAYNOC_SUPABASE_URL);
+}
+if (PAYNOC_SUPABASE_ANON_KEY) {
+  supabaseDefines["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(PAYNOC_SUPABASE_ANON_KEY);
+  supabaseDefines["import.meta.env.VITE_SUPABASE_ANON_KEY"] = JSON.stringify(PAYNOC_SUPABASE_ANON_KEY);
+}
+supabaseDefines["import.meta.env.VITE_SUPABASE_PROJECT_ID"] = JSON.stringify(PAYNOC_SUPABASE_PROJECT_ID);
 
 export default defineConfig({
   tanstackStart: {
@@ -48,11 +67,6 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
-    define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(PAYNOC_SUPABASE_URL),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PAYNOC_SUPABASE_ANON_KEY),
-      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(PAYNOC_SUPABASE_ANON_KEY),
-      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(PAYNOC_SUPABASE_PROJECT_ID),
-    },
+    define: supabaseDefines,
   },
 });
