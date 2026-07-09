@@ -220,9 +220,11 @@ function MethodsPage() {
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="font-display text-lg font-semibold">
-                  {editing.id ? "Edit method" : "Add payment method"}
+                  {editing.id ? "Edit channel" : "Add manual channel"}
                 </h2>
-                <p className="text-xs text-muted-foreground">Manual mode collects proof, API mode auto-verifies.</p>
+                <p className="text-xs text-muted-foreground">
+                  Customer sees your account number + instructions and submits a Transaction ID for verification.
+                </p>
               </div>
               <button onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
@@ -230,7 +232,7 @@ function MethodsPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Type">
+              <Field label="Type" full>
                 <select
                   value={editing.type}
                   onChange={(e) => setEditing({ ...editing, type: e.target.value as MethodType })}
@@ -239,16 +241,7 @@ function MethodsPage() {
                   {METHOD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </Field>
-              <Field label="Mode">
-                <select
-                  value={editing.mode}
-                  onChange={(e) => setEditing({ ...editing, mode: e.target.value as Mode })}
-                  className={inputCls}
-                >
-                  <option value="manual">Manual</option>
-                  <option value="api">API (auto-verify)</option>
-                </select>
-              </Field>
+
               <Field label="Label" full>
                 <input
                   value={editing.label ?? ""}
