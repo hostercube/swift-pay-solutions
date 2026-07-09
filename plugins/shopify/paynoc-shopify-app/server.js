@@ -129,8 +129,10 @@ app.post('/webhooks/shopify/orders-create', async (req, res) => {
       },
       body: JSON.stringify(invoicePayload),
     });
-    const data = await resp.json();
-    if (!resp.ok || !data.checkout_url) throw new Error(`PayNOC ${resp.status}: ${JSON.stringify(data)}`);
+    const parsed = await resp.json();
+    // API returns { data: { id, checkout_url, ... } }; accept flat shape too.
+    const data = parsed?.data && typeof parsed.data === 'object' ? parsed.data : parsed;
+    if (!resp.ok || !data?.checkout_url) throw new Error(`PayNOC ${resp.status}: ${JSON.stringify(parsed)}`);
 
     // Tag the order with the checkout URL so the merchant/customer can find it.
     await shopifyAdmin(`/orders/${order.id}.json`, {
