@@ -5,6 +5,9 @@ export const Route = createFileRoute("/api/public/v1/postman")({
     handlers: {
       GET: async ({ request }) => {
         const origin = new URL(request.url).origin;
+        const baseUrl = origin.includes("localhost") || origin.includes("lovable")
+          ? "https://paynoc.bd"
+          : origin;
         const collection = {
           info: {
             _postman_id: "paynoc-v1",
@@ -13,7 +16,7 @@ export const Route = createFileRoute("/api/public/v1/postman")({
             schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
           },
           variable: [
-            { key: "baseUrl", value: origin, type: "string" },
+            { key: "baseUrl", value: baseUrl, type: "string" },
             { key: "apiKey", value: "sk_test_replace_me", type: "string" },
           ],
           auth: {
