@@ -287,6 +287,34 @@ function CheckoutPage() {
     load();
   }
 
+  async function payViaGateway(provider: string) {
+    if (!inv) return;
+    setRedirecting(provider);
+    try {
+      const origin = window.location.origin;
+      const res = await initiateGw({
+        data: {
+          invoiceId: inv.id,
+          provider,
+          source: "byo",
+          successUrl: `${origin}/pay/${inv.id}?paid=1`,
+          cancelUrl: `${origin}/pay/${inv.id}?cancelled=1`,
+        },
+      });
+      if (res?.redirectUrl) {
+        window.location.href = res.redirectUrl;
+      } else {
+        toast.success("Payment initiated");
+        load();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gateway checkout failed");
+      setRedirecting(null);
+    }
+  }
+
+
+
   if (loading) {
     return (
       <Shell brand={brand}><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
