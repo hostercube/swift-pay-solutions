@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { FilteredList, type CardFilter } from "@/components/filtered-list";
+
 
 export const Route = createFileRoute("/_authenticated/disputes")({
   head: () => ({ meta: [{ title: "Disputes · PayNOC" }] }),
