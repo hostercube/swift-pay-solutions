@@ -248,11 +248,64 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
     }
 
     if (data.status === "processed") {
+      // Call the actual provider refund endpoint before marking processed.
+      const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+      const { refundProvider } = await import("@/lib/gateways/adapters.server");
+
+      // Find original completed transaction to identify provider + txn id.
+      const { data: origTxn } = await supabaseAdmin
+        .from("transactions")
+        .select("provider_txn_id, method_type")
+        .eq("invoice_id", invoiceId)
+        .eq("status", "completed")
+        .maybeSingle();
+
+      const providerName = (origTxn?.method_type as string | undefined) ?? "manual";
+      const providerTxnId = origTxn?.provider_txn_id ?? "";
+
+      let providerRefundId: string | null = null;
+      let providerResp: unknown = null;
+
+      if (providerName !== "manual" && providerTxnId) {
+        // Look up merchant creds for this provider.
+        const { data: gw } = await supabaseAdmin
+          .from("byo_gateways")
+          .select("credentials, mode")
+          .eq("merchant_id", merchantId)
+          .eq("provider", providerName)
+          .maybeSingle();
+        if (gw) {
+          const res = await refundProvider(providerName, {
+            providerTxnId,
+            amount: Number(amount),
+            currency,
+            creds: (gw.credentials as Record<string, string>) ?? {},
+            mode: ((gw.mode as string) === "live" ? "live" : "sandbox"),
+            reason: data.note ?? undefined,
+          });
+          providerResp = res.raw ?? { error: res.error };
+          if (!res.ok) {
+            // Revert refund row status and bubble error up.
+            await supabaseAdmin.from("refunds")
+              .update({ status: "approved", admin_note: `Provider refund failed: ${res.error}` })
+              .eq("id", refundId);
+            throw new Error(`Refund failed at provider: ${res.error}`);
+          }
+          providerRefundId = res.providerRefundId ?? null;
+        }
+      }
+
+      await supabaseAdmin.from("refunds").update({
+        provider: providerName,
+        provider_refund_id: providerRefundId,
+        provider_response: providerResp as never,
+      }).eq("id", refundId);
+
       // Mark invoice as refunded
       await supabase.from("invoices").update({ status: "refunded" }).eq("id", invoiceId);
 
-      dispatchWebhooks({ merchantId, invoiceId, event: "refund.processed", data: row }).catch(() => undefined);
-      dispatchWebhooks({ merchantId, invoiceId, event: "invoice.refunded", data: { invoice_id: invoiceId, refund_id: refundId, amount, currency } }).catch(() => undefined);
+      dispatchWebhooks({ merchantId, invoiceId, event: "refund.processed", data: { ...row, provider_refund_id: providerRefundId } }).catch(() => undefined);
+      dispatchWebhooks({ merchantId, invoiceId, event: "invoice.refunded", data: { invoice_id: invoiceId, refund_id: refundId, amount, currency, provider_refund_id: providerRefundId } }).catch(() => undefined);
 
       notify({
         merchantId, event: "refund.processed", title: "Refund processed",
