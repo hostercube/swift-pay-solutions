@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Pause, Play } from "lucide-react";
 import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -80,58 +81,80 @@ function RecurringPage() {
         />
       )}
 
-      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Customer</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Every</th>
-              <th className="px-4 py-3">Next run</th>
-              <th className="px-4 py-3">Runs</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (<tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>)}
-            {!loading && rows.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
-                No recurring schedules yet.
-              </td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3">
-                  <div className="font-medium">{r.name}</div>
-                  {r.mode === "test" && <span className="text-[9px] font-bold uppercase text-amber-500">Test</span>}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{r.customer_email || "—"}</td>
-                <td className="px-4 py-3 font-medium">{r.currency} {Number(r.amount).toLocaleString()}</td>
-                <td className="px-4 py-3 text-muted-foreground">{r.interval_count} {r.interval_unit}{r.interval_count > 1 ? "s" : ""}</td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(r.next_run_at).toLocaleString()}</td>
-                <td className="px-4 py-3">{r.runs_count}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"}`}>
-                    {r.is_active ? "Active" : "Paused"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-2">
-                    <button onClick={() => toggle(r.id, r.is_active)} className="text-muted-foreground hover:text-foreground" title={r.is_active ? "Pause" : "Resume"}>
-                      {r.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </button>
-                    <button onClick={() => remove(r.id)} className="text-muted-foreground hover:text-destructive" title="Delete">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<Row>
+        rows={rows}
+        loading={loading}
+        rowKey={(r) => r.id}
+        searchable={(r) => `${r.name} ${r.customer_email ?? ""} ${r.currency}`}
+        dateField={(r) => r.next_run_at}
+        emptyMessage="No recurring schedules yet."
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "active", label: "Active" },
+              { value: "paused", label: "Paused" },
+            ],
+            match: (r, v) => (v === "active" ? r.is_active : !r.is_active),
+          },
+          {
+            key: "mode",
+            label: "Mode",
+            options: [
+              { value: "live", label: "Live" },
+              { value: "test", label: "Test" },
+            ],
+            match: (r, v) => r.mode === v,
+          },
+          {
+            key: "unit",
+            label: "Interval",
+            options: [
+              { value: "day", label: "Daily" },
+              { value: "week", label: "Weekly" },
+              { value: "month", label: "Monthly" },
+            ],
+            match: (r, v) => r.interval_unit === v,
+          },
+        ]}
+        columns={[
+          {
+            key: "name",
+            label: "Name",
+            render: (r) => (
+              <div>
+                <div className="font-medium">{r.name}</div>
+                {r.mode === "test" && <span className="text-[9px] font-bold uppercase text-amber-500">Test</span>}
+              </div>
+            ),
+          },
+          { key: "customer", label: "Customer", render: (r) => <span className="text-muted-foreground">{r.customer_email || "—"}</span> },
+          { key: "amount", label: "Amount", render: (r) => <span className="font-medium">{r.currency} {Number(r.amount).toLocaleString()}</span> },
+          { key: "every", label: "Every", render: (r) => <span className="text-muted-foreground">{r.interval_count} {r.interval_unit}{r.interval_count > 1 ? "s" : ""}</span> },
+          { key: "next", label: "Next run", render: (r) => <span className="text-muted-foreground">{new Date(r.next_run_at).toLocaleString()}</span> },
+          { key: "runs", label: "Runs", render: (r) => r.runs_count },
+          {
+            key: "status",
+            label: "Status",
+            render: (r) => (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"}`}>
+                {r.is_active ? "Active" : "Paused"}
+              </span>
+            ),
+          },
+        ] as DataTableColumn<Row>[]}
+        actions={(r) => (
+          <div className="inline-flex items-center gap-2">
+            <button onClick={() => toggle(r.id, r.is_active)} className="text-muted-foreground hover:text-foreground" title={r.is_active ? "Pause" : "Resume"}>
+              {r.is_active ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </button>
+            <button onClick={() => remove(r.id)} className="text-muted-foreground hover:text-destructive" title="Delete">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      />
     </MerchantShell>
   );
 }
