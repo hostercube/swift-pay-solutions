@@ -43,9 +43,10 @@ function KycPage() {
       .select(
         "id, email, business_name, kyc_status, kyc_id_type, kyc_id_number, kyc_business_type, kyc_address, kyc_documents, kyc_submitted_at",
       )
-      .in("kyc_status", ["pending", "unverified"])
-      .order("kyc_submitted_at", { ascending: false, nullsFirst: false });
+      .order("kyc_submitted_at", { ascending: false, nullsFirst: false })
+      .limit(500);
     setRows((data ?? []) as Row[]);
+
 
     const { data: s } = await supabase.from("platform_settings").select("verification_mode").eq("id", 1).single();
     setMode(s?.verification_mode ?? "manual");
