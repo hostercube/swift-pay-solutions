@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { CreditCard, Plug, Code2, MessageSquare } from "lucide-react";
+import { CreditCard, Plug, Code2, MessageSquare, FileText } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
