@@ -42,6 +42,11 @@ type Invoice = {
   display_currency?: string | null;
   discount_amount?: number | null;
   discount_code?: string | null;
+  allow_custom_amount?: boolean | null;
+  min_amount?: number | null;
+  max_amount?: number | null;
+  reusable?: boolean | null;
+  auto_redirect?: boolean | null;
 };
 
 
@@ -233,7 +238,7 @@ function CheckoutPage() {
   }, [txns, load]);
 
   // Iframe embed integration: notify parent window on status changes,
-  // and support ?auto_redirect=1 to auto-forward after success.
+  // and auto-forward after success when the merchant opted in.
   useEffect(() => {
     if (typeof window === "undefined" || !inv) return;
     const verified = txns.find((t) => t.status === "verified");
@@ -253,10 +258,11 @@ function CheckoutPage() {
         "*",
       );
     } catch { /* ignore */ }
-    if (verified) {
+    if (verified && !inv.reusable && inv.redirect_url) {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("auto_redirect") === "1" && inv.redirect_url) {
-        const t = setTimeout(() => { window.top!.location.href = inv.redirect_url!; }, 1500);
+      const autoRedirect = inv.auto_redirect !== false || params.get("auto_redirect") === "1";
+      if (autoRedirect) {
+        const t = setTimeout(() => { (window.top ?? window).location.href = inv.redirect_url!; }, 2500);
         return () => clearTimeout(t);
       }
     }
@@ -367,7 +373,9 @@ function CheckoutPage() {
 
   const verified = txns.find((t) => t.status === "verified");
   const pending = txns.find((t) => t.status === "pending");
-  const isPaid = !!verified || ["completed", "paid"].includes(inv.status);
+  const isReusable = !!inv.reusable;
+  const isPaid = !isReusable && (!!verified || ["completed", "paid"].includes(inv.status));
+  const needsAmount = !!inv.allow_custom_amount && Number(inv.amount) <= 0;
 
   if (isPaid) {
     return (
@@ -513,8 +521,33 @@ function CheckoutPage() {
         </aside>
 
         {/* ── Right: Method picker ────────────────────────── */}
-        <section className="min-w-0">
-          {pending ? (
+        <section className="min-w-0 space-y-4">
+          {isReusable && verified && (
+            <div className="glass rounded-2xl border border-success/30 bg-success/5 p-5">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                <div className="font-semibold">Last payment received</div>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                This is a reusable link — another customer can pay again below.
+              </p>
+            </div>
+          )}
+          {needsAmount ? (
+            <AmountSetter
+              inv={inv}
+              onSet={async (val) => {
+                const rpc = supabase.rpc.bind(supabase) as unknown as (
+                  fn: string, args: Record<string, unknown>,
+                ) => Promise<{ data: unknown }>;
+                const { data } = await rpc("set_checkout_amount", { _invoice_id: inv.id, _amount: val });
+                const row = Array.isArray(data) ? data[0] : null;
+                const r = row as { ok?: boolean; message?: string } | null;
+                if (r?.ok) { toast.success("Amount set"); load(); }
+                else toast.error(r?.message || "Could not set amount");
+              }}
+            />
+          ) : pending ? (
             <div className="glass rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
               <Clock className="mx-auto h-10 w-10 text-amber-500" />
               <h2 className="mt-3 font-display text-xl font-bold">Awaiting verification</h2>
@@ -553,6 +586,42 @@ function CheckoutPage() {
         </section>
       </div>
     </Shell>
+  );
+}
+
+function AmountSetter({ inv, onSet }: { inv: Invoice; onSet: (v: number) => void }) {
+  const [val, setVal] = useState("");
+  const min = inv.min_amount ? Number(inv.min_amount) : 0;
+  const max = inv.max_amount ? Number(inv.max_amount) : null;
+  return (
+    <div className="glass rounded-2xl border border-glass-border p-6 sm:p-8">
+      <h2 className="font-display text-xl font-bold">Enter amount to pay</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {min > 0 && `Min ${currencySymbol(inv.currency)}${min.toLocaleString()}`}
+        {min > 0 && max ? " · " : ""}
+        {max && `Max ${currencySymbol(inv.currency)}${max.toLocaleString()}`}
+      </p>
+      <div className="mt-5 flex items-center gap-2">
+        <span className="text-2xl font-bold text-muted-foreground">{currencySymbol(inv.currency)}</span>
+        <input
+          type="number" step="0.01" value={val} onChange={(e) => setVal(e.target.value)}
+          placeholder="0.00" autoFocus
+          className="flex-1 rounded-lg border border-glass-border bg-card/60 px-4 py-3 font-display text-2xl font-bold outline-none focus:border-brand"
+        />
+      </div>
+      <button
+        onClick={() => {
+          const n = Number(val);
+          if (!n || n <= 0) return toast.error("Enter a valid amount");
+          if (min > 0 && n < min) return toast.error(`Minimum is ${min}`);
+          if (max && n > max) return toast.error(`Maximum is ${max}`);
+          onSet(n);
+        }}
+        className="mt-5 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)]"
+      >
+        Continue
+      </button>
+    </div>
   );
 }
 

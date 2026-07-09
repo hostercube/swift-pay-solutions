@@ -487,7 +487,9 @@ export type Database = {
       }
       invoices: {
         Row: {
+          allow_custom_amount: boolean
           amount: number
+          auto_redirect: boolean
           created_at: string
           currency: string
           customer_email: string | null
@@ -501,20 +503,25 @@ export type Database = {
           fee_amount: number
           id: string
           invoice_number: string
+          max_amount: number | null
           merchant_id: string
           metadata: Json
           method_id: string | null
           method_type: Database["public"]["Enums"]["payment_method_type"] | null
+          min_amount: number | null
           mode: string
           net_amount: number
           paid_at: string | null
           redirect_url: string | null
+          reusable: boolean
           status: Database["public"]["Enums"]["invoice_status"]
           updated_at: string
           webhook_url: string | null
         }
         Insert: {
+          allow_custom_amount?: boolean
           amount: number
+          auto_redirect?: boolean
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -528,22 +535,27 @@ export type Database = {
           fee_amount?: number
           id?: string
           invoice_number: string
+          max_amount?: number | null
           merchant_id: string
           metadata?: Json
           method_id?: string | null
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
+          min_amount?: number | null
           mode?: string
           net_amount?: number
           paid_at?: string | null
           redirect_url?: string | null
+          reusable?: boolean
           status?: Database["public"]["Enums"]["invoice_status"]
           updated_at?: string
           webhook_url?: string | null
         }
         Update: {
+          allow_custom_amount?: boolean
           amount?: number
+          auto_redirect?: boolean
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -557,16 +569,19 @@ export type Database = {
           fee_amount?: number
           id?: string
           invoice_number?: string
+          max_amount?: number | null
           merchant_id?: string
           metadata?: Json
           method_id?: string | null
           method_type?:
             | Database["public"]["Enums"]["payment_method_type"]
             | null
+          min_amount?: number | null
           mode?: string
           net_amount?: number
           paid_at?: string | null
           redirect_url?: string | null
+          reusable?: boolean
           status?: Database["public"]["Enums"]["invoice_status"]
           updated_at?: string
           webhook_url?: string | null
@@ -2129,7 +2144,9 @@ export type Database = {
       get_checkout_invoice: {
         Args: { _id: string }
         Returns: {
+          allow_custom_amount: boolean
           amount: number
+          auto_redirect: boolean
           created_at: string
           currency: string
           customer_email: string
@@ -2139,13 +2156,16 @@ export type Database = {
           expires_at: string
           id: string
           invoice_number: string
+          max_amount: number
           merchant_id: string
           metadata: Json
           method_id: string
           method_type: string
+          min_amount: number
           mode: string
           paid_at: string
           redirect_url: string
+          reusable: boolean
           status: Database["public"]["Enums"]["invoice_status"]
         }[]
       }
@@ -2258,6 +2278,14 @@ export type Database = {
         Returns: boolean
       }
       renew_due_subscriptions: { Args: never; Returns: number }
+      set_checkout_amount: {
+        Args: { _amount: number; _invoice_id: string }
+        Returns: {
+          message: string
+          new_amount: number
+          ok: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "merchant"
