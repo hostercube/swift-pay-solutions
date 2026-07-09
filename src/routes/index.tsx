@@ -182,7 +182,7 @@ function HomePage() {
                   </span>
                 </div>
                 <pre className="mt-4 overflow-x-auto font-mono text-[11.5px] leading-relaxed text-foreground/90">
-{`curl -X POST https://api.paynoc.dev/v1/invoices \\
+{`curl -X POST https://paynoc.bd/api/public/v1/invoices \\
   -H "Authorization: Bearer sk_live_..." \\
   -H "Idempotency-Key: 8f14e45f..." \\
   -d '{
