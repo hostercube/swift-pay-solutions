@@ -588,7 +588,7 @@ function ApiReferencePage() {
             <Section id="create-invoice" title="Create an invoice">
               <Method verb="POST" path="/v1/invoices" />
               <div className="rounded-lg border border-glass-border bg-card/40 p-4">
-                <Field name="amount" type="integer" required desc="Amount to charge, in the smallest currency unit." />
+                <Field name="amount" type="number" required desc="Amount to charge in major currency units (e.g. 1500 = 1,500 BDT). Must be > 0." />
                 <Field name="currency" type="string" desc="Currency code. Defaults to BDT." />
                 <Field name="customer_name" type="string" desc="Buyer name shown on checkout and receipts." />
                 <Field name="customer_email" type="string" desc="Buyer email — receives receipt." />
