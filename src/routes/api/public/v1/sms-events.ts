@@ -131,7 +131,7 @@ async function handlePost(request: Request): Promise<Response> {
       paid_at: nowIso,
       fee_amount: txn.fee_amount,
       net_amount: txn.net_amount,
-      method_type: txn.method_type,
+      method_type: txn.method_type as never,
     }).eq("id", txn.invoice_id).select("*").single();
 
     if (invoice) {
