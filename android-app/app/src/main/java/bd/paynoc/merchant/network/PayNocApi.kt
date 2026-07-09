@@ -1,0 +1,67 @@
+package bd.paynoc.merchant.network
+
+import bd.paynoc.merchant.data.QueuedEvent
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import java.util.concurrent.TimeUnit
+
+/**
+ * Thin HTTP client for the PayNOC public API.
+ * Uses the merchant's API key as a Bearer token — same one used from
+ * the dashboard for /api/public/v1/invoices etc.
+ */
+class PayNocApi(private val baseUrl: String, private val apiKey: String) {
+
+    private val http: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .build()
+
+    private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    private val requestAdapter = moshi.adapter(SmsEventsBody::class.java)
+
+    @JsonClass(generateAdapter = true)
+    data class SmsEventDto(
+        val provider: String,
+        val raw_body: String,
+        val trx_id: String,
+        val amount: Double,
+        val sender: String?,
+        val received_at: String,
+        val device_id: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class SmsEventsBody(val events: List<SmsEventDto>)
+
+    fun postSmsEvents(batch: List<QueuedEvent>, deviceId: String): Response {
+        val body = SmsEventsBody(
+            events = batch.map {
+                SmsEventDto(
+                    provider = it.provider,
+                    raw_body = it.rawBody,
+                    trx_id = it.trxId,
+                    amount = it.amount,
+                    sender = it.sender,
+                    received_at = it.receivedAtIso,
+                    device_id = deviceId,
+                )
+            },
+        )
+        val json = requestAdapter.toJson(body)
+        val url = baseUrl.trimEnd('/') + "/api/public/v1/sms-events"
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", "Bearer $apiKey")
+            .header("Content-Type", "application/json")
+            .post(json.toRequestBody("application/json".toMediaType()))
+            .build()
+        return http.newCall(request).execute()
+    }
+}

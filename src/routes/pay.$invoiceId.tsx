@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { downloadReceipt } from "@/lib/pdf-receipt";
 import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
+import { submitManualPayment } from "@/lib/checkout-submit.functions";
 import { getGateway } from "@/lib/gateways/registry";
 
 
@@ -127,6 +128,7 @@ const STYLES: Record<CheckoutStyle, {
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
   const initiateGw = useServerFn(initiateGatewayCheckout);
+  const submitManual = useServerFn(submitManualPayment);
   const [inv, setInv] = useState<Invoice | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
@@ -284,54 +286,26 @@ function CheckoutPage() {
     if (!form.provider_txn_id.trim()) return toast.error("Enter your Transaction ID");
     if (!form.sender_number.trim()) return toast.error("Enter the number you paid from");
     setSubmitting(true);
-
-    // Fraud blocklist screen (email + phone; ip is not visible to browser)
     try {
-      const rpc = (supabase.rpc.bind(supabase) as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: boolean | null; error: { message: string } | null }>);
-      const { data: blocked } = await rpc("check_fraud_block", {
-        _merchant_id: inv.merchant_id,
-        _email: inv.customer_email ?? "",
-        _phone: form.sender_number,
-        _ip: "",
+      await submitManual({
+        data: {
+          invoiceId: inv.id,
+          methodId: selected.id,
+          senderNumber: form.sender_number,
+          senderName: form.sender_name,
+          providerTxnId: form.provider_txn_id,
+        },
       });
-      if (blocked) {
-        setSubmitting(false);
-        return toast.error("Payment blocked by merchant fraud rules");
-      }
-    } catch {
-      // fail-open: don't block a legitimate customer on RPC hiccup
+      toast.success("Payment submitted — awaiting verification");
+      setForm({ sender_number: "", sender_name: "", provider_txn_id: "" });
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Submit failed");
+    } finally {
+      setSubmitting(false);
     }
-
-    const { fee, net } = computeFee(selected, Number(inv.amount));
-
-    // Attach method + move to processing (best effort)
-    await supabase
-      .from("invoices")
-      .update({ method_id: selected.id, method_type: selected.type as never, status: "processing" })
-      .eq("id", inv.id);
-
-    const { error } = await supabase.from("transactions").insert({
-      invoice_id: inv.id,
-      merchant_id: inv.merchant_id,
-      method_type: selected.type as never,
-      status: "pending",
-      gross_amount: Number(inv.amount),
-      fee_amount: fee,
-      net_amount: net,
-      sender_number: form.sender_number,
-      sender_name: form.sender_name || null,
-      provider_txn_id: form.provider_txn_id,
-      reference: form.provider_txn_id,
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Payment submitted — awaiting verification");
-    setForm({ sender_number: "", sender_name: "", provider_txn_id: "" });
-    load();
   }
+
 
   async function payViaGateway(provider: string) {
     if (!inv) return;
