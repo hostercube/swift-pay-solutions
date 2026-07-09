@@ -12,10 +12,28 @@ import {
   renderTemplate,
 } from "@/lib/smsnoc.server";
 
-async function assertSuperAdminOrPlatformStaff(
-  supabase: Awaited<ReturnType<typeof import("@/integrations/supabase/auth-middleware").requireSupabaseAuth>["middleware"] extends never ? never : never> extends never ? never : never,
-): Promise<never> {
-  throw new Error("unused");
+function serializeResult(r: {
+  status: string;
+  channel: string;
+  http_status?: number;
+  provider_response?: unknown;
+  error?: string | null;
+}) {
+  return {
+    status: r.status,
+    channel: r.channel,
+    http_status: r.http_status ?? null,
+    provider_response: (() => {
+      try {
+        return typeof r.provider_response === "string"
+          ? r.provider_response
+          : JSON.stringify(r.provider_response ?? null);
+      } catch {
+        return String(r.provider_response ?? "");
+      }
+    })(),
+    error: r.error ?? null,
+  };
 }
 
 // ---------- Platform (super-admin) config ----------
