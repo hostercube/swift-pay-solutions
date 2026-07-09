@@ -297,6 +297,9 @@ function CheckoutPage() {
     if (!inv || !selected) return;
     if (!form.provider_txn_id.trim()) return toast.error("Enter your Transaction ID");
     if (!form.sender_number.trim()) return toast.error("Enter the number you paid from");
+    if (selected.type === "bank_transfer" && !form.slip_url) {
+      return toast.error("Please upload your bank deposit slip");
+    }
     setSubmitting(true);
     try {
       await submitManual({
@@ -306,10 +309,12 @@ function CheckoutPage() {
           senderNumber: form.sender_number,
           senderName: form.sender_name,
           providerTxnId: form.provider_txn_id,
+          slipUrl: form.slip_url || undefined,
+          bankReference: form.bank_reference || undefined,
         },
       });
       toast.success("Payment submitted — awaiting verification");
-      setForm({ sender_number: "", sender_name: "", provider_txn_id: "" });
+      setForm({ sender_number: "", sender_name: "", provider_txn_id: "", bank_reference: "", slip_url: "" });
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Submit failed");
