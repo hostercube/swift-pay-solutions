@@ -79,6 +79,13 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "private_key", label: "Merchant Private Key (PEM)", type: "textarea", required: true },
     ],
     docsUrl: "https://nagadpg.com/docs",
+    setupSteps: [
+      "Onboard as a Nagad PGW merchant through your Nagad relationship manager.",
+      "Nagad issues a Merchant ID, a Merchant Number, and a Nagad Public Key (PEM).",
+      "Generate your own RSA key pair (2048-bit). Share the public key with Nagad; keep the private key secret and paste it into 'Merchant Private Key' below.",
+      "Paste Nagad's Public Key into 'Nagad Public Key' (starts with -----BEGIN PUBLIC KEY-----).",
+      "Test in sandbox first, then switch this configuration to Live once verified.",
+    ],
   },
   {
     id: "rocket",
