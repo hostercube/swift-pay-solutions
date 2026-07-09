@@ -1,0 +1,1 @@
+ALTER TABLE public.byo_gateways ADD COLUMN IF NOT EXISTS label TEXT;
