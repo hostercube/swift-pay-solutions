@@ -318,6 +318,8 @@ const nav = [
     { id: "testing", label: "Testing" },
     { id: "sdks", label: "SDKs & Postman" },
     { id: "plugins", label: "Plugins & integrations" },
+    { id: "connect-site", label: "Connect your site / app" },
+    { id: "connect-apk", label: "Connect the Android APK" },
   ]},
 ];
 
