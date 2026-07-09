@@ -238,7 +238,7 @@ function CheckoutPage() {
   }, [txns, load]);
 
   // Iframe embed integration: notify parent window on status changes,
-  // and support ?auto_redirect=1 to auto-forward after success.
+  // and auto-forward after success when the merchant opted in.
   useEffect(() => {
     if (typeof window === "undefined" || !inv) return;
     const verified = txns.find((t) => t.status === "verified");
@@ -258,10 +258,11 @@ function CheckoutPage() {
         "*",
       );
     } catch { /* ignore */ }
-    if (verified) {
+    if (verified && !inv.reusable && inv.redirect_url) {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("auto_redirect") === "1" && inv.redirect_url) {
-        const t = setTimeout(() => { window.top!.location.href = inv.redirect_url!; }, 1500);
+      const autoRedirect = inv.auto_redirect !== false || params.get("auto_redirect") === "1";
+      if (autoRedirect) {
+        const t = setTimeout(() => { (window.top ?? window).location.href = inv.redirect_url!; }, 2500);
         return () => clearTimeout(t);
       }
     }
