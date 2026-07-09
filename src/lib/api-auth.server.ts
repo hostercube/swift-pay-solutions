@@ -23,10 +23,12 @@ function clientIp(request: Request) {
  * and audit the call. Returns merchant context or an error response shape.
  */
 export async function authenticateApiKey(request: Request): Promise<
-  | { merchantId: string; environment: string; keyId: string; ip: string | null }
-  | { error: string; status: number }
+  | { merchantId: string; environment: string; keyId: string; ip: string | null; rateLimit: { limit: number; remaining: number; reset: number }; requestId: string }
+  | { error: string; status: number; headers?: Record<string, string> }
 > {
+  const requestId = newRequestId();
   const header =
+
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ||
     request.headers.get("x-api-key")?.trim();
 
