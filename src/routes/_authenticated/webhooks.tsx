@@ -5,6 +5,7 @@ import { Copy, Trash2 } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/webhooks")({
   head: () => ({ meta: [{ title: "Webhooks · PayNOC" }] }),
@@ -35,17 +36,18 @@ function WebhooksPage() {
   const [url, setUrl] = useState("");
   const [mode, setMode] = useState<"live" | "test">("live");
   const [selected, setSelected] = useState<string[]>(["invoice.paid", "invoice.failed"]);
-
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     if (!user) return;
+    setLoading(true);
     const { data } = await supabase
       .from("webhook_endpoints")
       .select("id, url, events, signing_secret, is_active, created_at, mode")
       .eq("merchant_id", user.id)
-
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
+    setLoading(false);
   }
   useEffect(() => { load(); }, [user]);
 
@@ -60,7 +62,6 @@ function WebhooksPage() {
       signing_secret: randomSecret(),
       mode,
     });
-
     if (error) return toast.error(error.message);
     setUrl("");
     toast.success("Webhook endpoint added");
@@ -77,6 +78,53 @@ function WebhooksPage() {
     await supabase.from("webhook_endpoints").delete().eq("id", id);
     load();
   }
+
+  const columns: DataTableColumn<Row>[] = [
+    {
+      key: "url",
+      label: "URL",
+      render: (r) => (
+        <div className="font-mono text-xs">
+          {r.url}
+          {r.mode === "test" && <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>}
+        </div>
+      ),
+    },
+    { key: "events", label: "Events", render: (r) => <span className="text-xs text-muted-foreground">{r.events.join(", ")}</span> },
+    {
+      key: "signing_secret",
+      label: "Signing secret",
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <code className="font-mono text-xs">{r.signing_secret.slice(0, 14)}…</code>
+          <button
+            onClick={() => { navigator.clipboard.writeText(r.signing_secret); toast.success("Copied"); }}
+            className="rounded p-1 text-muted-foreground hover:text-foreground"
+          ><Copy className="h-3.5 w-3.5" /></button>
+        </div>
+      ),
+    },
+    {
+      key: "is_active",
+      label: "Status",
+      render: (r) => (
+        <button
+          onClick={() => toggle(r.id, r.is_active)}
+          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+            r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          {r.is_active ? "Active" : "Disabled"}
+        </button>
+      ),
+    },
+  ];
+
+  const filters: DataTableFilter<Row>[] = [
+    { key: "mode", label: "Live + Test", options: [{ value: "live", label: "Live" }, { value: "test", label: "Test" }], match: (r, v) => r.mode === v },
+    { key: "state", label: "All states", options: [{ value: "active", label: "Active" }, { value: "disabled", label: "Disabled" }], match: (r, v) => (v === "active" ? r.is_active : !r.is_active) },
+    { key: "event", label: "Any event", options: ALL_EVENTS.map((e) => ({ value: e, label: e })), match: (r, v) => r.events.includes(v) },
+  ];
 
   return (
     <MerchantShell title="Webhooks" subtitle="Receive real-time notifications when payments succeed or fail.">
@@ -98,7 +146,6 @@ function WebhooksPage() {
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-
             {ALL_EVENTS.map((ev) => {
               const on = selected.includes(ev);
               return (
@@ -108,72 +155,32 @@ function WebhooksPage() {
                   className={`rounded-full border px-3 py-1 text-xs transition ${
                     on ? "border-brand bg-brand/10 text-brand" : "border-glass-border text-muted-foreground hover:text-foreground"
                   }`}
-                >
-                  {ev}
-                </button>
+                >{ev}</button>
               );
             })}
           </div>
-          <button
-            onClick={create}
-            className="rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
-          >
+          <button onClick={create} className="rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground">
             Create endpoint
           </button>
         </div>
       </div>
 
-      <div className="glass mt-6 overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">URL</th>
-              <th className="px-4 py-3">Events</th>
-              <th className="px-4 py-3">Signing secret</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No endpoints yet.</td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-mono text-xs">
-                  {r.url}
-                  {r.mode === "test" && <span className="ml-2 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>}
-                </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{r.events.join(", ")}</td>
-
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <code className="font-mono text-xs">{r.signing_secret.slice(0, 14)}…</code>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(r.signing_secret); toast.success("Copied"); }}
-                      className="rounded p-1 text-muted-foreground hover:text-foreground"
-                    ><Copy className="h-3.5 w-3.5" /></button>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => toggle(r.id, r.is_active)}
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                      r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {r.is_active ? "Active" : "Disabled"}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => remove(r.id)} className="text-destructive hover:opacity-80">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-6">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyMessage="No endpoints yet."
+          searchable={(r) => `${r.url} ${r.events.join(" ")}`}
+          filters={filters}
+          dateField={(r) => r.created_at}
+          actions={(r) => (
+            <button onClick={() => remove(r.id)} className="text-destructive hover:opacity-80">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        />
       </div>
     </MerchantShell>
   );
