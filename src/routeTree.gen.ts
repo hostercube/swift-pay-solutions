@@ -66,13 +66,13 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin/packages'
-import { Route as AuthenticatedAdminMerchantsRouteImport } from './routes/_authenticated/admin/merchants'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
 import { Route as AuthenticatedAdminFxRouteImport } from './routes/_authenticated/admin/fx'
 import { Route as AuthenticatedAdminBroadcastRouteImport } from './routes/_authenticated/admin/broadcast'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin/audit'
 import { Route as AuthenticatedAdminPlatformIndexRouteImport } from './routes/_authenticated/admin/platform.index'
+import { Route as AuthenticatedAdminMerchantsIndexRouteImport } from './routes/_authenticated/admin/merchants.index'
 import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/public/webhooks.$provider'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
@@ -395,12 +395,6 @@ const AuthenticatedAdminPackagesRoute =
     path: '/packages',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminMerchantsRoute =
-  AuthenticatedAdminMerchantsRouteImport.update({
-    id: '/merchants',
-    path: '/merchants',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
 const AuthenticatedAdminKycRoute = AuthenticatedAdminKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -433,6 +427,12 @@ const AuthenticatedAdminPlatformIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
+const AuthenticatedAdminMerchantsIndexRoute =
+  AuthenticatedAdminMerchantsIndexRouteImport.update({
+    id: '/merchants/',
+    path: '/merchants/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const ApiPublicWebhooksProviderRoute =
   ApiPublicWebhooksProviderRouteImport.update({
@@ -505,9 +505,9 @@ const AuthenticatedAdminPlatformIncidentsRoute =
   } as any)
 const AuthenticatedAdminMerchantsIdRoute =
   AuthenticatedAdminMerchantsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAdminMerchantsRoute,
+    id: '/merchants/$id',
+    path: '/merchants/$id',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
   id: '/$id',
@@ -555,7 +555,6 @@ export interface FileRoutesByFullPath {
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
@@ -591,6 +590,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/admin/merchants/': typeof AuthenticatedAdminMerchantsIndexRoute
   '/admin/platform/': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
@@ -630,7 +630,6 @@ export interface FileRoutesByTo {
   '/admin/fx': typeof AuthenticatedAdminFxRoute
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -665,6 +664,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/admin/merchants': typeof AuthenticatedAdminMerchantsIndexRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
@@ -710,7 +710,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/fx': typeof AuthenticatedAdminFxRoute
   '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
-  '/_authenticated/admin/merchants': typeof AuthenticatedAdminMerchantsRouteWithChildren
   '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
@@ -746,6 +745,7 @@ export interface FileRoutesById {
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
+  '/_authenticated/admin/merchants/': typeof AuthenticatedAdminMerchantsIndexRoute
   '/_authenticated/admin/platform/': typeof AuthenticatedAdminPlatformIndexRoute
   '/api/public/v1/invoices/$id': typeof ApiPublicV1InvoicesIdRoute
 }
@@ -791,7 +791,6 @@ export interface FileRouteTypes {
     | '/admin/fx'
     | '/admin/invoices'
     | '/admin/kyc'
-    | '/admin/merchants'
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/platform'
@@ -827,6 +826,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/admin/merchants/'
     | '/admin/platform/'
     | '/api/public/v1/invoices/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -866,7 +866,6 @@ export interface FileRouteTypes {
     | '/admin/fx'
     | '/admin/invoices'
     | '/admin/kyc'
-    | '/admin/merchants'
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/settings'
@@ -901,6 +900,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/admin/merchants'
     | '/admin/platform'
     | '/api/public/v1/invoices/$id'
   id:
@@ -945,7 +945,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/fx'
     | '/_authenticated/admin/invoices'
     | '/_authenticated/admin/kyc'
-    | '/_authenticated/admin/merchants'
     | '/_authenticated/admin/packages'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform'
@@ -981,6 +980,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/webhooks/$provider'
+    | '/_authenticated/admin/merchants/'
     | '/_authenticated/admin/platform/'
     | '/api/public/v1/invoices/$id'
   fileRoutesById: FileRoutesById
@@ -1412,13 +1412,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPackagesRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/merchants': {
-      id: '/_authenticated/admin/merchants'
-      path: '/merchants'
-      fullPath: '/admin/merchants'
-      preLoaderRoute: typeof AuthenticatedAdminMerchantsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
     '/_authenticated/admin/kyc': {
       id: '/_authenticated/admin/kyc'
       path: '/kyc'
@@ -1460,6 +1453,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/platform/'
       preLoaderRoute: typeof AuthenticatedAdminPlatformIndexRouteImport
       parentRoute: typeof AuthenticatedAdminPlatformRoute
+    }
+    '/_authenticated/admin/merchants/': {
+      id: '/_authenticated/admin/merchants/'
+      path: '/merchants'
+      fullPath: '/admin/merchants/'
+      preLoaderRoute: typeof AuthenticatedAdminMerchantsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/api/public/webhooks/$provider': {
       id: '/api/public/webhooks/$provider'
@@ -1547,10 +1547,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/admin/merchants/$id': {
       id: '/_authenticated/admin/merchants/$id'
-      path: '/$id'
+      path: '/merchants/$id'
       fullPath: '/admin/merchants/$id'
       preLoaderRoute: typeof AuthenticatedAdminMerchantsIdRouteImport
-      parentRoute: typeof AuthenticatedAdminMerchantsRoute
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/api/public/v1/invoices/$id': {
       id: '/api/public/v1/invoices/$id'
@@ -1561,20 +1561,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedAdminMerchantsRouteChildren {
-  AuthenticatedAdminMerchantsIdRoute: typeof AuthenticatedAdminMerchantsIdRoute
-}
-
-const AuthenticatedAdminMerchantsRouteChildren: AuthenticatedAdminMerchantsRouteChildren =
-  {
-    AuthenticatedAdminMerchantsIdRoute: AuthenticatedAdminMerchantsIdRoute,
-  }
-
-const AuthenticatedAdminMerchantsRouteWithChildren =
-  AuthenticatedAdminMerchantsRoute._addFileChildren(
-    AuthenticatedAdminMerchantsRouteChildren,
-  )
 
 interface AuthenticatedAdminPlatformRouteChildren {
   AuthenticatedAdminPlatformIncidentsRoute: typeof AuthenticatedAdminPlatformIncidentsRoute
@@ -1605,7 +1591,6 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminFxRoute: typeof AuthenticatedAdminFxRoute
   AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
-  AuthenticatedAdminMerchantsRoute: typeof AuthenticatedAdminMerchantsRouteWithChildren
   AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
@@ -1614,6 +1599,8 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminMerchantsIdRoute: typeof AuthenticatedAdminMerchantsIdRoute
+  AuthenticatedAdminMerchantsIndexRoute: typeof AuthenticatedAdminMerchantsIndexRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
@@ -1623,8 +1610,6 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminFxRoute: AuthenticatedAdminFxRoute,
     AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
-    AuthenticatedAdminMerchantsRoute:
-      AuthenticatedAdminMerchantsRouteWithChildren,
     AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRoute,
     AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminPlatformRoute:
@@ -1634,6 +1619,9 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+    AuthenticatedAdminMerchantsIdRoute: AuthenticatedAdminMerchantsIdRoute,
+    AuthenticatedAdminMerchantsIndexRoute:
+      AuthenticatedAdminMerchantsIndexRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =
