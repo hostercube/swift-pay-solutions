@@ -19,6 +19,8 @@ export const submitManualPayment = createServerFn({ method: "POST" })
     senderNumber: string;
     senderName?: string;
     providerTxnId: string;
+    slipUrl?: string;
+    bankReference?: string;
   }) => {
     if (!d.invoiceId || !d.methodId) throw new Error("Missing invoice or method");
     if (!d.providerTxnId?.trim()) throw new Error("Transaction ID required");
@@ -96,6 +98,8 @@ export const submitManualPayment = createServerFn({ method: "POST" })
         sender_name: data.senderName || null,
         provider_txn_id: trimmedTxn,
         reference: trimmedTxn,
+        slip_url: data.slipUrl || null,
+        bank_reference: data.bankReference || null,
       })
       .select("id")
       .single();

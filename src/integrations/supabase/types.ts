@@ -960,6 +960,8 @@ export type Database = {
         Row: {
           account_name: string | null
           account_number: string | null
+          bank_name: string | null
+          branch_name: string | null
           created_at: string
           credentials: Json
           fee_flat: number
@@ -975,13 +977,19 @@ export type Database = {
           merchant_id: string
           min_amount: number | null
           mode: Database["public"]["Enums"]["payment_method_mode"]
+          qr_code_url: string | null
+          qr_type: string | null
+          routing_number: string | null
           sort_order: number
+          swift_code: string | null
           type: Database["public"]["Enums"]["payment_method_type"]
           updated_at: string
         }
         Insert: {
           account_name?: string | null
           account_number?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
           created_at?: string
           credentials?: Json
           fee_flat?: number
@@ -997,13 +1005,19 @@ export type Database = {
           merchant_id: string
           min_amount?: number | null
           mode?: Database["public"]["Enums"]["payment_method_mode"]
+          qr_code_url?: string | null
+          qr_type?: string | null
+          routing_number?: string | null
           sort_order?: number
+          swift_code?: string | null
           type: Database["public"]["Enums"]["payment_method_type"]
           updated_at?: string
         }
         Update: {
           account_name?: string | null
           account_number?: string | null
+          bank_name?: string | null
+          branch_name?: string | null
           created_at?: string
           credentials?: Json
           fee_flat?: number
@@ -1019,7 +1033,11 @@ export type Database = {
           merchant_id?: string
           min_amount?: number | null
           mode?: Database["public"]["Enums"]["payment_method_mode"]
+          qr_code_url?: string | null
+          qr_type?: string | null
+          routing_number?: string | null
           sort_order?: number
+          swift_code?: string | null
           type?: Database["public"]["Enums"]["payment_method_type"]
           updated_at?: string
         }
@@ -1711,6 +1729,7 @@ export type Database = {
       }
       transactions: {
         Row: {
+          bank_reference: string | null
           created_at: string
           fee_amount: number
           gross_amount: number
@@ -1726,12 +1745,14 @@ export type Database = {
           reference: string | null
           sender_name: string | null
           sender_number: string | null
+          slip_url: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           updated_at: string
           verified_at: string | null
           verified_by: string | null
         }
         Insert: {
+          bank_reference?: string | null
           created_at?: string
           fee_amount?: number
           gross_amount: number
@@ -1747,12 +1768,14 @@ export type Database = {
           reference?: string | null
           sender_name?: string | null
           sender_number?: string | null
+          slip_url?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           updated_at?: string
           verified_at?: string | null
           verified_by?: string | null
         }
         Update: {
+          bank_reference?: string | null
           created_at?: string
           fee_amount?: number
           gross_amount?: number
@@ -1768,6 +1791,7 @@ export type Database = {
           reference?: string | null
           sender_name?: string | null
           sender_number?: string | null
+          slip_url?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           updated_at?: string
           verified_at?: string | null
@@ -2292,6 +2316,8 @@ export type Database = {
         Returns: {
           account_name: string | null
           account_number: string | null
+          bank_name: string | null
+          branch_name: string | null
           created_at: string
           credentials: Json
           fee_flat: number
@@ -2307,7 +2333,11 @@ export type Database = {
           merchant_id: string
           min_amount: number | null
           mode: Database["public"]["Enums"]["payment_method_mode"]
+          qr_code_url: string | null
+          qr_type: string | null
+          routing_number: string | null
           sort_order: number
+          swift_code: string | null
           type: Database["public"]["Enums"]["payment_method_type"]
           updated_at: string
         }[]

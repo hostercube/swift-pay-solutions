@@ -30,6 +30,12 @@ type Method = {
   max_amount: number | null;
   is_active: boolean;
   sort_order: number;
+  qr_code_url: string | null;
+  qr_type: string | null;
+  bank_name: string | null;
+  branch_name: string | null;
+  routing_number: string | null;
+  swift_code: string | null;
 };
 
 const METHOD_TYPES: { value: MethodType; label: string }[] = [
@@ -49,7 +55,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
 const EMPTY: Partial<Method> = {
   type: "bkash",
   label: "",
-  mode: "manual", // manual only — API/auto verification lives in "Auto gateways" tab
+  mode: "manual",
   account_number: "",
   account_name: "",
   instructions: "",
@@ -59,6 +65,12 @@ const EMPTY: Partial<Method> = {
   max_amount: null,
   is_active: true,
   sort_order: 0,
+  qr_code_url: null,
+  qr_type: null,
+  bank_name: null,
+  branch_name: null,
+  routing_number: null,
+  swift_code: null,
 };
 
 
@@ -99,6 +111,12 @@ function MethodsPage() {
       max_amount: editing.max_amount != null && editing.max_amount !== ("" as unknown as number) ? Number(editing.max_amount) : null,
       is_active: !!editing.is_active,
       sort_order: Number(editing.sort_order) || 0,
+      qr_code_url: editing.qr_code_url || null,
+      qr_type: editing.qr_type || null,
+      bank_name: editing.bank_name || null,
+      branch_name: editing.branch_name || null,
+      routing_number: editing.routing_number || null,
+      swift_code: editing.swift_code || null,
     };
     const { error } = editing.id
       ? await supabase.from("payment_methods").update(payload).eq("id", editing.id)
@@ -272,6 +290,94 @@ function MethodsPage() {
                   className={inputCls}
                 />
               </Field>
+
+              {/* Bank transfer specific fields */}
+              {editing.type === "bank_transfer" && (
+                <>
+                  <Field label="Bank name">
+                    <input
+                      value={editing.bank_name ?? ""}
+                      onChange={(e) => setEditing({ ...editing, bank_name: e.target.value })}
+                      placeholder="e.g. Dutch Bangla Bank"
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Branch">
+                    <input
+                      value={editing.branch_name ?? ""}
+                      onChange={(e) => setEditing({ ...editing, branch_name: e.target.value })}
+                      placeholder="e.g. Dhanmondi"
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="Routing number">
+                    <input
+                      value={editing.routing_number ?? ""}
+                      onChange={(e) => setEditing({ ...editing, routing_number: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="SWIFT / IBAN">
+                    <input
+                      value={editing.swift_code ?? ""}
+                      onChange={(e) => setEditing({ ...editing, swift_code: e.target.value })}
+                      className={inputCls}
+                    />
+                  </Field>
+                </>
+              )}
+
+              {/* QR code (agent/personal number + Bangla QR) */}
+              <Field label="QR code type" full>
+                <select
+                  value={editing.qr_type ?? ""}
+                  onChange={(e) => setEditing({ ...editing, qr_type: e.target.value || null })}
+                  className={inputCls}
+                >
+                  <option value="">— None —</option>
+                  <option value="bkash">bKash QR</option>
+                  <option value="nagad">Nagad QR</option>
+                  <option value="rocket">Rocket QR</option>
+                  <option value="bangla_qr">Bangla QR (BB unified)</option>
+                  <option value="emv">EMV / Merchant QR</option>
+                  <option value="other">Other</option>
+                </select>
+              </Field>
+              <Field label="QR image" full>
+                <div className="flex flex-wrap items-center gap-3">
+                  {editing.qr_code_url && <QrThumb path={editing.qr_code_url} />}
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f || !user) return;
+                        const path = `qr/${user.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
+                        const { error } = await supabase.storage.from("payment-assets").upload(path, f, { upsert: false, contentType: f.type });
+                        if (error) return toast.error(error.message);
+                        setEditing((cur) => cur ? { ...cur, qr_code_url: path } : cur);
+                        toast.success("QR uploaded");
+                      }}
+                    />
+                    Upload QR
+                  </label>
+                  {editing.qr_code_url && (
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ ...editing, qr_code_url: null })}
+                      className="text-xs text-destructive hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Payers can scan this QR from any bKash / Nagad / Bangla QR compatible app.
+                </p>
+              </Field>
+
               <Field label="Fee %">
                 <input
                   type="number" step="0.001"
@@ -351,4 +457,17 @@ function Field({ label, children, full }: { label: string; children: React.React
       {children}
     </label>
   );
+}
+
+function QrThumb({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    supabase.storage.from("payment-assets").createSignedUrl(path, 3600).then(({ data }) => {
+      if (alive) setUrl(data?.signedUrl ?? null);
+    });
+    return () => { alive = false; };
+  }, [path]);
+  if (!url) return <div className="h-24 w-24 animate-pulse rounded-lg bg-muted" />;
+  return <img src={url} alt="QR" className="h-24 w-24 rounded-lg border border-glass-border object-contain bg-background/60" />;
 }
