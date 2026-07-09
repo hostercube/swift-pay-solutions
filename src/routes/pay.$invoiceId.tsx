@@ -307,9 +307,9 @@ function CheckoutPage() {
   }
 
 
-  async function payViaGateway(provider: string) {
+  async function payViaGateway(provider: string, configId?: string) {
     if (!inv) return;
-    setRedirecting(provider);
+    setRedirecting(configId ?? provider);
     try {
       const origin = window.location.origin;
       const res = await initiateGw({
@@ -317,6 +317,7 @@ function CheckoutPage() {
           invoiceId: inv.id,
           provider,
           source: "byo",
+          configId,
           successUrl: `${origin}/pay/${inv.id}?paid=1`,
           cancelUrl: `${origin}/pay/${inv.id}?cancelled=1`,
         },
