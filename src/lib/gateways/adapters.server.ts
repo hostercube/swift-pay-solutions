@@ -882,3 +882,130 @@ export async function refundProvider(providerId: string, a: RefundArgs): Promise
     return { ok: false, error: (e as Error).message };
   }
 }
+
+// ─── Additional webhook verifiers ─────────────────────────────────
+function verifyNagad(v: VerifyArgs): VerifyResult {
+  // Nagad posts JSON on the merchant callback. Payment status confirmation
+  // must be re-checked via the verification endpoint using merchant keys;
+  // for the webhook we accept payload + confirm status field.
+  const body = JSON.parse(v.rawBody) as {
+    merchant?: string; order_id?: string; payment_ref_id?: string; status?: string;
+    status_code?: string; amount?: string; issuer_payment_ref?: string;
+  };
+  if (v.creds.merchant_id && body.merchant && body.merchant !== v.creds.merchant_id) {
+    return { verified: false, reason: "merchant_mismatch" };
+  }
+  const ok = body.status === "Success" || body.status_code === "000";
+  return {
+    verified: ok,
+    eventType: body.status,
+    providerEventId: body.payment_ref_id,
+    invoiceRef: body.order_id,
+    providerTxnId: body.issuer_payment_ref ?? body.payment_ref_id,
+    status: ok ? "completed" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: "BDT",
+    reason: ok ? undefined : "nagad_not_success",
+  };
+}
+
+function verifyShurjopay(v: VerifyArgs): VerifyResult {
+  // ShurjoPay IPN posts JSON with sp_code/order_id/bank_status.
+  const body = JSON.parse(v.rawBody) as {
+    order_id?: string; sp_code?: string; sp_message?: string; bank_status?: string;
+    amount?: string; currency?: string; bank_trx_id?: string;
+  };
+  const ok = body.sp_code === "1000" && (body.bank_status ?? "").toLowerCase() === "success";
+  return {
+    verified: ok, eventType: body.bank_status,
+    providerEventId: body.bank_trx_id ?? body.order_id,
+    invoiceRef: body.order_id, providerTxnId: body.bank_trx_id ?? body.order_id,
+    status: ok ? "completed" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: body.currency ?? "BDT",
+    reason: ok ? undefined : (body.sp_message ?? "shurjopay_not_success"),
+  };
+}
+
+function verifyAamarpay(v: VerifyArgs): VerifyResult {
+  // AamarPay IPN is form-encoded. Signature = md5(store_id + signature_key).
+  const p = Object.fromEntries(new URLSearchParams(v.rawBody));
+  const expected = createHash("md5").update(`${v.creds.store_id}${v.creds.signature_key}`).digest("hex");
+  const ok = (p.pay_status === "Successful") && p.store_id === v.creds.store_id
+             && (!p.signature_key || p.signature_key === expected);
+  return {
+    verified: ok, eventType: p.pay_status,
+    providerEventId: p.pg_txnid ?? p.mer_txnid,
+    invoiceRef: p.mer_txnid, providerTxnId: p.pg_txnid ?? p.mer_txnid,
+    status: ok ? "completed" : "failed",
+    amount: p.amount ? Number(p.amount) : undefined,
+    currency: p.currency,
+    reason: ok ? undefined : "aamarpay_not_success",
+  };
+}
+
+function verifyPaddle(v: VerifyArgs): VerifyResult {
+  // Paddle Billing signs with HMAC-SHA256 header `Paddle-Signature: ts=..;h1=..`.
+  const sig = v.headers["paddle-signature"];
+  if (!sig || !v.creds.webhook_secret) return { verified: false, reason: "missing_signature" };
+  const parts = Object.fromEntries(sig.split(";").map((p) => p.split("=") as [string, string]));
+  const ts = parts.ts; const h1 = parts.h1;
+  if (!ts || !h1) return { verified: false, reason: "bad_signature_format" };
+  const expected = hmacSha256Hex(v.creds.webhook_secret, `${ts}:${v.rawBody}`);
+  if (!safeEqualHex(h1, expected)) return { verified: false, reason: "bad_signature" };
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return { verified: false, reason: "stale_signature" };
+  const body = JSON.parse(v.rawBody) as {
+    event_id?: string; event_type?: string;
+    data?: { id?: string; status?: string; custom_data?: { invoice_id?: string }; details?: { totals?: { total?: string; currency_code?: string } } };
+  };
+  const d = body.data;
+  return {
+    verified: true, eventType: body.event_type, providerEventId: body.event_id,
+    invoiceRef: d?.custom_data?.invoice_id, providerTxnId: d?.id,
+    status: d?.status === "completed" || d?.status === "paid" ? "completed" : "pending",
+    amount: d?.details?.totals?.total ? Number(d.details.totals.total) / 100 : undefined,
+    currency: d?.details?.totals?.currency_code,
+  };
+}
+
+function verifyTwocheckout(v: VerifyArgs): VerifyResult {
+  // 2Checkout IHN is form-encoded, hash = md5(merchant_code+order_no+total+secret)
+  const p = Object.fromEntries(new URLSearchParams(v.rawBody));
+  const expected = createHash("md5").update(
+    `${v.creds.merchant_code}${p.REFNO ?? ""}${p.IPN_TOTALGENERAL ?? ""}${v.creds.secret_key}`,
+  ).digest("hex").toUpperCase();
+  const ok = ((p.HASH ?? "").toUpperCase() === expected) && (p.ORDERSTATUS === "COMPLETE" || p.IPN_STATUS === "1");
+  return {
+    verified: ok, eventType: p.ORDERSTATUS ?? p.IPN_STATUS,
+    providerEventId: p.REFNO, invoiceRef: p.REFNOEXT, providerTxnId: p.REFNO,
+    status: ok ? "completed" : "failed",
+    amount: p.IPN_TOTALGENERAL ? Number(p.IPN_TOTALGENERAL) : undefined,
+    currency: p.IPN_CURRENCY,
+    reason: ok ? undefined : "2co_bad_hash",
+  };
+}
+
+function verifyBinancePay(v: VerifyArgs): VerifyResult {
+  // Binance Pay signs with HMAC-SHA512(secret, timestamp\nnonce\nbody\n) -> uppercase hex.
+  const ts = v.headers["binancepay-timestamp"];
+  const nonce = v.headers["binancepay-nonce"];
+  const sig = v.headers["binancepay-signature"];
+  if (!ts || !nonce || !sig || !v.creds.api_secret) return { verified: false, reason: "missing_signature" };
+  const expected = createHmac("sha512", v.creds.api_secret)
+    .update(`${ts}\n${nonce}\n${v.rawBody}\n`).digest("hex").toUpperCase();
+  if (!safeEqual(sig.toUpperCase(), expected)) return { verified: false, reason: "bad_signature" };
+  const body = JSON.parse(v.rawBody) as {
+    bizType?: string; bizStatus?: string; bizId?: string;
+    data?: string | { merchantTradeNo?: string; orderAmount?: string; currency?: string };
+  };
+  const data = typeof body.data === "string" ? JSON.parse(body.data) : body.data ?? {};
+  const status = body.bizStatus === "PAY_SUCCESS" ? "completed"
+               : body.bizStatus === "PAY_CLOSED" ? "failed" : "pending";
+  return {
+    verified: true, eventType: body.bizStatus, providerEventId: String(body.bizId ?? ""),
+    invoiceRef: data.merchantTradeNo, providerTxnId: String(body.bizId ?? ""),
+    status, amount: data.orderAmount ? Number(data.orderAmount) : undefined,
+    currency: data.currency,
+  };
+}
+
