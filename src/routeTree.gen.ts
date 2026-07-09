@@ -75,6 +75,7 @@ import { Route as AuthenticatedAdminPlatformIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminMerchantsIndexRouteImport } from './routes/_authenticated/admin/merchants.index'
 import { Route as ApiPublicWebhooksProviderRouteImport } from './routes/api/public/webhooks.$provider'
 import { Route as ApiPublicV1SmsEventsRouteImport } from './routes/api/public/v1/sms-events'
+import { Route as ApiPublicV1RefundsRouteImport } from './routes/api/public/v1/refunds'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
@@ -446,6 +447,11 @@ const ApiPublicV1SmsEventsRoute = ApiPublicV1SmsEventsRouteImport.update({
   path: '/api/public/v1/sms-events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1RefundsRoute = ApiPublicV1RefundsRouteImport.update({
+  id: '/api/public/v1/refunds',
+  path: '/api/public/v1/refunds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1PostmanRoute = ApiPublicV1PostmanRouteImport.update({
   id: '/api/public/v1/postman',
   path: '/api/public/v1/postman',
@@ -595,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
   '/api/public/v1/sms-events': typeof ApiPublicV1SmsEventsRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/admin/merchants/': typeof AuthenticatedAdminMerchantsIndexRoute
@@ -670,6 +677,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
   '/api/public/v1/sms-events': typeof ApiPublicV1SmsEventsRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/admin/merchants': typeof AuthenticatedAdminMerchantsIndexRoute
@@ -752,6 +760,7 @@ export interface FileRoutesById {
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
+  '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
   '/api/public/v1/sms-events': typeof ApiPublicV1SmsEventsRoute
   '/api/public/webhooks/$provider': typeof ApiPublicWebhooksProviderRoute
   '/_authenticated/admin/merchants/': typeof AuthenticatedAdminMerchantsIndexRoute
@@ -834,6 +843,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/v1/refunds'
     | '/api/public/v1/sms-events'
     | '/api/public/webhooks/$provider'
     | '/admin/merchants/'
@@ -909,6 +919,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/v1/refunds'
     | '/api/public/v1/sms-events'
     | '/api/public/webhooks/$provider'
     | '/admin/merchants'
@@ -990,6 +1001,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/webhook-retry'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
+    | '/api/public/v1/refunds'
     | '/api/public/v1/sms-events'
     | '/api/public/webhooks/$provider'
     | '/_authenticated/admin/merchants/'
@@ -1019,6 +1031,7 @@ export interface RootRouteChildren {
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
   ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
+  ApiPublicV1RefundsRoute: typeof ApiPublicV1RefundsRoute
   ApiPublicV1SmsEventsRoute: typeof ApiPublicV1SmsEventsRoute
   ApiPublicWebhooksProviderRoute: typeof ApiPublicWebhooksProviderRoute
 }
@@ -1487,6 +1500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1SmsEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/refunds': {
+      id: '/api/public/v1/refunds'
+      path: '/api/public/v1/refunds'
+      fullPath: '/api/public/v1/refunds'
+      preLoaderRoute: typeof ApiPublicV1RefundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/postman': {
       id: '/api/public/v1/postman'
       path: '/api/public/v1/postman'
@@ -1799,6 +1819,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
   ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
+  ApiPublicV1RefundsRoute: ApiPublicV1RefundsRoute,
   ApiPublicV1SmsEventsRoute: ApiPublicV1SmsEventsRoute,
   ApiPublicWebhooksProviderRoute: ApiPublicWebhooksProviderRoute,
 }

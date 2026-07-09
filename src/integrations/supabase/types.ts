@@ -1483,6 +1483,79 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          admin_note: string | null
+          amount: number
+          api_key_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string
+          merchant_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          requested_via: string
+          status: Database["public"]["Enums"]["refund_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount: number
+          api_key_id?: string | null
+          created_at?: string
+          currency: string
+          id?: string
+          invoice_id: string
+          merchant_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_via?: string
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount?: number
+          api_key_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id?: string
+          merchant_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_via?: string
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_events: {
         Row: {
           created_at: string
@@ -2357,6 +2430,7 @@ export type Database = {
         | "card"
         | "crypto"
         | "other"
+      refund_status: "requested" | "approved" | "processed" | "rejected"
       subscription_status: "trialing" | "active" | "expired" | "cancelled"
       transaction_status: "pending" | "verified" | "rejected"
       webhook_delivery_status: "pending" | "success" | "failed"
@@ -2512,6 +2586,7 @@ export const Constants = {
         "crypto",
         "other",
       ],
+      refund_status: ["requested", "approved", "processed", "rejected"],
       subscription_status: ["trialing", "active", "expired", "cancelled"],
       transaction_status: ["pending", "verified", "rejected"],
       webhook_delivery_status: ["pending", "success", "failed"],

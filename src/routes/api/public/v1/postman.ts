@@ -52,6 +52,37 @@ export const Route = createFileRoute("/api/public/v1/postman")({
                 },
               },
             },
+            {
+              name: "Create refund",
+              request: {
+                method: "POST",
+                header: [
+                  { key: "Content-Type", value: "application/json" },
+                  { key: "Idempotency-Key", value: "{{$guid}}" },
+                ],
+                url: { raw: "{{baseUrl}}/api/public/v1/refunds", host: ["{{baseUrl}}"], path: ["api", "public", "v1", "refunds"] },
+                body: {
+                  mode: "raw",
+                  raw: JSON.stringify(
+                    { invoice_id: "inv_xxx", amount: 500, reason: "Customer request" },
+                    null,
+                    2,
+                  ),
+                },
+              },
+            },
+            {
+              name: "List refunds",
+              request: {
+                method: "GET",
+                url: {
+                  raw: "{{baseUrl}}/api/public/v1/refunds?limit=25",
+                  host: ["{{baseUrl}}"],
+                  path: ["api", "public", "v1", "refunds"],
+                  query: [{ key: "limit", value: "25" }],
+                },
+              },
+            },
           ],
         };
         return new Response(JSON.stringify(collection, null, 2), {

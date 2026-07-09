@@ -156,23 +156,39 @@ export const createRefund = createServerFn({ method: "POST" })
       .eq("id", data.invoiceId)
       .maybeSingle();
     if (iErr || !inv) throw new Error(iErr?.message ?? "Invoice not found");
-    if (inv.merchant_id !== userId) throw new Error("Forbidden");
+    await assertMerchantRole(supabase, userId, inv.merchant_id, "operator");
     if (inv.status !== "completed") throw new Error("Only completed invoices can be refunded");
     if (data.amount <= 0 || data.amount > Number(inv.amount))
       throw new Error("Invalid refund amount");
 
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-    const { error } = await (supabaseAdmin.from as unknown as (t: string) => {
-      insert: (row: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
-    })("refunds").insert({
-      merchant_id: userId,
-      invoice_id: inv.id,
-      amount: data.amount,
-      currency: inv.currency,
-      reason: data.reason ?? null,
-      status: "requested",
-    });
+    const { data: refund, error } = await (supabaseAdmin.from as unknown as (t: string) => {
+      insert: (row: Record<string, unknown>) => {
+        select: (s: string) => {
+          single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
+        };
+      };
+    })("refunds")
+      .insert({
+        merchant_id: inv.merchant_id,
+        invoice_id: inv.id,
+        amount: data.amount,
+        currency: inv.currency,
+        reason: data.reason ?? null,
+        status: "requested",
+        requested_via: "dashboard",
+      })
+      .select("*")
+      .single();
     if (error) throw new Error(error.message);
+
+    dispatchWebhooks({
+      merchantId: inv.merchant_id,
+      invoiceId: inv.id,
+      event: "refund.requested",
+      data: refund ?? { invoice_id: inv.id, amount: data.amount, currency: inv.currency },
+    }).catch(() => undefined);
+
     return { ok: true };
   });
 
