@@ -307,6 +307,181 @@ async function ownpayInitiate(a: InitiateArgs): Promise<InitiateResult> {
   return { redirectUrl: j.payment_url, providerRef: j.charge_id ?? a.invoiceId };
 }
 
+// ─── Nagad (RSA-signed hosted checkout) ───────────────────────────
+// Reference: https://nagadpg.com/docs — sandbox base https://sandbox-ssl.mynagad.com,
+// live base https://api.mynagad.com. Flow: initialize → complete → hosted redirect.
+function normalisePem(input: string, kind: "PUBLIC" | "RSA PRIVATE" | "PRIVATE") {
+  const s = (input || "").trim();
+  if (s.includes("BEGIN")) return s;
+  // Wrap raw base64 body into PEM envelope.
+  const header = kind === "PUBLIC" ? "PUBLIC KEY" : kind === "RSA PRIVATE" ? "RSA PRIVATE KEY" : "PRIVATE KEY";
+  const body = s.replace(/\s+/g, "").match(/.{1,64}/g)?.join("\n") ?? "";
+  return `-----BEGIN ${header}-----\n${body}\n-----END ${header}-----`;
+}
+
+async function nagadInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://api.mynagad.com" : "https://sandbox-ssl.mynagad.com";
+  const merchantId = a.creds.merchant_id;
+  const orderId = a.invoiceId.replace(/-/g, "").slice(0, 20);
+  const dateTime = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+  const pubKey = normalisePem(a.creds.public_key, "PUBLIC");
+  const privKey = normalisePem(a.creds.private_key, "PRIVATE");
+  const sensitive = JSON.stringify({ merchantId, datetime: dateTime, orderId, challenge: orderId });
+  const sensitiveData = publicEncrypt({ key: pubKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(sensitive)).toString("base64");
+  const signature = createSign("SHA256").update(sensitive).sign({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, "base64");
+  const initRes = await fetch(`${base}/api/dfs/check-out/initialize/${merchantId}/${orderId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-KM-IP-V4": "0.0.0.0", "X-KM-Client-Type": "PC_WEB" },
+    body: JSON.stringify({ accountNumber: a.creds.merchant_number, dateTime, sensitiveData, signature }),
+  });
+  const init = await initRes.json() as { sensitiveData?: string; signature?: string; status?: string; message?: string };
+  if (!init.sensitiveData) throw new Error(init.message ?? "Nagad init failed");
+  const decrypted = JSON.parse(privateDecrypt({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(init.sensitiveData, "base64")).toString());
+  const paymentReferenceId: string = decrypted.paymentReferenceId;
+  const challenge: string = decrypted.challenge;
+  const sensitive2 = JSON.stringify({
+    merchantId, orderId, currencyCode: "050", amount: a.amount.toFixed(2), challenge,
+  });
+  const sensitiveData2 = publicEncrypt({ key: pubKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(sensitive2)).toString("base64");
+  const signature2 = createSign("SHA256").update(sensitive2).sign({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, "base64");
+  const compRes = await fetch(`${base}/api/dfs/check-out/complete/${paymentReferenceId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-KM-IP-V4": "0.0.0.0", "X-KM-Client-Type": "PC_WEB" },
+    body: JSON.stringify({
+      sensitiveData: sensitiveData2, signature: signature2,
+      merchantCallbackURL: a.successUrl, additionalMerchantInfo: { invoice_id: a.invoiceId },
+    }),
+  });
+  const comp = await compRes.json() as { status?: string; callBackUrl?: string; message?: string };
+  if (!comp.callBackUrl) throw new Error(comp.message ?? "Nagad complete failed");
+  return { redirectUrl: comp.callBackUrl, providerRef: paymentReferenceId };
+}
+
+// ─── ShurjoPay ────────────────────────────────────────────────────
+async function shurjopayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://engine.shurjopayment.com" : "https://sandbox.shurjopayment.com";
+  const tokRes = await fetch(`${base}/api/get_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: a.creds.merchant_username, password: a.creds.merchant_password }),
+  });
+  const tok = await tokRes.json() as { token?: string; store_id?: string; sp_code?: string; message?: string };
+  if (!tok.token) throw new Error(tok.message ?? "ShurjoPay token failed");
+  const payRes = await fetch(`${base}/api/secret-pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok.token}` },
+    body: JSON.stringify({
+      token: tok.token, store_id: tok.store_id, prefix: a.creds.prefix || "sp",
+      amount: a.amount.toFixed(2), order_id: a.invoiceId, currency: a.currency,
+      customer_name: a.customerName ?? "Customer", customer_address: "N/A",
+      customer_email: a.customerEmail ?? "no-reply@paynoc.bd",
+      customer_phone: "01700000000", customer_city: "Dhaka", customer_post_code: "1000",
+      client_ip: "0.0.0.0", return_url: a.successUrl, cancel_url: a.cancelUrl,
+    }),
+  });
+  const p = await payRes.json() as { checkout_url?: string; sp_order_id?: string; message?: string };
+  if (!p.checkout_url) throw new Error(p.message ?? "ShurjoPay init failed");
+  return { redirectUrl: p.checkout_url, providerRef: p.sp_order_id ?? a.invoiceId };
+}
+
+// ─── AamarPay ─────────────────────────────────────────────────────
+async function aamarpayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://secure.aamarpay.com" : "https://sandbox.aamarpay.com";
+  const body = {
+    store_id: a.creds.store_id, signature_key: a.creds.signature_key,
+    amount: a.amount.toFixed(2), currency: a.currency, tran_id: a.invoiceId,
+    cus_name: a.customerName ?? "Customer",
+    cus_email: a.customerEmail ?? "no-reply@paynoc.bd",
+    cus_add1: "N/A", cus_city: "Dhaka", cus_country: "Bangladesh", cus_phone: "01700000000",
+    desc: `Invoice ${a.invoiceId}`, success_url: a.successUrl, fail_url: a.cancelUrl,
+    cancel_url: a.cancelUrl, ipn_url: a.webhookUrl, type: "json",
+  };
+  const res = await fetch(`${base}/jsonpost.php`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const j = await res.json() as { result?: string; payment_url?: string; reason?: string };
+  if (!j.payment_url) throw new Error(j.reason ?? "AamarPay init failed");
+  return { redirectUrl: j.payment_url, providerRef: a.invoiceId };
+}
+
+// ─── Paddle Billing (v2) ──────────────────────────────────────────
+async function paddleInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
+  const res = await fetch(`${base}/transactions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${a.creds.api_key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      items: [{ quantity: 1, price: { description: `Invoice ${a.invoiceId}`, unit_price: { amount: String(Math.round(a.amount * 100)), currency_code: a.currency } } }],
+      custom_data: { invoice_id: a.invoiceId },
+      collection_mode: "automatic",
+      checkout: { url: a.successUrl },
+    }),
+  });
+  const j = await res.json() as { data?: { id: string; checkout?: { url: string } }; error?: { detail: string } };
+  if (!j.data?.checkout?.url) throw new Error(j.error?.detail ?? "Paddle init failed");
+  return { redirectUrl: j.data.checkout.url, providerRef: j.data.id };
+}
+
+// ─── 2Checkout / Verifone (ConvertPlus hosted) ────────────────────
+async function twocheckoutInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  // 2Checkout supports a signed hosted-checkout URL (ConvertPlus).
+  const params = new URLSearchParams({
+    "merchant": a.creds.merchant_code,
+    "dynamic": "1",
+    "prod": `Invoice ${a.invoiceId}`,
+    "price": a.amount.toFixed(2),
+    "qty": "1",
+    "type": "digital",
+    "return-url": a.successUrl,
+    "return-type": "redirect",
+    "currency": a.currency,
+    "merchant-order-id": a.invoiceId,
+    "customer-email": a.customerEmail ?? "",
+    "customer-name": a.customerName ?? "Customer",
+  });
+  // Signature = HMAC-SHA256(secret, sorted concatenation of key+len+value).
+  const entries = Array.from(params.entries()).sort(([a1], [b1]) => a1.localeCompare(b1));
+  const raw = entries.map(([k, v]) => `${k.length}${k}${v.length}${v}`).join("");
+  const signature = hmacSha256Hex(a.creds.secret_key, raw);
+  params.set("signature", signature);
+  const url = `https://secure.2checkout.com/checkout/buy?${params.toString()}`;
+  return { redirectUrl: url, providerRef: a.invoiceId };
+}
+
+// ─── Binance Pay ──────────────────────────────────────────────────
+async function binancePayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = "https://bpay.binanceapi.com";
+  const nonce = Math.random().toString(36).slice(2, 34).padEnd(32, "0");
+  const timestamp = Date.now().toString();
+  const payload = {
+    env: { terminalType: "WEB" },
+    merchantTradeNo: a.invoiceId.replace(/-/g, "").slice(0, 32),
+    orderAmount: Number(a.amount.toFixed(2)),
+    currency: a.currency,
+    goods: { goodsType: "02", goodsCategory: "Z000", referenceGoodsId: a.invoiceId, goodsName: `Invoice ${a.invoiceId}` },
+    returnUrl: a.successUrl,
+    cancelUrl: a.cancelUrl,
+    webhookUrl: a.webhookUrl,
+  };
+  const bodyStr = JSON.stringify(payload);
+  const payloadToSign = `${timestamp}\n${nonce}\n${bodyStr}\n`;
+  const signature = createHmac("sha512", a.creds.api_secret).update(payloadToSign).digest("hex").toUpperCase();
+  const res = await fetch(`${base}/binancepay/openapi/v3/order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "BinancePay-Timestamp": timestamp,
+      "BinancePay-Nonce": nonce,
+      "BinancePay-Certificate-SN": a.creds.api_key,
+      "BinancePay-Signature": signature,
+    },
+    body: bodyStr,
+  });
+  const j = await res.json() as { status?: string; data?: { checkoutUrl: string; prepayId: string }; errorMessage?: string };
+  if (j.status !== "SUCCESS" || !j.data) throw new Error(j.errorMessage ?? "Binance Pay init failed");
+  return { redirectUrl: j.data.checkoutUrl, providerRef: j.data.prepayId };
+}
+
 // Registry dispatcher
 export async function initiateCheckout(providerId: string, args: InitiateArgs): Promise<InitiateResult> {
   switch (providerId) {
@@ -320,12 +495,14 @@ export async function initiateCheckout(providerId: string, args: InitiateArgs): 
     case "uddoktapay":        return uddoktapayInitiate(args);
     case "piprapay":          return piprapayInitiate(args);
     case "ownpay":            return ownpayInitiate(args);
+    case "nagad":             return nagadInitiate(args);
+    case "shurjopay":         return shurjopayInitiate(args);
+    case "aamarpay":          return aamarpayInitiate(args);
+    case "paddle":            return paddleInitiate(args);
+    case "twocheckout":       return twocheckoutInitiate(args);
+    case "binance_pay":       return binancePayInitiate(args);
 
-    // The remaining providers (nagad RSA, rocket manual, shurjopay, aamarpay,
-    // paddle, twocheckout, binance_pay) require merchant-specific onboarding
-    // or SDK signing that is easier to complete once the merchant supplies
-    // live sandbox credentials. We surface a clear error so the merchant
-    // falls back to the manual-verification flow which is fully supported.
+    // Rocket (DBBL) has no public checkout API — remains manual verification only.
     default:
       throw new Error(
         `Automatic checkout for ${providerId} isn't wired yet — enable manual verification for this method.`,
