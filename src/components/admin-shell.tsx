@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft,
   Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug, Package,
-  Receipt, ArrowRightLeft, Webhook, Megaphone,
+  Receipt, ArrowRightLeft, Webhook, Megaphone, MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
