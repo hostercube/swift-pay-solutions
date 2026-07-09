@@ -33,7 +33,7 @@ type Stats = {
   todayVolume: number;
 };
 
-type Tx = { created_at: string; gross_amount: number | null; status: string; provider: string | null; merchant_id: string };
+type Tx = { created_at: string; gross_amount: number | null; status: string; method_type: string; merchant_id: string };
 
 function AdminOverview() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -55,7 +55,7 @@ function AdminOverview() {
         supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", d7),
         supabase.from("invoices").select("*", { count: "exact", head: true }),
         supabase.from("transactions").select("*", { count: "exact", head: true }),
-        supabase.from("transactions").select("created_at,gross_amount,status,provider,merchant_id").gte("created_at", d30).order("created_at", { ascending: false }).limit(2000),
+        supabase.from("transactions").select("created_at,gross_amount,status,method_type,merchant_id").gte("created_at", d30).order("created_at", { ascending: false }).limit(2000),
         supabase.from("profiles").select("*", { count: "exact", head: true }).eq("kyc_status", "pending"),
         supabase.from("disputes").select("*", { count: "exact", head: true }).in("status", ["open", "under_review"]),
         supabase.from("incidents").select("*", { count: "exact", head: true }).neq("status", "resolved"),
@@ -141,7 +141,7 @@ function AdminOverview() {
   const providerBreakdown = useMemo(() => {
     const map = new Map<string, number>();
     txs.filter(t => t.status === "verified").forEach(t => {
-      const k = (t.provider || "unknown").toLowerCase();
+      const k = (t.method_type || "unknown").toLowerCase();
       map.set(k, (map.get(k) ?? 0) + Number(t.gross_amount ?? 0));
     });
     return [...map.entries()].map(([provider, volume]) => ({ provider, volume })).sort((a, b) => b.volume - a.volume).slice(0, 6);
@@ -210,7 +210,7 @@ function AdminOverview() {
         </div>
 
         <div className="glass rounded-2xl border border-glass-border p-6">
-          <h2 className="mb-4 font-display text-base font-semibold">Top providers</h2>
+          <h2 className="mb-4 font-display text-base font-semibold">Top methods</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={providerBreakdown} layout="vertical" margin={{ left: 10 }}>
