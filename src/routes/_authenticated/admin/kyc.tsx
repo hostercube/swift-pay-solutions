@@ -93,12 +93,35 @@ function KycPage() {
         </div>
       </Card>
 
-      {rows.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">No pending KYC submissions.</Card>
-      ) : (
-        <div className="space-y-4">{rows.map((r) => <KycRow key={r.id} row={r} onDecide={decide} onDoc={docUrl} />)}</div>
-      )}
+      <FilteredList
+        rows={rows}
+        rowKey={(r) => r.id}
+        searchable={(r) => `${r.email} ${r.business_name ?? ""} ${r.kyc_id_number ?? ""}`}
+        filters={[
+          {
+            key: "kyc",
+            label: "All KYC states",
+            options: [
+              { value: "unverified", label: "Unverified" },
+              { value: "pending", label: "Pending review" },
+              { value: "verified", label: "Verified" },
+              { value: "rejected", label: "Rejected" },
+            ],
+            match: (r, v) => (r.kyc_status ?? "unverified") === v,
+          },
+          {
+            key: "biz",
+            label: "All business types",
+            options: Array.from(new Set(rows.map((r) => r.kyc_business_type).filter(Boolean) as string[])).map((b) => ({ value: b, label: b })),
+            match: (r, v) => r.kyc_business_type === v,
+          },
+        ]}
+        dateField={(r) => r.kyc_submitted_at}
+        emptyMessage="No KYC submissions."
+        render={(r) => <KycRow row={r} onDecide={decide} onDoc={docUrl} />}
+      />
     </AdminShell>
+
   );
 }
 
