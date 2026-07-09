@@ -44,23 +44,24 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
       };
     };
 
-    let gw: { credentials?: Record<string, string>; mode?: string; is_active?: boolean } | null = null;
+    type Gw = { credentials?: Record<string, string>; mode?: string; is_active?: boolean };
+    let gw: Gw | null = null;
     if (data.source === "platform") {
       const res = await admin.from("platform_gateways")
         .select("credentials, mode, is_active, provider")
         .eq("provider", data.provider).maybeSingle();
-      gw = res.data as typeof gw;
+      gw = res.data as Gw | null;
     } else if (data.configId) {
       const res = await admin.from("byo_gateways")
         .select("credentials, mode, is_active, merchant_id, provider")
         .eq("id", data.configId).eq!("merchant_id", inv.merchant_id).maybeSingle();
-      gw = res.data as typeof gw;
+      gw = res.data as Gw | null;
     } else {
       const res = await admin.from("byo_gateways")
         .select("credentials, mode, is_active, merchant_id, provider")
         .eq("merchant_id", inv.merchant_id).eq!("provider", data.provider)
         .order!("created_at", { ascending: true }).limit(1).maybeSingle();
-      gw = res.data as typeof gw;
+      gw = res.data as Gw | null;
     }
     if (!gw || !gw.is_active) throw new Error(`${data.provider} is not connected for this merchant`);
 
