@@ -702,13 +702,73 @@ function ApiReferencePage() {
             </Section>
 
             {/* Refunds & payouts */}
-            <Section id="refunds" eyebrow="Advanced" title="Refunds & payouts">
+            <Section id="refunds" eyebrow="Advanced" title="Refunds">
               <p className="text-sm text-muted-foreground">
-                Refunds and payouts are initiated from the merchant dashboard and delivered via webhooks
-                (<span className="font-mono">refund.processed</span>,{" "}
-                <span className="font-mono">payout.processed</span>). A programmatic refund API is on the roadmap;
-                until then, use the dashboard or contact support for automation.
+                Request a full or partial refund on a <span className="font-mono">completed</span> invoice.
+                Refunds start in <span className="font-mono">requested</span> state and move through{" "}
+                <span className="font-mono">approved</span> → <span className="font-mono">processed</span> once
+                reviewed. Every state change fires a webhook.
               </p>
+              <Method verb="POST" path="/v1/refunds" />
+              <div className="rounded-lg border border-glass-border bg-card/40 p-4">
+                <Field name="invoice_id" type="string" required desc="ID of the completed invoice to refund." />
+                <Field name="amount" type="number" desc="Amount to refund. Omit to refund the full invoice. Partial refunds are supported; total refunded across all requests can't exceed the invoice amount." />
+                <Field name="reason" type="string" desc="Short human-readable reason (surfaced in the admin dashboard)." />
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Code lang="cURL" code={`curl -X POST ${BASE}/refunds \\
+  -H "Authorization: Bearer sk_live_xxx" \\
+  -H "Content-Type: application/json" \\
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{
+    "invoice_id": "inv_7f2b4c8a...",
+    "amount": 500,
+    "reason": "Customer request"
+  }'`} />
+                <Code lang="JavaScript" code={`await fetch("${BASE}/refunds", {
+  method: "POST",
+  headers: {
+    Authorization: \`Bearer \${process.env.PAYNOC_SECRET_KEY}\`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": crypto.randomUUID(),
+  },
+  body: JSON.stringify({
+    invoice_id: "inv_7f2b4c8a...",
+    amount: 500,           // omit for full refund
+    reason: "Customer request",
+  }),
+});`} />
+              </div>
+              <Code lang="201 Created" code={`{
+  "data": {
+    "id": "rf_1a2b3c4d...",
+    "invoice_id": "inv_7f2b4c8a...",
+    "amount": 500,
+    "currency": "BDT",
+    "status": "requested",
+    "reason": "Customer request",
+    "created_at": "2026-07-09T09:11:00.000Z"
+  }
+}`} />
+              <Method verb="GET" path="/v1/refunds" />
+              <p className="text-sm text-muted-foreground">
+                List refunds for the authenticated merchant. Optional{" "}
+                <span className="font-mono">?invoice_id=</span> filter, <span className="font-mono">?limit=</span>{" "}
+                up to 100. Refunds are strictly scoped to the merchant that owns the API key — a key can never
+                touch or refund another merchant's invoice.
+              </p>
+              <Code lang="cURL" code={`curl "${BASE}/refunds?invoice_id=inv_7f2b4c8a..." \\
+  -H "Authorization: Bearer sk_live_xxx"`} />
+              <div className="rounded-lg border border-warning/40 bg-warning/5 p-4 text-sm">
+                <p className="font-semibold text-warning">Security note</p>
+                <p className="mt-1 text-muted-foreground">
+                  API keys can only <em>request</em> refunds — they never mark an invoice paid, complete a
+                  transaction, or bypass gateway verification. Payment state changes only when the underlying
+                  gateway (bKash, Nagad, Rocket, SSLCOMMERZ, Uddoktapay, OWNpay, Piprapay, card, BYO…) confirms
+                  the money moved, or a platform admin manually verifies a transaction from the dashboard.
+                  Approving and processing a refund still requires a signed-in admin.
+                </p>
+              </div>
             </Section>
 
             {/* Testing */}
