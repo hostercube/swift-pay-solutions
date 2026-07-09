@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Trash2, ShieldAlert, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/security/fraud")({
   head: () => ({ meta: [{ title: "Fraud Rules · PayNOC" }] }),
