@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { createRefund, updateRefundStatus } from "@/lib/payments.functions";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/refunds")({
   head: () => ({ meta: [{ title: "Refunds · PayNOC" }] }),
@@ -46,11 +47,13 @@ function RefundsPage() {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
   const createFn = useServerFn(createRefund);
   const updateFn = useServerFn(updateRefundStatus);
 
   const load = async () => {
-    const rq = (supabase.from as unknown as (t: string) => {
+    setLoading(true);
+    const { data } = await (supabase.from as unknown as (t: string) => {
       select: (s: string) => {
         order: (c: string, o: { ascending: boolean }) => {
           limit: (n: number) => Promise<{ data: Row[] | null }>;
@@ -59,9 +62,9 @@ function RefundsPage() {
     })("refunds")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(200);
-    const { data } = await rq;
+      .limit(500);
     setRows(data ?? []);
+    setLoading(false);
 
     const { data: inv } = await supabase
       .from("invoices")
@@ -107,6 +110,44 @@ function RefundsPage() {
     }
   };
 
+  const columns: DataTableColumn<Row>[] = [
+    { key: "created_at", label: "Date", render: (r) => <span className="text-xs">{new Date(r.created_at).toLocaleString()}</span> },
+    { key: "invoice_id", label: "Invoice", render: (r) => <span className="font-mono text-xs">{r.invoice_id.slice(0, 8)}</span> },
+    { key: "amount", label: "Amount", render: (r) => <>{r.currency} {Number(r.amount).toLocaleString()}</> },
+    { key: "reason", label: "Reason", render: (r) => <span className="text-xs">{r.reason ?? "—"}</span> },
+    { key: "status", label: "Status", render: (r) => <Badge className={COLOR[r.status] ?? ""}>{r.status}</Badge> },
+    ...(isAdmin ? [{
+      key: "action",
+      label: "Action",
+      render: (r: Row) =>
+        r.status === "requested" || r.status === "approved" ? (
+          <div className="space-y-2 min-w-[240px]">
+            <Input
+              placeholder="Note"
+              value={notes[r.id] ?? r.admin_note ?? ""}
+              onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })}
+              className="h-8"
+            />
+            <div className="flex flex-wrap gap-1">
+              {r.status === "requested" && (
+                <>
+                  <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
+                  <Button size="sm" onClick={() => approveAndProcess(r.id)}>Approve & Process</Button>
+                </>
+              )}
+              <Button size="sm" variant="secondary" onClick={() => decide(r.id, "processed")}>Processed</Button>
+              <Button size="sm" variant="destructive" onClick={() => decide(r.id, "rejected")}>Reject</Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">{r.admin_note ?? "—"}</p>
+        ),
+    }] : []),
+  ];
+
+  const filters: DataTableFilter<Row>[] = [
+    { key: "status", label: "All statuses", options: ["requested","approved","processed","rejected"].map((s) => ({ value: s, label: s })), match: (r, v) => r.status === v },
+  ];
 
   return (
     <MerchantShell title="Refunds" subtitle="Request full or partial refunds against completed invoices.">
@@ -122,9 +163,7 @@ function RefundsPage() {
             >
               <option value="">Select completed invoice…</option>
               {invoices.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.invoice_number} — {i.currency} {i.amount}
-                </option>
+                <option key={i.id} value={i.id}>{i.invoice_number} — {i.currency} {i.amount}</option>
               ))}
             </select>
           </label>
@@ -142,60 +181,18 @@ function RefundsPage() {
         </div>
       </Card>
 
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Invoice</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Reason</th>
-              <th className="px-4 py-3">Status</th>
-              {isAdmin && <th className="px-4 py-3">Action</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={isAdmin ? 6 : 5} className="p-8 text-center text-muted-foreground">No refunds yet</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border align-top">
-                <td className="px-4 py-3 text-xs">{new Date(r.created_at).toLocaleString()}</td>
-                <td className="px-4 py-3 font-mono text-xs">{r.invoice_id.slice(0, 8)}</td>
-                <td className="px-4 py-3">{r.currency} {Number(r.amount).toLocaleString()}</td>
-                <td className="px-4 py-3 text-xs">{r.reason ?? "—"}</td>
-                <td className="px-4 py-3"><Badge className={COLOR[r.status] ?? ""}>{r.status}</Badge></td>
-                {isAdmin && (
-                  <td className="px-4 py-3">
-                    {r.status === "requested" || r.status === "approved" ? (
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="Note"
-                          value={notes[r.id] ?? r.admin_note ?? ""}
-                          onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })}
-                          className="h-8"
-                        />
-                        <div className="flex flex-wrap gap-1">
-                          {r.status === "requested" && (
-                            <>
-                              <Button size="sm" onClick={() => decide(r.id, "approved")}>Approve</Button>
-                              <Button size="sm" variant="default" onClick={() => approveAndProcess(r.id)}>Approve & Process</Button>
-                            </>
-                          )}
-                          <Button size="sm" variant="secondary" onClick={() => decide(r.id, "processed")}>Processed</Button>
-                          <Button size="sm" variant="destructive" onClick={() => decide(r.id, "rejected")}>Reject</Button>
-                        </div>
-
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">{r.admin_note ?? "—"}</p>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      <div className="mt-6">
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.id}
+          loading={loading}
+          emptyMessage="No refunds yet"
+          searchable={(r) => `${r.invoice_id} ${r.reason ?? ""} ${r.admin_note ?? ""}`}
+          filters={filters}
+          dateField={(r) => r.created_at}
+        />
+      </div>
     </MerchantShell>
   );
 }

@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { adminReviewKyc } from "@/lib/admin.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { FilteredList } from "@/components/filtered-list";
+
 
 export const Route = createFileRoute("/_authenticated/admin/kyc")({
   head: () => ({ meta: [{ title: "KYC review · Admin" }] }),
@@ -41,9 +43,10 @@ function KycPage() {
       .select(
         "id, email, business_name, kyc_status, kyc_id_type, kyc_id_number, kyc_business_type, kyc_address, kyc_documents, kyc_submitted_at",
       )
-      .in("kyc_status", ["pending", "unverified"])
-      .order("kyc_submitted_at", { ascending: false, nullsFirst: false });
+      .order("kyc_submitted_at", { ascending: false, nullsFirst: false })
+      .limit(500);
     setRows((data ?? []) as Row[]);
+
 
     const { data: s } = await supabase.from("platform_settings").select("verification_mode").eq("id", 1).single();
     setMode(s?.verification_mode ?? "manual");
@@ -90,12 +93,35 @@ function KycPage() {
         </div>
       </Card>
 
-      {rows.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">No pending KYC submissions.</Card>
-      ) : (
-        <div className="space-y-4">{rows.map((r) => <KycRow key={r.id} row={r} onDecide={decide} onDoc={docUrl} />)}</div>
-      )}
+      <FilteredList
+        rows={rows}
+        rowKey={(r) => r.id}
+        searchable={(r) => `${r.email} ${r.business_name ?? ""} ${r.kyc_id_number ?? ""}`}
+        filters={[
+          {
+            key: "kyc",
+            label: "All KYC states",
+            options: [
+              { value: "unverified", label: "Unverified" },
+              { value: "pending", label: "Pending review" },
+              { value: "verified", label: "Verified" },
+              { value: "rejected", label: "Rejected" },
+            ],
+            match: (r, v) => (r.kyc_status ?? "unverified") === v,
+          },
+          {
+            key: "biz",
+            label: "All business types",
+            options: Array.from(new Set(rows.map((r) => r.kyc_business_type).filter(Boolean) as string[])).map((b) => ({ value: b, label: b })),
+            match: (r, v) => r.kyc_business_type === v,
+          },
+        ]}
+        dateField={(r) => r.kyc_submitted_at}
+        emptyMessage="No KYC submissions."
+        render={(r) => <KycRow row={r} onDecide={decide} onDoc={docUrl} />}
+      />
     </AdminShell>
+
   );
 }
 
