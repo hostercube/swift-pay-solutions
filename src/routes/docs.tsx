@@ -132,7 +132,7 @@ const RESP_INVOICE = `{
     "expires_at": "2026-07-09T12:00:00.000Z",
     "created_at": "2026-07-08T12:00:00.000Z",
     "paid_at": null,
-    "checkout_url": "https://paynoc.example/pay/inv_7f2b4c8a..."
+    "checkout_url": "https://pay.paynoc.bd/inv_7f2b4c8a..."
   }
 }`;
 
