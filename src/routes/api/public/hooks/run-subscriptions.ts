@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { notifyPlatform } from "@/lib/smsnoc.server";
+import { requirePaynocBackendEnv } from "@/lib/paynoc-env.server";
 
 /**
  * Runs periodically (see db/cron/schedule.sql). Renews & expires subscriptions,
@@ -10,8 +11,10 @@ export const Route = createFileRoute("/api/public/hooks/run-subscriptions")({
   server: {
     handlers: {
       POST: async () => {
-        const url = process.env.SUPABASE_URL!;
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const { url, serviceRoleKey: key } = requirePaynocBackendEnv([
+          "url",
+          "serviceRoleKey",
+        ]);
         const sb = createClient(url, key, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
