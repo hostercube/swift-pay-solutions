@@ -137,6 +137,12 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "prefix", label: "Prefix", type: "text", required: true, placeholder: "sp" },
     ],
     docsUrl: "https://engineering.shurjopay.com.bd/",
+    setupSteps: [
+      "Register at shurjopay.com.bd and complete KYC.",
+      "ShurjoPay will email you a Merchant Username, Password, and a Prefix (e.g. 'sp', 'NOK') tied to your store.",
+      "Paste all three. Use the sandbox credentials from engineering.shurjopay.com.bd first.",
+      "Switch to Live once your account is approved.",
+    ],
   },
   {
     id: "aamarpay",
