@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -80,41 +81,47 @@ function FxPage() {
         </div>
       </Card>
 
-      <Card className="overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Pair</th>
-              <th className="px-4 py-3">Rate</th>
-              <th className="px-4 py-3">Updated</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No FX rates yet. Add a pair above.</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-mono">{r.base_currency} → {r.quote_currency}</td>
-                <td className="px-4 py-3">
-                  <Input
-                    className="h-8 w-32"
-                    defaultValue={String(r.rate)}
-                    onChange={(e) => setEdits({ ...edits, [r.id]: e.target.value })}
-                  />
-                </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => save(r.id)}>Save</Button>
-                    <Button size="sm" variant="outline" onClick={() => remove(r.id)}>Delete</Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      <DataTable<Row>
+        rows={rows}
+        rowKey={(r) => r.id}
+        searchable={(r) => `${r.base_currency} ${r.quote_currency}`}
+        emptyMessage="No FX rates yet. Add a pair above."
+        filters={[
+          {
+            key: "base",
+            label: "Base",
+            options: Array.from(new Set(rows.map((r) => r.base_currency))).sort().map((c) => ({ value: c, label: c })),
+            match: (r, v) => r.base_currency === v,
+          },
+          {
+            key: "quote",
+            label: "Quote",
+            options: Array.from(new Set(rows.map((r) => r.quote_currency))).sort().map((c) => ({ value: c, label: c })),
+            match: (r, v) => r.quote_currency === v,
+          },
+        ]}
+        columns={[
+          { key: "pair", label: "Pair", render: (r) => <span className="font-mono">{r.base_currency} → {r.quote_currency}</span> },
+          {
+            key: "rate",
+            label: "Rate",
+            render: (r) => (
+              <Input
+                className="h-8 w-32"
+                defaultValue={String(r.rate)}
+                onChange={(e) => setEdits({ ...edits, [r.id]: e.target.value })}
+              />
+            ),
+          },
+          { key: "upd", label: "Updated", render: (r) => <span className="text-xs text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</span> },
+        ] as DataTableColumn<Row>[]}
+        actions={(r) => (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" onClick={() => save(r.id)}>Save</Button>
+            <Button size="sm" variant="outline" onClick={() => remove(r.id)}>Delete</Button>
+          </div>
+        )}
+      />
     </AdminShell>
   );
 }
