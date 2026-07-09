@@ -78,6 +78,11 @@ export const submitManualPayment = createServerFn({ method: "POST" })
     if (dupe && dupe.invoice_id !== inv.id) {
       throw new Error("This Transaction ID was already submitted for another invoice.");
     }
+    // Idempotency: same invoice + same TrxID → return the existing pending claim
+    // instead of creating a duplicate. Guards against double-clicks / retries.
+    if (dupe && dupe.invoice_id === inv.id) {
+      return { ok: true, transactionId: dupe.id, duplicate: true };
+    }
 
     await supabaseAdmin
       .from("invoices")
