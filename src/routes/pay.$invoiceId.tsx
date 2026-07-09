@@ -795,7 +795,7 @@ type ManualFormState = {
 };
 
 function ManualForm({
-  method, inv, form, setForm, onCancel, onSubmit, submitting,
+  method, inv, form, setForm, onCancel, onSubmit, submitting, pending,
 }: {
   method: Method;
   inv: Invoice;
@@ -804,6 +804,7 @@ function ManualForm({
   onCancel: () => void;
   onSubmit: () => void;
   submitting: boolean;
+  pending: Txn | null;
 }) {
   const isBank = method.type === "bank_transfer";
   const [uploading, setUploading] = useState(false);
