@@ -788,17 +788,42 @@ function MethodPicker({
   );
 }
 
+type ManualFormState = {
+  sender_number: string; sender_name: string; provider_txn_id: string;
+  bank_reference: string; slip_url: string;
+};
+
 function ManualForm({
   method, inv, form, setForm, onCancel, onSubmit, submitting,
 }: {
   method: Method;
   inv: Invoice;
-  form: { sender_number: string; sender_name: string; provider_txn_id: string };
-  setForm: (f: { sender_number: string; sender_name: string; provider_txn_id: string }) => void;
+  form: ManualFormState;
+  setForm: React.Dispatch<React.SetStateAction<ManualFormState>>;
   onCancel: () => void;
   onSubmit: () => void;
   submitting: boolean;
 }) {
+  const isBank = method.type === "bank_transfer";
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadSlip(file: File) {
+    setUploading(true);
+    try {
+      const path = `slips/${inv.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
+      const { error } = await supabase.storage
+        .from("payment-assets")
+        .upload(path, file, { upsert: false, contentType: file.type });
+      if (error) throw new Error(error.message);
+      setForm((f) => ({ ...f, slip_url: path }));
+      toast.success("Slip uploaded");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="glass rounded-2xl border border-glass-border p-5 sm:p-6">
       <button onClick={onCancel} className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -817,14 +842,48 @@ function ManualForm({
 
       <div className="mt-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="min-w-0">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Send money to</div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="truncate font-mono text-base font-semibold">{method.account_number || "—"}</span>
-              {method.account_number && <CopyBtn text={method.account_number} />}
+          {isBank ? (
+            <>
+              {method.bank_name && (
+                <Info label="Bank"><div className="font-semibold">{method.bank_name}</div></Info>
+              )}
+              {method.branch_name && (
+                <Info label="Branch"><div className="text-sm">{method.branch_name}</div></Info>
+              )}
+              <Info label="Account number">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-mono text-base font-semibold">{method.account_number || "—"}</span>
+                  {method.account_number && <CopyBtn text={method.account_number} />}
+                </div>
+              </Info>
+              {method.account_name && <Info label="Account name"><div className="text-sm">{method.account_name}</div></Info>}
+              {method.routing_number && (
+                <Info label="Routing">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm">{method.routing_number}</span>
+                    <CopyBtn text={method.routing_number} />
+                  </div>
+                </Info>
+              )}
+              {method.swift_code && (
+                <Info label="SWIFT / IBAN">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm">{method.swift_code}</span>
+                    <CopyBtn text={method.swift_code} />
+                  </div>
+                </Info>
+              )}
+            </>
+          ) : (
+            <div className="min-w-0">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Send money to</div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="truncate font-mono text-base font-semibold">{method.account_number || "—"}</span>
+                {method.account_number && <CopyBtn text={method.account_number} />}
+              </div>
+              {method.account_name && <div className="truncate text-xs text-muted-foreground">{method.account_name}</div>}
             </div>
-            {method.account_name && <div className="truncate text-xs text-muted-foreground">{method.account_name}</div>}
-          </div>
+          )}
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Exact amount</div>
             <div className="mt-1 flex items-center gap-2">
@@ -835,6 +894,17 @@ function ManualForm({
             </div>
           </div>
         </div>
+
+        {method.qr_code_url && (
+          <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              Scan to pay {method.qr_type ? `· ${method.qr_type.replace("_", " ")}` : ""}
+            </div>
+            <PayQr path={method.qr_code_url} />
+            <div className="text-[11px] text-muted-foreground">Open your mobile banking app and scan the QR</div>
+          </div>
+        )}
+
         {method.instructions && (
           <div className="mt-3 whitespace-pre-line rounded-lg bg-background/40 p-3 text-xs text-muted-foreground">
             {method.instructions}
@@ -843,16 +913,44 @@ function ManualForm({
       </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <Field label="Your number">
-          <input value={form.sender_number} onChange={(e) => setForm({ ...form, sender_number: e.target.value })} className={inputCls} placeholder="01XXXXXXXXX" />
+        <Field label={isBank ? "Your account / mobile number" : "Your number"}>
+          <input value={form.sender_number} onChange={(e) => setForm((f) => ({ ...f, sender_number: e.target.value }))} className={inputCls} placeholder="01XXXXXXXXX" />
         </Field>
         <Field label="Your name (optional)">
-          <input value={form.sender_name} onChange={(e) => setForm({ ...form, sender_name: e.target.value })} className={inputCls} />
+          <input value={form.sender_name} onChange={(e) => setForm((f) => ({ ...f, sender_name: e.target.value }))} className={inputCls} />
         </Field>
-        <Field label="Transaction ID" full>
-          <input value={form.provider_txn_id} onChange={(e) => setForm({ ...form, provider_txn_id: e.target.value })} className={inputCls} placeholder="e.g. 8A7BXY123" />
+        <Field label={isBank ? "Deposit slip / transaction ID" : "Transaction ID"} full>
+          <input value={form.provider_txn_id} onChange={(e) => setForm((f) => ({ ...f, provider_txn_id: e.target.value }))} className={inputCls} placeholder="e.g. 8A7BXY123" />
         </Field>
+
+        {isBank && (
+          <>
+            <Field label="Bank reference (optional)" full>
+              <input
+                value={form.bank_reference}
+                onChange={(e) => setForm((f) => ({ ...f, bank_reference: e.target.value }))}
+                className={inputCls}
+                placeholder="e.g. cheque no. / online transfer ref"
+              />
+            </Field>
+            <Field label="Upload bank slip (required)" full>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadSlip(f); }}
+                  />
+                  {uploading ? "Uploading…" : form.slip_url ? "Replace slip" : "Choose file"}
+                </label>
+                {form.slip_url && <span className="text-xs text-success">✓ Slip attached</span>}
+              </div>
+            </Field>
+          </>
+        )}
       </div>
+
 
       <button
         onClick={onSubmit} disabled={submitting}
