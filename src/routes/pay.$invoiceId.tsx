@@ -164,7 +164,7 @@ function CheckoutPage() {
         ]);
         setMethods(((m as Method[]) ?? []));
         setTxns(((t as Txn[]) ?? []));
-        setGateways(((g as { provider: string; mode: string }[]) ?? []));
+        setGateways(((g as { id?: string; provider: string; mode: string; label?: string | null }[]) ?? []));
         const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
         setBrand((brandRow ?? null) as Brand | null);
       }
