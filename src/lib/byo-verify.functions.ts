@@ -77,6 +77,32 @@ async function verifyNagad(mode: "live" | "test", creds: Creds, ref: string) {
   };
 }
 
+/** UddoktaPay `verify-payment` endpoint. Base URL is per-merchant install.
+ *  Docs: https://uddoktapay.readme.io/reference/verify-payment
+ */
+async function verifyUddoktapay(_mode: "live" | "test", creds: Creds, invoiceId: string) {
+  const base = String(creds.base_url ?? "").replace(/\/$/, "");
+  if (!base) throw new Error("UddoktaPay base_url missing");
+  const res = await fetch(`${base}/api/verify-payment`, {
+    method: "POST",
+    headers: {
+      "RT-UDDOKTAPAY-API-KEY": creds.api_key ?? "",
+      "Content-Type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({ invoice_id: invoiceId }),
+  });
+  const body = (await res.json()) as {
+    status?: string; amount?: string; transaction_id?: string; sender_number?: string;
+  };
+  return {
+    ok: (body.status ?? "").toUpperCase() === "COMPLETED",
+    amount: body.amount ? Number(body.amount) : undefined,
+    providerRef: body.transaction_id,
+    raw: body,
+  };
+}
+
 export const byoVerifyTransaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { transactionId: string }) => d)
@@ -95,7 +121,7 @@ export const byoVerifyTransaction = createServerFn({ method: "POST" })
     await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
 
     const provider = String(txn.method_type).toLowerCase();
-    if (!["bkash", "nagad"].includes(provider)) {
+    if (!["bkash", "nagad", "uddoktapay"].includes(provider)) {
       throw new Error(`Auto-verify unsupported for method: ${provider}`);
     }
 
@@ -118,7 +144,9 @@ export const byoVerifyTransaction = createServerFn({ method: "POST" })
 
     const result = provider === "bkash"
       ? await verifyBkash(mode, creds, txn.provider_txn_id)
-      : await verifyNagad(mode, creds, txn.provider_txn_id);
+      : provider === "nagad"
+      ? await verifyNagad(mode, creds, txn.provider_txn_id)
+      : await verifyUddoktapay(mode, creds, txn.provider_txn_id);
 
     // Amount sanity check (within 1 unit tolerance)
     if (result.ok && result.amount !== undefined && inv) {
