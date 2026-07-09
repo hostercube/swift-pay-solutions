@@ -31,16 +31,21 @@ function NewInvoicePage() {
     redirect_url: "",
     webhook_url: "",
     expires_in_hours: "24",
+    allow_custom_amount: false,
+    min_amount: "",
+    max_amount: "",
+    reusable: false,
+    auto_redirect: true,
   });
 
-  function update<K extends keyof typeof form>(k: K, v: string) {
+  function update<K extends keyof typeof form>(k: K, v: typeof form[K]) {
     setForm({ ...form, [k]: v });
   }
 
   async function submit() {
     if (!user) return;
-    const amount = Number(form.amount);
-    if (!amount || amount <= 0) return toast.error("Enter a valid amount");
+    const amount = Number(form.amount) || 0;
+    if (!form.allow_custom_amount && amount <= 0) return toast.error("Enter a valid amount");
     setSaving(true);
     const expires_at = form.expires_in_hours
       ? new Date(Date.now() + Number(form.expires_in_hours) * 3_600_000).toISOString()
@@ -60,6 +65,11 @@ function NewInvoicePage() {
         webhook_url: form.webhook_url || null,
         expires_at,
         status: "pending",
+        allow_custom_amount: form.allow_custom_amount,
+        min_amount: form.min_amount ? Number(form.min_amount) : null,
+        max_amount: form.max_amount ? Number(form.max_amount) : null,
+        reusable: form.reusable,
+        auto_redirect: form.auto_redirect,
       })
       .select("id")
       .single();
@@ -68,6 +78,7 @@ function NewInvoicePage() {
     toast.success("Invoice created");
     navigate({ to: "/invoices/$id", params: { id: data.id } });
   }
+
 
   return (
     <MerchantShell title="New invoice" subtitle="Generate a hosted checkout link you can share with your customer.">
