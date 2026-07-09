@@ -1,72 +1,62 @@
 
-## SMS NOC Integration Plan
+# Pagination + Search + Filters — Everywhere
 
-Integrate smsnoc.com REST API (`https://smsnoc.com/api/v1`) as a unified notification channel for both the platform (super-admin) and merchants (their own portal).
+## Goal
+Add consistent pagination, keyword search, and advanced filters to every table across the merchant portal, admin portal, and any other panels — without rewriting each page from scratch.
 
-### 1. Configuration surfaces
+## Approach
+Build ONE reusable primitive and roll it out. No per-page pagination code.
 
-**Platform-level** (super-admin → Admin → Settings)
-Extend `platform_settings.settings.smsnoc` JSON:
-- `api_key`, `default_sender_id`, `default_email_config_id`, `default_whatsapp_device_id`
-- Per-channel toggles: `sms`, `email`, `whatsapp`, `voice`
-- Per-event toggles + templates for:
-  - `user_registered` (welcome)
-  - `password_reset` (forgot password)
-  - `package_purchased` / `subscription_assigned`
-  - `subscription_renewed`
-  - `subscription_expiring` (reminder, 3 days before)
-  - `subscription_expired`
-  - `payment_received` (platform copy, optional)
+### 1. New primitive: `src/components/data-table.tsx`
+A single generic component used by every listing page.
 
-**Merchant-level** (Dashboard → Integrations → SMS NOC)
-New table `merchant_smsnoc_configs`:
-- `merchant_id`, `api_key`, `sender_id`, `email_config_id`, `whatsapp_device_id`
-- `enabled`, `notify_on_payment_received`, `notify_on_invoice_created`, `notify_on_refund`
-- Channel toggles + destination (phone/email/whatsapp)
-- Custom template per event
+Props (typed generic `<T>`):
+- `columns`: `{ key, label, render?, sortable?, className? }[]`
+- `rows`: `T[]` (full dataset OR server-paged slice)
+- `searchable?`: `(row: T) => string` — enables the search box
+- `filters?`: `{ key, label, options: {value,label}[], match: (row, value) => boolean }[]` — dropdown filters above the table
+- `dateField?`: string — enables From/To date range filter
+- `pageSize?`: default 20; user-adjustable (10/20/50/100)
+- `emptyMessage?`
+- `serverPagination?`: `{ page, total, onPageChange, onSearchChange, onFilterChange }` — opt-in mode for very large tables
 
-### 2. Backend
+Client mode (default): does filtering + search + pagination in memory.
+Server mode: parent controls state and passes slices back.
 
-- `src/lib/smsnoc.server.ts` — provider client:
-  - `sendSms({ apiKey, sender, to, message })` → POST `/send-sms`
-  - `sendEmail({ apiKey, configId, to, subject, html })` → POST `/send-email`
-  - `sendWhatsApp({ apiKey, deviceId, to, message })` → POST `/send-whatsapp`
-  - `sendVoice({ apiKey, callerId, to, message })` → POST `/send-voice`
-  - Uses `Authorization: Bearer <apiKey>`, handles 4xx/429/402 gracefully, logs to `notification_log`.
-- `src/lib/notifications.server.ts` — extend `notify(event, ctx)`:
-  - Look up platform + merchant config, pick channels, render template, dispatch through smsnoc client, log outcome.
-- Server functions:
-  - `savePlatformSmsnocConfig` (super-admin only)
-  - `sendTestSmsnocMessage` (admin + merchant, sends 1 test)
-  - `saveMerchantSmsnocConfig` (merchant scope via `requireSupabaseAuth`)
-  - `getMerchantSmsnocConfig`
+URL sync: reads `?q=&page=&pageSize=&<filterKey>=` via `useSearch`/`useNavigate` so refresh + share-link works. Uses `fallback()` from `@tanstack/zod-adapter` per project rules.
 
-### 3. Event wiring
+### 2. Rollout — replace hand-rolled `<table>`s with `<DataTable>`
 
-- **user_registered**: hook in `handle_new_user` trigger flow — call a server fn from auth signup success (`src/routes/auth.tsx`) after `supabase.auth.signUp`.
-- **password_reset**: server fn `sendResetLinkWithSmsnoc` in `forgot-password.tsx` (fires after `resetPasswordForEmail` succeeds).
-- **subscription_assigned / renewed / expired**: hook into `assign_subscription`, `renew_due_subscriptions`, `expire_due_subscriptions` — extend `run-subscriptions.ts` cron to enqueue notifications.
-- **subscription_expiring reminder**: extend cron to select rows where `current_period_end` between now+2d and now+3d and dispatch reminder.
-- **payment_received (merchant)**: hook in `payments.functions.ts` and gateway callback path (`webhooks.$provider.ts`) when invoice transitions to `completed`.
+Merchant pages:
+- invoices.index, transactions, refunds, disputes, recurring, discounts, notifications.index, api-logs, webhooks, team, domains, security.api-keys, security.devices, security.ip-whitelist, security.fraud, integrations.byo, integrations.api, integrations.reviews, notifications.digest, marketing
 
-### 4. UI
+Admin pages:
+- admin/merchants.index, admin/invoices, admin/transactions, admin/kyc, admin/staff, admin/audit, admin/packages, admin/fx, admin/smsnoc, admin/platform.plugins, admin/platform.webhooks, admin/platform.incidents
 
-- `src/routes/_authenticated/admin/settings.tsx` — new "SMS NOC" card with API key, sender id, channel/event matrix, "Send test" button.
-- `src/routes/_authenticated/integrations.smsnoc.tsx` — merchant page with the same shape scoped to their config + payment-received toggles and destination fields.
-- Add "SMS NOC" tile on `integrations.index.tsx`.
+Each conversion is small: define `columns`, optional `filters`, pass `rows` — delete the manual `<thead>/<tbody>/pagination` block.
 
-### 5. Database migration
+### 3. Filter presets per domain
+- Invoices/transactions: status filter, method filter, date range
+- Refunds/disputes: status
+- KYC/merchants: status, KYC state, date range
+- Audit/api-logs: action/level, date range
+- Team/staff: role, status
+- Webhooks/deliveries: status code bucket (2xx/4xx/5xx)
 
-- Add JSONB `smsnoc` sub-object handling to existing `platform_settings.settings`.
-- New table `merchant_smsnoc_configs` with RLS: owner + team `notifications:manage` can read/write, service_role bypass. Standard GRANTs.
-- Reuse `notification_log` for delivery records.
+### 4. Delivery in stages (single PR)
+Because ~30 pages: I'll ship them in ONE turn but grouped commits inside my edits:
+1. `data-table.tsx` primitive + tiny `useTableSearch` URL hook
+2. Convert merchant listing pages (batch 1)
+3. Convert admin listing pages (batch 2)
+4. Convert security/integrations pages (batch 3)
 
-### Technical notes
+## Non-goals
+- No backend/API changes. All filtering is client-side unless a page is already server-paginated.
+- No visual redesign — reuse existing card/glass styling.
+- Fraud blocklist and other <10-row tables get search only; pagination stays hidden until >`pageSize` rows exist.
 
-- Provider auth: `Authorization: Bearer <api_key>` (query param fallback supported).
-- Bangladesh MSISDN normalization is server-side by smsnoc, so we pass raw phones through.
-- All outbound sends are gated behind per-config `enabled` flag + per-event toggle so nothing sends until super-admin/merchant switches it on.
-- Templates use `{{name}}`, `{{amount}}`, `{{invoice_number}}`, `{{package_name}}`, `{{expires_at}}`, `{{reset_link}}` placeholders — rendered server-side.
-- Failures never block the primary action (signup/payment/etc.) — logged to `notification_log` with error text and surfaced in the existing notifications settings page.
+## Risks
+- A few admin pages (e.g. transactions/audit) can grow large. Those get `serverPagination` in a follow-up if needed; for now client-side with `pageSize=50` is fine — queries already `.limit(200-500)`.
+- URL search sync could conflict with existing route `validateSearch` on a couple of pages (invoices.index has one). The primitive will accept an optional `stateMode: "url" | "local"` — I'll use `local` on routes that already own their search schema to avoid clashes.
 
-Ask for approval before I start building.
+Ready to build.
