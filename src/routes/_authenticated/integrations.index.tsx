@@ -30,6 +30,12 @@ type Method = {
   max_amount: number | null;
   is_active: boolean;
   sort_order: number;
+  qr_code_url: string | null;
+  qr_type: string | null;
+  bank_name: string | null;
+  branch_name: string | null;
+  routing_number: string | null;
+  swift_code: string | null;
 };
 
 const METHOD_TYPES: { value: MethodType; label: string }[] = [
