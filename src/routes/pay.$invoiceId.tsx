@@ -388,9 +388,9 @@ function CheckoutPage() {
                   customerName: inv.customer_name,
                   customerEmail: inv.customer_email,
                   description: inv.description,
-                  methodType: verified.method_type,
-                  paidAt: verified.verified_at,
-                  createdAt: verified.created_at,
+                  methodType: verified?.method_type ?? inv.method_type,
+                  paidAt: verified?.verified_at ?? null,
+                  createdAt: verified?.created_at ?? inv.expires_at ?? new Date().toISOString(),
                   businessName: brand?.business_name ?? null,
                   supportEmail: brand?.support_email ?? null,
                 })
