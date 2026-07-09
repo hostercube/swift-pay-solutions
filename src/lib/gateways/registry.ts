@@ -303,6 +303,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://uddoktapay.readme.io/reference/overview",
     webhookHint: "Add the webhook URL below in UddoktaPay admin → Webhook Settings.",
+    setupSteps: [
+      "Install UddoktaPay on your own domain (e.g. https://pay.your-domain.com) or use your existing licensed instance.",
+      "Log in to the UddoktaPay admin panel → API Settings and copy your API Key.",
+      "Enter the full Base URL (including https://) and the API Key below.",
+      "In UddoktaPay admin → Webhook Settings, paste the webhook URL shown below and enable it.",
+    ],
   },
   {
     id: "piprapay",
@@ -318,6 +324,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://docs.piprapay.com/reference/overview",
     webhookHint: "PipraPay sends webhooks with the mh-piprapay-api-key header for verification.",
+    setupSteps: [
+      "Sign up at piprapay.com and complete merchant verification.",
+      "Sandbox: use https://sandbox.piprapay.com and the sandbox API key from your dashboard.",
+      "Live: use https://api.piprapay.com and your live API Key from Dashboard → Developers.",
+      "Register the webhook URL below in Dashboard → Webhooks so PipraPay can confirm payments.",
+    ],
   },
   {
     id: "ownpay",
@@ -334,6 +346,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://ownpay.org/",
     webhookHint: "OwnPay posts JSON with an X-Signature HMAC-SHA256 header.",
+    setupSteps: [
+      "Deploy OwnPay on your own server or use a licensed hosted instance.",
+      "In OwnPay admin → Settings → API, copy the API Key and (recommended) generate a Webhook Secret.",
+      "Paste the Base URL (https://...), API Key, and Webhook Secret here.",
+      "Register the webhook URL below in OwnPay → Webhooks. PayNOC verifies the X-Signature header on every event.",
+    ],
   },
 
 
