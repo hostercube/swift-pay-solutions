@@ -110,7 +110,18 @@ export const submitManualPayment = createServerFn({ method: "POST" })
       .single();
     if (tErr || !txn) {
       const msg = tErr?.message ?? "Submit failed";
-      if (/duplicate key|unique/i.test(msg)) {
+      // Race-condition safe: unique index (merchant_id, provider_txn_id) WHERE status IN ('pending','verified')
+      if (/duplicate key|unique|23505/i.test(msg)) {
+        const { data: existing } = await supabaseAdmin
+          .from("transactions")
+          .select("id, invoice_id")
+          .eq("merchant_id", inv.merchant_id)
+          .eq("provider_txn_id", trimmedTxn)
+          .in("status", ["pending", "verified"])
+          .maybeSingle();
+        if (existing && existing.invoice_id === inv.id) {
+          return { ok: true, transactionId: existing.id, duplicate: true };
+        }
         throw new Error("This Transaction ID was already submitted for another invoice.");
       }
       throw new Error(msg);

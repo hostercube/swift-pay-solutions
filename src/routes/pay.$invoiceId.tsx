@@ -592,6 +592,7 @@ function CheckoutPage() {
               onCancel={() => setSelected(null)}
               onSubmit={submit}
               submitting={submitting}
+              pending={pending ?? null}
             />
           )}
         </section>
@@ -794,7 +795,7 @@ type ManualFormState = {
 };
 
 function ManualForm({
-  method, inv, form, setForm, onCancel, onSubmit, submitting,
+  method, inv, form, setForm, onCancel, onSubmit, submitting, pending,
 }: {
   method: Method;
   inv: Invoice;
@@ -803,6 +804,7 @@ function ManualForm({
   onCancel: () => void;
   onSubmit: () => void;
   submitting: boolean;
+  pending: Txn | null;
 }) {
   const isBank = method.type === "bank_transfer";
   const [uploading, setUploading] = useState(false);
@@ -905,8 +907,8 @@ function ManualForm({
         </div>
 
         {(() => {
-          const fallback = defaultQrFor(method);
-          if (!method.qr_code_url && !fallback) return null;
+          const hasFallback = qrFallbackEligible(method);
+          if (!method.qr_code_url && !hasFallback) return null;
           return (
             <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -914,7 +916,7 @@ function ManualForm({
               </div>
               {method.qr_code_url
                 ? <PayQr path={method.qr_code_url} />
-                : <img src={fallback!} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />}
+                : <LocalQr text={method.account_number!} />}
               <div className="text-[11px] text-muted-foreground">
                 {method.qr_code_url
                   ? "Open your mobile banking app and scan the QR"
@@ -971,11 +973,21 @@ function ManualForm({
       </div>
 
 
+      {pending && (
+        <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+          <div className="font-semibold text-amber-600">Awaiting verification</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            You already submitted TrxID <span className="font-mono">{pending.provider_txn_id}</span> on{" "}
+            {new Date(pending.created_at).toLocaleString()}. The merchant will confirm shortly.
+          </div>
+        </div>
+      )}
+
       <button
-        onClick={onSubmit} disabled={submitting}
-        className="mt-6 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)] transition hover:brightness-110 disabled:opacity-60"
+        onClick={onSubmit} disabled={submitting || !!pending}
+        className="mt-6 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? "Submitting…" : `Confirm & Pay ${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`}
+        {pending ? "Submission pending review" : submitting ? "Submitting…" : `Confirm & Pay ${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`}
       </button>
     </div>
   );
@@ -1024,14 +1036,28 @@ function PayQr({ path }: { path: string }) {
   );
 }
 
-/** Fallback QR: uses api.qrserver.com to render a QR of the account number
- *  for mobile-banking channels that didn't upload their own image. */
-function defaultQrFor(m: Method): string | null {
-  if (m.qr_code_url) return null;
-  if (!m.account_number) return null;
-  if (!["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type)) return null;
-  const data = encodeURIComponent(m.account_number);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${data}`;
+/** Local QR generator (no external API) with in-memory cache per input. */
+const QR_CACHE = new Map<string, string>();
+function LocalQr({ text }: { text: string }) {
+  const [url, setUrl] = useState<string | null>(() => QR_CACHE.get(text) ?? null);
+  useEffect(() => {
+    let alive = true;
+    const cached = QR_CACHE.get(text);
+    if (cached) { setUrl(cached); return; }
+    import("qrcode").then(({ default: QR }) =>
+      QR.toDataURL(text, { width: 300, margin: 2, errorCorrectionLevel: "M" })
+    ).then((d) => { QR_CACHE.set(text, d); if (alive) setUrl(d); })
+     .catch(() => { /* noop */ });
+    return () => { alive = false; };
+  }, [text]);
+  if (!url) return <div className="h-48 w-48 animate-pulse rounded-xl bg-muted" />;
+  return <img src={url} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />;
+}
+
+function qrFallbackEligible(m: Method): boolean {
+  if (m.qr_code_url) return false;
+  if (!m.account_number) return false;
+  return ["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type);
 }
 
 function labelForType(t: string) {
