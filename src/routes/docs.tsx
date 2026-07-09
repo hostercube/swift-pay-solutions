@@ -27,7 +27,7 @@ export const Route = createFileRoute("/docs")({
   component: ApiReferencePage,
 });
 
-const BASE = "https://api.paynoc.example/v1";
+const BASE = "https://paynoc.bd/api/public/v1";
 
 /* ---------------------- code snippets ---------------------- */
 
