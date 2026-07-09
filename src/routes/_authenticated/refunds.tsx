@@ -53,7 +53,7 @@ function RefundsPage() {
 
   const load = async () => {
     setLoading(true);
-    const fromLoose = ((supabase.from as unknown as (t: string) => {
+    const fromLoose = (supabase.from as unknown as (t: string) => {
       select: (s: string) => {
         order: (c: string, o: { ascending: boolean }) => {
           limit: (n: number) => Promise<{ data: Row[] | null }>;
