@@ -1,7 +1,12 @@
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 
 const RATE_LIMIT = 120;
 const WINDOW_SECONDS = 60;
+
+export function newRequestId() {
+  try { return randomUUID(); } catch { return `req_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`; }
+}
+
 
 
 function clientIp(request: Request) {
