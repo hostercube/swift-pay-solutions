@@ -532,17 +532,36 @@ function ApiReferencePage() {
           <main className="min-w-0">
             {/* Anchor */}
             <div id="overview" className="scroll-mt-24">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <Card className="border-glass-border bg-surface/60 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Base URL</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Canonical base URL</p>
                   <p className="mt-1 font-mono text-sm">{BASE}</p>
+                </Card>
+                <Card className="border-glass-border bg-surface/60 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">This deployment</p>
+                  <p className="mt-1 font-mono text-sm text-brand break-all">{liveBase}</p>
                 </Card>
                 <Card className="border-glass-border bg-surface/60 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Auth header</p>
                   <p className="mt-1 font-mono text-sm">Authorization: Bearer sk_live_…</p>
                 </Card>
               </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <a href="/security/api-keys" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">1. Get an API key</p>
+                  <p className="mt-1 text-muted-foreground">Dashboard → Security → API keys.</p>
+                </a>
+                <a href="#quickstart" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">2. Create an invoice</p>
+                  <p className="mt-1 text-muted-foreground">POST /invoices → redirect to checkout_url.</p>
+                </a>
+                <a href="#webhooks" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">3. Verify a webhook</p>
+                  <p className="mt-1 text-muted-foreground">HMAC-SHA256 over timestamp.raw_body.</p>
+                </a>
+              </div>
             </div>
+
 
             {/* Quickstart */}
             <Section id="quickstart" eyebrow="Getting started" title="Quickstart">
