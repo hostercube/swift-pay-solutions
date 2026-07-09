@@ -1,16 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { Shield } from "lucide-react";
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-surface-2">
+      <div className="hairline-gold h-px w-full" />
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div className="lg:col-span-2">
           <Link to="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand">
-              <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand ring-1 ring-brand/40">
+              <span className="font-display text-sm font-black text-brand-foreground">P</span>
             </span>
-            <span className="font-display text-lg font-bold tracking-tight">PayNOC</span>
+            <span className="font-display text-lg font-bold tracking-tight">
+              Pay<span className="text-gradient-brand">NOC</span>
+            </span>
           </Link>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
             Self-hosted merchant payment infrastructure. Own your data, own your money, own your
