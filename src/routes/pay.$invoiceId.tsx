@@ -592,6 +592,7 @@ function CheckoutPage() {
               onCancel={() => setSelected(null)}
               onSubmit={submit}
               submitting={submitting}
+              pending={pending ?? null}
             />
           )}
         </section>
