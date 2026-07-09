@@ -592,6 +592,7 @@ export function verifyWebhook(providerId: string, v: VerifyArgs): VerifyResult {
       case "paddle":            return verifyPaddle(v);
       case "twocheckout":       return verifyTwocheckout(v);
       case "binance_pay":       return verifyBinancePay(v);
+      case "cryptomus":         return verifyCryptomus(v);
 
       default: {
         // Generic HMAC-SHA256 fallback using webhook_secret if provided.
