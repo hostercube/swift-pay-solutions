@@ -500,9 +500,12 @@ function ApiReferencePage() {
           <aside className="hidden lg:block">
             <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 text-sm">
               <div className="mb-5 rounded-xl border border-glass-border bg-surface/60 p-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Base URL</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Base URL (canonical)</p>
                 <p className="mt-1 truncate font-mono text-xs text-foreground">{BASE}</p>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">This deployment</p>
+                <p className="mt-1 truncate font-mono text-xs text-brand">{liveBase}</p>
               </div>
+
               {nav.map((g) => (
                 <div key={g.group} className="mb-6">
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand/80">
