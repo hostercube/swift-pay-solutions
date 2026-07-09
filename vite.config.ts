@@ -31,18 +31,6 @@ const PAYNOC_SUPABASE_URL = pickEnv(
   "SUPABASE_URL",
 );
 
-const SUPABASE_URL_FOR_CLIENT = isLovablePreview
-  ? pickEnv("VITE_SUPABASE_URL", "SUPABASE_URL")
-  : PAYNOC_SUPABASE_URL;
-
-const SUPABASE_ANON_KEY_FOR_CLIENT = isLovablePreview
-  ? pickEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_ANON_KEY")
-  : PAYNOC_SUPABASE_ANON_KEY;
-
-const SUPABASE_PROJECT_ID_FOR_CLIENT = isLovablePreview
-  ? (pickEnv("VITE_SUPABASE_PROJECT_ID", "SUPABASE_PROJECT_ID") ?? "paynoc")
-  : PAYNOC_SUPABASE_PROJECT_ID;
-
 const PAYNOC_SUPABASE_ANON_KEY = pickEnv(
   "PAYNOC_SUPABASE_ANON_KEY",
   "PAYNOC_SUPABASE_PUBLISHABLE_KEY",
@@ -63,6 +51,23 @@ const PAYNOC_SUPABASE_PROJECT_ID =
     "VITE_SUPABASE_PROJECT_ID",
     "SUPABASE_PROJECT_ID",
   ) ?? "paynoc";
+
+const SUPABASE_URL_FOR_CLIENT = isLovablePreview
+  ? pickEnv("VITE_SUPABASE_URL", "SUPABASE_URL")
+  : PAYNOC_SUPABASE_URL;
+
+const SUPABASE_ANON_KEY_FOR_CLIENT = isLovablePreview
+  ? pickEnv(
+      "VITE_SUPABASE_PUBLISHABLE_KEY",
+      "VITE_SUPABASE_ANON_KEY",
+      "SUPABASE_PUBLISHABLE_KEY",
+      "SUPABASE_ANON_KEY",
+    )
+  : PAYNOC_SUPABASE_ANON_KEY;
+
+const SUPABASE_PROJECT_ID_FOR_CLIENT = isLovablePreview
+  ? (pickEnv("VITE_SUPABASE_PROJECT_ID", "SUPABASE_PROJECT_ID") ?? "paynoc")
+  : PAYNOC_SUPABASE_PROJECT_ID;
 
 // Only override Vite's own VITE_* env injection when we resolved a real value
 // from a non-VITE source (i.e. an operator explicitly set PAYNOC_* / SERVICE_*).
