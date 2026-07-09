@@ -105,25 +105,60 @@ function MerchantsPage() {
   }
 
 
-  const filtered = rows.filter((r) => {
-    const s = q.toLowerCase();
-    return (
-      !q ||
-      r.email.toLowerCase().includes(s) ||
-      (r.business_name ?? "").toLowerCase().includes(s) ||
-      (r.full_name ?? "").toLowerCase().includes(s)
-    );
-  });
+  const filtered = rows
+    .filter((r) => {
+      const s = q.toLowerCase();
+      const matchQ = !q ||
+        r.email.toLowerCase().includes(s) ||
+        (r.business_name ?? "").toLowerCase().includes(s) ||
+        (r.full_name ?? "").toLowerCase().includes(s) ||
+        r.id.toLowerCase().includes(s);
+      const matchStatus = statusFilter === "all" || r.status === statusFilter;
+      const matchKyc = kycFilter === "all" || (r.kyc_status ?? "unverified") === kycFilter;
+      return matchQ && matchStatus && matchKyc;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return (a.business_name ?? a.email).localeCompare(b.business_name ?? b.email);
+      if (sortBy === "oldest") return +new Date(a.created_at) - +new Date(b.created_at);
+      return +new Date(b.created_at) - +new Date(a.created_at);
+    });
 
   return (
     <AdminShell title="Merchants" subtitle="Approve, suspend, or review every merchant on the platform.">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by email, business, or name…"
-          className="w-full max-w-sm rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
+          placeholder="Search email, business, name, or ID…"
+          className="w-full max-w-xs rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
         />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={kycFilter} onValueChange={setKycFilter}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All KYC</SelectItem>
+            <SelectItem value="verified">Verified</SelectItem>
+            <SelectItem value="pending">KYC pending</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="unverified">Unverified</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="oldest">Oldest first</SelectItem>
+            <SelectItem value="name">Name A→Z</SelectItem>
+          </SelectContent>
+        </Select>
         <span className="text-xs text-muted-foreground">{filtered.length} of {rows.length}</span>
         <div className="ml-auto">
           <Button size="sm" onClick={() => setShowCreate((v) => !v)}>
@@ -131,6 +166,7 @@ function MerchantsPage() {
           </Button>
         </div>
       </div>
+
 
       {showCreate && (
         <Card className="mb-4 p-5">
