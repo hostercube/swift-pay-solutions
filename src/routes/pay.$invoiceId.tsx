@@ -405,199 +405,398 @@ function CheckoutPage() {
   const converted =
     fxRate && activeDisplayCur ? Number((Number(inv.amount) * fxRate).toFixed(2)) : null;
 
+  const autoGateways = gateways.filter((g) => AUTO_GATEWAYS.has(g.provider));
+  const trxId = `TXN-${inv.invoice_number}`;
+
   return (
-    <Shell brand={brand}>
-      {inv.mode === "test" && (
-        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-center text-xs font-bold uppercase tracking-widest text-amber-600">
-          Test mode — no real money will be moved
-        </div>
-      )}
-      <div className="mb-6 flex items-baseline justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Amount due</div>
-          <div className="font-display text-3xl font-bold">
-            {inv.currency} {Number(inv.amount).toLocaleString()}
-          </div>
-          {converted != null && (
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              ≈ {activeDisplayCur} {converted.toLocaleString()} · settled in {inv.currency}
-            </div>
-          )}
-          {(inv.discount_amount ?? 0) > 0 && (
-            <div className="mt-0.5 text-xs text-success">
-              Discount {inv.discount_code}: −{inv.currency}{" "}
-              {Number(inv.discount_amount).toLocaleString()}
-            </div>
-          )}
-          {inv.description && <p className="mt-1 text-sm text-muted-foreground">{inv.description}</p>}
-        </div>
-        <div className="text-right text-xs text-muted-foreground">
-          <div>Invoice</div>
-          <div className="font-mono">{inv.invoice_number}</div>
-          <select
-            value={activeDisplayCur ?? inv.currency}
-            onChange={(e) =>
-              setDisplayCurrency(e.target.value === inv.currency ? null : e.target.value)
-            }
-            className="mt-2 rounded border border-glass-border bg-background px-2 py-1 text-xs"
-          >
-            <option value={inv.currency}>{inv.currency}</option>
-            {["USD", "EUR", "GBP", "INR", "AED"].filter((c) => c !== inv.currency).map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {inv.status === "pending" && !pending && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-glass-border bg-card/40 p-3">
-          <input
-            value={couponInput}
-            onChange={(e) => setCouponInput(e.target.value)}
-            placeholder="Discount code"
-            className="flex-1 rounded-md bg-transparent px-2 py-1 text-sm outline-none"
-          />
-          <button
-            onClick={applyCoupon}
-            disabled={couponBusy}
-            className="rounded-md bg-brand/10 px-3 py-1 text-xs font-semibold text-brand hover:bg-brand/20"
-          >
-            {couponBusy ? "…" : "Apply"}
-          </button>
-        </div>
-      )}
-
-      {pending && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-          <Clock className="h-5 w-5 text-amber-500" />
-          <div className="text-sm">
-            Your payment is awaiting merchant verification. This page updates automatically.
-          </div>
-        </div>
-      )}
-
-
-      {!selected && gateways.filter((g) => AUTO_GATEWAYS.has(g.provider)).length > 0 && (
-        <div className="mb-6">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-            <Zap className="h-4 w-4 text-brand" /> Pay online instantly
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Redirects to the merchant's secure gateway. No manual verification needed.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {gateways.filter((g) => AUTO_GATEWAYS.has(g.provider)).map((g) => {
-              const spec = getGateway(g.provider);
-              const busy = redirecting === g.provider;
-              return (
-                <button
-                  key={g.provider}
-                  disabled={busy || !!redirecting}
-                  onClick={() => payViaGateway(g.provider)}
-                  className="glass rounded-xl border border-glass-border p-4 text-left transition hover:border-brand disabled:opacity-60"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold">{spec?.label ?? g.provider}</div>
-                    {g.mode === "sandbox" && (
-                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-600">
-                        Test
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {busy ? "Redirecting…" : `Pay with ${spec?.label ?? g.provider}`}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {!selected && (
-        <div>
-          <h2 className="font-display text-lg font-semibold">
-            {gateways.length > 0 ? "Or pay manually" : "Select a payment method"}
-          </h2>
-          {methods.length === 0 && gateways.length === 0 && (
-            <p className="mt-3 text-sm text-muted-foreground">
-              The merchant has not configured any payment methods yet.
-            </p>
-          )}
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {methods.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setSelected(m)}
-                className="glass rounded-xl border border-glass-border p-4 text-left transition hover:border-brand"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold">{m.label}</div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</span>
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Fee: {m.fee_percent}% + {m.fee_flat}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {selected && (
-        <div className="glass rounded-2xl border border-glass-border p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Pay with</div>
-              <div className="font-display text-lg font-semibold">{selected.label}</div>
-            </div>
-            <button onClick={() => setSelected(null)} className="text-xs text-muted-foreground hover:text-foreground">
-              Change
-            </button>
-          </div>
-
-          <div className="mt-4 rounded-xl border border-glass-border bg-background/40 p-4 text-sm">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Info label="Send money to">
-                <div className="font-mono">{selected.account_number || "—"}</div>
-                {selected.account_name && <div className="text-xs text-muted-foreground">{selected.account_name}</div>}
-              </Info>
-              <Info label="Exact amount">
-                <div className="font-mono">{inv.currency} {Number(inv.amount).toLocaleString()}</div>
-              </Info>
-            </div>
-            {selected.instructions && (
-              <div className="mt-3 whitespace-pre-line text-xs text-muted-foreground">
-                {selected.instructions}
+    <Shell brand={brand} inv={inv} trxId={trxId}>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
+        {/* ── Left: Order summary ─────────────────────────── */}
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          <div className="glass overflow-hidden rounded-2xl border border-glass-border">
+            {inv.mode === "test" && (
+              <div className="bg-amber-500/15 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                Test mode — no real money will be moved
               </div>
             )}
+            <div className="p-5 sm:p-6">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="uppercase tracking-widest">You are paying</span>
+                <CopyBtn text={trxId} label="Trx ID" />
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="font-display text-4xl font-black tracking-tight sm:text-5xl">
+                  {currencySymbol(inv.currency)}{Number(inv.amount).toLocaleString()}
+                </span>
+                <span className="text-sm font-medium text-muted-foreground">{inv.currency}</span>
+              </div>
+              {converted != null && (
+                <div className="mt-1 text-xs text-muted-foreground">
+                  ≈ {activeDisplayCur} {converted.toLocaleString()} · settled in {inv.currency}
+                </div>
+              )}
+              {inv.description && (
+                <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">{inv.description}</p>
+              )}
+            </div>
+
+            <div className="border-t border-glass-border/70 bg-card/30 p-5 sm:p-6">
+              <SumRow label="Subtotal" value={`${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`} />
+              {(inv.discount_amount ?? 0) > 0 && (
+                <SumRow
+                  label={`Discount (${inv.discount_code})`}
+                  value={`−${currencySymbol(inv.currency)}${Number(inv.discount_amount).toLocaleString()}`}
+                  accent="text-success"
+                />
+              )}
+              <SumRow label="Convenience fee" value={`${currencySymbol(inv.currency)}0.00`} muted />
+              <div className="mt-3 flex items-baseline justify-between border-t border-dashed border-glass-border pt-3">
+                <span className="text-sm font-semibold">Total amount</span>
+                <span className="font-display text-lg font-bold">
+                  {currencySymbol(inv.currency)}{Number(inv.amount).toLocaleString()}
+                </span>
+              </div>
+
+              {inv.status === "pending" && !pending && (
+                <div className="mt-4 flex items-center gap-2 rounded-lg border border-glass-border bg-background/60 p-2">
+                  <Sparkles className="h-3.5 w-3.5 shrink-0 text-brand" />
+                  <input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    placeholder="Have a discount code?"
+                    className="min-w-0 flex-1 bg-transparent px-1 py-0.5 text-sm outline-none"
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={couponBusy}
+                    className="shrink-0 rounded-md bg-brand/15 px-3 py-1 text-xs font-semibold text-brand hover:bg-brand/25 disabled:opacity-50"
+                  >
+                    {couponBusy ? "…" : "Apply"}
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>Display currency</span>
+                <select
+                  value={activeDisplayCur ?? inv.currency}
+                  onChange={(e) => setDisplayCurrency(e.target.value === inv.currency ? null : e.target.value)}
+                  className="rounded border border-glass-border bg-background px-2 py-1 text-[11px]"
+                >
+                  <option value={inv.currency}>{inv.currency}</option>
+                  {["USD", "EUR", "GBP", "INR", "AED"].filter((c) => c !== inv.currency).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <Field label="Your number">
-              <input value={form.sender_number} onChange={(e) => setForm({ ...form, sender_number: e.target.value })} className={inputCls} placeholder="01XXXXXXXXX" />
-            </Field>
-            <Field label="Your name (optional)">
-              <input value={form.sender_name} onChange={(e) => setForm({ ...form, sender_name: e.target.value })} className={inputCls} />
-            </Field>
-            <Field label="Transaction ID" full>
-              <input value={form.provider_txn_id} onChange={(e) => setForm({ ...form, provider_txn_id: e.target.value })} className={inputCls} placeholder="e.g. 8A7BXY123" />
-            </Field>
+          <div className="mt-3 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+            <Lock className="h-3 w-3" /> 256-bit encrypted · PCI-aware routing
           </div>
+        </aside>
 
-          <button
-            onClick={submit} disabled={submitting}
-            className="mt-6 w-full rounded-lg bg-gradient-brand py-3 text-sm font-semibold text-brand-foreground disabled:opacity-60"
-          >
-            {submitting ? "Submitting…" : "I have paid — submit for verification"}
-          </button>
-        </div>
-      )}
+        {/* ── Right: Method picker ────────────────────────── */}
+        <section className="min-w-0">
+          {pending && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+              <Clock className="h-5 w-5 shrink-0 text-amber-500" />
+              <div className="text-sm">Your payment is awaiting merchant verification. This page updates automatically.</div>
+            </div>
+          )}
+
+          {!selected ? (
+            <MethodPicker
+              autoGateways={autoGateways}
+              methods={methods}
+              redirecting={redirecting}
+              onSelectMethod={setSelected}
+              onGateway={payViaGateway}
+            />
+          ) : (
+            <ManualForm
+              method={selected}
+              inv={inv}
+              form={form}
+              setForm={setForm}
+              onCancel={() => setSelected(null)}
+              onSubmit={submit}
+              submitting={submitting}
+            />
+          )}
+        </section>
+      </div>
     </Shell>
   );
 }
 
-function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | null }) {
+// ─────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────
+
+type CatKey = "auto" | "mobile" | "bank" | "crypto" | "other";
+const CATEGORIES: { key: CatKey; label: string; icon: typeof Zap }[] = [
+  { key: "auto", label: "Instant", icon: Zap },
+  { key: "mobile", label: "Mobile Banking", icon: Smartphone },
+  { key: "bank", label: "Cards & Banks", icon: CreditCard },
+  { key: "crypto", label: "Crypto", icon: Bitcoin },
+  { key: "other", label: "Other", icon: MoreHorizontal },
+];
+
+function methodCategory(type: string): CatKey {
+  if (["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(type)) return "mobile";
+  if (["card", "bank_transfer"].includes(type)) return "bank";
+  if (type === "crypto") return "crypto";
+  return "other";
+}
+
+type Gw = { provider: string; mode: string };
+
+function MethodPicker({
+  autoGateways, methods, redirecting, onSelectMethod, onGateway,
+}: {
+  autoGateways: Gw[];
+  methods: Method[];
+  redirecting: string | null;
+  onSelectMethod: (m: Method) => void;
+  onGateway: (p: string) => void;
+}) {
+  const grouped = useMemo(() => {
+    const g: Record<CatKey, Method[]> = { auto: [], mobile: [], bank: [], crypto: [], other: [] };
+    methods.forEach((m) => g[methodCategory(m.type)].push(m));
+    return g;
+  }, [methods]);
+
+  const available = useMemo(() => {
+    return CATEGORIES.filter((c) =>
+      c.key === "auto" ? autoGateways.length > 0 : grouped[c.key].length > 0,
+    );
+  }, [autoGateways, grouped]);
+
+  const [cat, setCat] = useState<CatKey>(available[0]?.key ?? "auto");
+  useEffect(() => {
+    if (!available.some((c) => c.key === cat)) setCat(available[0]?.key ?? "auto");
+  }, [available, cat]);
+
+  if (available.length === 0) {
+    return (
+      <div className="glass rounded-2xl border border-glass-border p-10 text-center">
+        <div className="text-sm text-muted-foreground">
+          The merchant has not configured any payment methods yet.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass rounded-2xl border border-glass-border p-4 sm:p-6">
+      <div className="mb-4">
+        <h2 className="font-display text-lg font-bold">Choose payment method</h2>
+        <p className="text-xs text-muted-foreground">Pick a category, then a provider.</p>
+      </div>
+
+      {/* Category tabs: horizontal scroll on mobile, grid on md+ */}
+      <div className="-mx-4 mb-5 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 md:grid md:grid-cols-4 lg:grid-cols-5">
+        {available.map((c) => {
+          const active = c.key === cat;
+          const Icon = c.icon;
+          const count = c.key === "auto" ? autoGateways.length : grouped[c.key].length;
+          return (
+            <button
+              key={c.key}
+              onClick={() => setCat(c.key)}
+              className={`snap-start shrink-0 rounded-xl border px-3 py-3 text-left transition md:shrink ${
+                active
+                  ? "border-brand bg-brand/10 shadow-[0_0_0_1px_var(--color-brand)]"
+                  : "border-glass-border bg-card/40 hover:border-brand/60"
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${active ? "text-brand" : "text-muted-foreground"}`} />
+              <div className={`mt-1 text-xs font-semibold ${active ? "text-foreground" : "text-muted-foreground"}`}>
+                {c.label}
+              </div>
+              <div className="text-[10px] text-muted-foreground">{count} option{count === 1 ? "" : "s"}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      {cat === "auto" ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {autoGateways.map((g) => {
+            const spec = getGateway(g.provider);
+            const busy = redirecting === g.provider;
+            return (
+              <button
+                key={g.provider}
+                disabled={busy || !!redirecting}
+                onClick={() => onGateway(g.provider)}
+                className="group relative overflow-hidden rounded-xl border border-glass-border bg-card/50 p-4 text-left transition hover:border-brand hover:shadow-[0_10px_30px_-15px_hsl(var(--brand)/0.4)] disabled:opacity-60"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
+                      <Zap className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate font-semibold">{spec?.label ?? g.provider}</div>
+                      <div className="text-[11px] text-muted-foreground">{busy ? "Redirecting…" : "Instant · auto-verified"}</div>
+                    </div>
+                  </div>
+                  {g.mode === "sandbox" && (
+                    <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                      Test
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {grouped[cat].map((m) => (
+            <button
+              key={m.id}
+              onClick={() => onSelectMethod(m)}
+              className="group flex flex-col items-start gap-2 rounded-xl border border-glass-border bg-card/50 p-3 text-left transition hover:border-brand hover:shadow-[0_10px_30px_-15px_hsl(var(--brand)/0.4)]"
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
+                {iconFor(m.type)}
+              </span>
+              <div className="min-w-0 w-full">
+                <div className="truncate text-sm font-semibold">{m.label}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</div>
+              </div>
+              <div className="mt-auto text-[10px] text-muted-foreground">Fee {m.fee_percent}% + {m.fee_flat}</div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ManualForm({
+  method, inv, form, setForm, onCancel, onSubmit, submitting,
+}: {
+  method: Method;
+  inv: Invoice;
+  form: { sender_number: string; sender_name: string; provider_txn_id: string };
+  setForm: (f: { sender_number: string; sender_name: string; provider_txn_id: string }) => void;
+  onCancel: () => void;
+  onSubmit: () => void;
+  submitting: boolean;
+}) {
+  return (
+    <div className="glass rounded-2xl border border-glass-border p-5 sm:p-6">
+      <button onClick={onCancel} className="mb-3 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-3 w-3" /> Choose another method
+      </button>
+
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand/15 text-brand">
+          {iconFor(method.type)}
+        </span>
+        <div className="min-w-0">
+          <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Pay with</div>
+          <div className="truncate font-display text-lg font-bold">{method.label}</div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-brand/20 bg-brand/5 p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="min-w-0">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Send money to</div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="truncate font-mono text-base font-semibold">{method.account_number || "—"}</span>
+              {method.account_number && <CopyBtn text={method.account_number} />}
+            </div>
+            {method.account_name && <div className="truncate text-xs text-muted-foreground">{method.account_name}</div>}
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Exact amount</div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="truncate font-mono text-base font-semibold">
+                {currencySymbol(inv.currency)}{Number(inv.amount).toLocaleString()}
+              </span>
+              <CopyBtn text={String(inv.amount)} />
+            </div>
+          </div>
+        </div>
+        {method.instructions && (
+          <div className="mt-3 whitespace-pre-line rounded-lg bg-background/40 p-3 text-xs text-muted-foreground">
+            {method.instructions}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <Field label="Your number">
+          <input value={form.sender_number} onChange={(e) => setForm({ ...form, sender_number: e.target.value })} className={inputCls} placeholder="01XXXXXXXXX" />
+        </Field>
+        <Field label="Your name (optional)">
+          <input value={form.sender_name} onChange={(e) => setForm({ ...form, sender_name: e.target.value })} className={inputCls} />
+        </Field>
+        <Field label="Transaction ID" full>
+          <input value={form.provider_txn_id} onChange={(e) => setForm({ ...form, provider_txn_id: e.target.value })} className={inputCls} placeholder="e.g. 8A7BXY123" />
+        </Field>
+      </div>
+
+      <button
+        onClick={onSubmit} disabled={submitting}
+        className="mt-6 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)] transition hover:brightness-110 disabled:opacity-60"
+      >
+        {submitting ? "Submitting…" : `Confirm & Pay ${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`}
+      </button>
+    </div>
+  );
+}
+
+function SumRow({ label, value, accent, muted }: { label: string; value: string; accent?: string; muted?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between py-1 text-sm">
+      <span className={muted ? "text-muted-foreground" : "text-foreground/80"}>{label}</span>
+      <span className={`font-mono ${accent ?? (muted ? "text-muted-foreground" : "text-foreground")}`}>{value}</span>
+    </div>
+  );
+}
+
+function CopyBtn({ text, label }: { text: string; label?: string }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async (e) => {
+        e.stopPropagation();
+        try { await navigator.clipboard.writeText(text); setOk(true); setTimeout(() => setOk(false), 1200); } catch { /* noop */ }
+      }}
+      className="inline-flex shrink-0 items-center gap-1 rounded border border-glass-border bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:border-brand hover:text-brand"
+    >
+      {ok ? <CheckCircle2 className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {label ?? (ok ? "Copied" : "Copy")}
+    </button>
+  );
+}
+
+function currencySymbol(code: string) {
+  const map: Record<string, string> = { BDT: "৳", USD: "$", EUR: "€", GBP: "£", INR: "₹", AED: "د.إ" };
+  return map[code] ?? `${code} `;
+}
+
+function iconFor(type: string) {
+  if (["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(type))
+    return <Smartphone className="h-4 w-4" />;
+  if (type === "card") return <CreditCard className="h-4 w-4" />;
+  if (type === "bank_transfer") return <Landmark className="h-4 w-4" />;
+  if (type === "crypto") return <Bitcoin className="h-4 w-4" />;
+  return <MoreHorizontal className="h-4 w-4" />;
+}
+
+function Shell({
+  children, brand, inv, trxId,
+}: { children: React.ReactNode; brand: Brand | null; inv?: Invoice | null; trxId?: string }) {
   const brandColor = brand?.brand_color || null;
   const style = brandColor
     ? ({ ["--brand" as never]: brandColor, ["--brand-2" as never]: brandColor } as React.CSSProperties)
@@ -607,27 +806,54 @@ function Shell({ children, brand }: { children: React.ReactNode; brand: Brand | 
     <div className="relative min-h-screen bg-background" style={style}>
       <MerchantTracking config={brand as TrackingConfig | null} />
       <div className="grid-radial absolute inset-0 opacity-30" />
-      <div className="relative mx-auto max-w-2xl px-4 py-10">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          {brand?.logo_url ? (
-            <img src={brand.logo_url} alt={name} className="h-9 w-9 rounded-lg object-contain" />
-          ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand">
-              <Shield className="h-4 w-4 text-brand-foreground" strokeWidth={2.5} />
-            </span>
-          )}
-          <span className="font-display text-lg font-bold">{name}</span>
-        </div>
-        {children}
-        <div className="mt-8 space-y-1 text-center text-[11px] text-muted-foreground">
-          {brand?.checkout_footer && <div>{brand.checkout_footer}</div>}
-          {brand?.support_email && (
-            <div>
-              Need help? <a href={`mailto:${brand.support_email}`} className="underline">{brand.support_email}</a>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
+        style={{ background: "radial-gradient(ellipse at top, hsl(var(--brand)/0.25), transparent 60%)" }}
+      />
+      <div className="relative mx-auto max-w-6xl px-4 py-6 sm:py-10">
+        {/* Merchant header */}
+        <header className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:mb-8">
+          <div className="flex min-w-0 items-center gap-3">
+            {brand?.logo_url ? (
+              <img src={brand.logo_url} alt={name} className="h-10 w-10 shrink-0 rounded-xl object-contain ring-1 ring-glass-border" />
+            ) : (
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-brand">
+                <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
+              </span>
+            )}
+            <div className="min-w-0">
+              <div className="truncate font-display text-base font-bold sm:text-lg">{name}</div>
+              {trxId && (
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="truncate font-mono">Trx ID: {trxId}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          {inv && (
+            <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-glass-border bg-card/60 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+              <Lock className="h-3 w-3 text-brand" /> Secure
             </div>
           )}
-          <div>Secured by PayNOC · Payments processed by the merchant.</div>
-        </div>
+        </header>
+
+        {children}
+
+        <footer className="mt-10 flex flex-col items-center gap-2 text-center text-[11px] text-muted-foreground sm:flex-row sm:justify-between sm:text-left">
+          <div className="flex items-center gap-3">
+            {brand?.support_email && (
+              <a href={`mailto:${brand.support_email}`} className="hover:underline">Support</a>
+            )}
+            <a href="#" className="hover:underline">FAQ</a>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Shield className="h-3 w-3 text-brand" />
+            <span>Secured by <span className="font-semibold text-foreground">PayNOC</span> · Payments processed by the merchant</span>
+          </div>
+        </footer>
+        {brand?.checkout_footer && (
+          <div className="mt-2 text-center text-[11px] text-muted-foreground">{brand.checkout_footer}</div>
+        )}
       </div>
     </div>
   );
