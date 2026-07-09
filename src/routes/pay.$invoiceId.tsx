@@ -1036,14 +1036,28 @@ function PayQr({ path }: { path: string }) {
   );
 }
 
-/** Fallback QR: uses api.qrserver.com to render a QR of the account number
- *  for mobile-banking channels that didn't upload their own image. */
-function defaultQrFor(m: Method): string | null {
-  if (m.qr_code_url) return null;
-  if (!m.account_number) return null;
-  if (!["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type)) return null;
-  const data = encodeURIComponent(m.account_number);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${data}`;
+/** Local QR generator (no external API) with in-memory cache per input. */
+const QR_CACHE = new Map<string, string>();
+function LocalQr({ text }: { text: string }) {
+  const [url, setUrl] = useState<string | null>(() => QR_CACHE.get(text) ?? null);
+  useEffect(() => {
+    let alive = true;
+    const cached = QR_CACHE.get(text);
+    if (cached) { setUrl(cached); return; }
+    import("qrcode").then(({ default: QR }) =>
+      QR.toDataURL(text, { width: 300, margin: 2, errorCorrectionLevel: "M" })
+    ).then((d) => { QR_CACHE.set(text, d); if (alive) setUrl(d); })
+     .catch(() => { /* noop */ });
+    return () => { alive = false; };
+  }, [text]);
+  if (!url) return <div className="h-48 w-48 animate-pulse rounded-xl bg-muted" />;
+  return <img src={url} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />;
+}
+
+function qrFallbackEligible(m: Method): boolean {
+  if (m.qr_code_url) return false;
+  if (!m.account_number) return false;
+  return ["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type);
 }
 
 function labelForType(t: string) {
