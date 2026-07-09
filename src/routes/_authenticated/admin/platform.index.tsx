@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { PlatformTabs } from "@/components/platform-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -86,6 +87,7 @@ function PlatformGatewaysPage() {
 
   return (
     <AdminShell title="Platform Gateways" subtitle="Hold master gateway credentials. Merchants can opt-in; platform takes the configured commission.">
+      <PlatformTabs />
       <Card className="p-5">
         <h3 className="mb-3 font-medium">Add / update</h3>
         <div className="grid gap-3 md:grid-cols-[240px_180px_120px_120px_auto]">

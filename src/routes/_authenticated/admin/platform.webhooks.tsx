@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { PlatformTabs } from "@/components/platform-tabs";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +67,7 @@ function WhPage() {
 
   return (
     <AdminShell title="Webhook health" subtitle="Every outbound webhook delivery, retries, and failures.">
+      <PlatformTabs />
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <Stat label="Total" value={totals.total} />
         <Stat label="Success" value={totals.success} tone="success" />

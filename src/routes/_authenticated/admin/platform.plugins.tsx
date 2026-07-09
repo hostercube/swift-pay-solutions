@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { PlatformTabs } from "@/components/platform-tabs";
 import { FilteredList } from "@/components/filtered-list";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
@@ -97,6 +98,7 @@ function AdminPluginsPage() {
       title="Plugins & integrations"
       subtitle="Everything you publish here appears live on the public API documentation page under Plugins & SDKs."
     >
+      <PlatformTabs />
       {/* Create */}
       <section className="rounded-2xl border border-glass-border bg-card/40 p-6">
         <h2 className="font-display text-lg font-semibold">Add a new plugin</h2>
