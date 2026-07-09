@@ -149,7 +149,7 @@ function CheckoutPage() {
   const [txns, setTxns] = useState<Txn[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ sender_number: "", sender_name: "", provider_txn_id: "" });
+  const [form, setForm] = useState({ sender_number: "", sender_name: "", provider_txn_id: "", bank_reference: "", slip_url: "" });
   const [couponInput, setCouponInput] = useState("");
   const [couponBusy, setCouponBusy] = useState(false);
   const [displayCurrency, setDisplayCurrency] = useState<string | null>(null);
