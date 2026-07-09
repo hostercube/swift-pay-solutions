@@ -87,6 +87,9 @@ function AdminPackagesPage() {
   const [subForm, setSubForm] = useState({ package_id: "", end_date: "", auto_renew: true });
   const [subQ, setSubQ] = useState("");
   const [subStatus, setSubStatus] = useState<string>("all");
+  const [pkgQ, setPkgQ] = useState("");
+  const [pkgCycle, setPkgCycle] = useState<string>("all");
+  const [pkgStatus, setPkgStatus] = useState<string>("all");
   const updateSubFn = useServerFn(adminUpdateSubscription);
 
   const load = useCallback(async () => {
