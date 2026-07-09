@@ -199,7 +199,16 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
-    if (!isAdmin) throw new Error("Forbidden");
+
+    // Look up the refund to check ownership; merchants may self-process their own refunds.
+    const { data: existing } = await supabase
+      .from("refunds")
+      .select("merchant_id, status")
+      .eq("id", data.refundId)
+      .maybeSingle();
+    if (!existing) throw new Error("Refund not found");
+    const isOwner = (existing as { merchant_id: string }).merchant_id === userId;
+    if (!isAdmin && !isOwner) throw new Error("Forbidden");
 
     const patch: Record<string, unknown> = { status: data.status, admin_note: data.note ?? null };
     if (data.status === "processed") {
