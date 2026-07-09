@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Plug, ExternalLink, Check, Settings2, X } from "lucide-react";
+import { Trash2, Plug, ExternalLink, Check, Settings2, X, Plus } from "lucide-react";
 import { GATEWAYS, getGateway, gatewaysByRegion } from "@/lib/gateways/registry";
 
 export const Route = createFileRoute("/_authenticated/integrations/byo")({
@@ -23,24 +23,30 @@ type Row = {
   mode: "sandbox" | "live";
   credentials: Record<string, string>;
   is_active: boolean;
+  label: string | null;
   created_at: string;
 };
 
-type Draft = { provider: string; mode: "sandbox" | "live"; creds: Record<string, string> };
+type Draft = {
+  id?: string;
+  provider: string;
+  mode: "sandbox" | "live";
+  label: string;
+  creds: Record<string, string>;
+};
 
 function ByoPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [editId, setEditId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
     if (!user) return;
     const { data, error } = await supabase
       .from("byo_gateways")
-      .select("id, provider, mode, credentials, is_active, created_at")
+      .select("id, provider, mode, credentials, is_active, label, created_at")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
@@ -50,18 +56,26 @@ function ByoPage() {
   useEffect(() => { load(); }, [user]);
 
   const byProvider = useMemo(() => {
-    const map = new Map<string, Row>();
-    rows.forEach((r) => map.set(r.provider, r));
+    const map = new Map<string, Row[]>();
+    rows.forEach((r) => {
+      const arr = map.get(r.provider) ?? [];
+      arr.push(r);
+      map.set(r.provider, arr);
+    });
     return map;
   }, [rows]);
 
   const openNew = (providerId: string) => {
-    const existing = byProvider.get(providerId);
-    setEditId(existing?.id ?? null);
+    setDraft({ provider: providerId, mode: "sandbox", label: "", creds: {} });
+  };
+
+  const openEdit = (r: Row) => {
     setDraft({
-      provider: providerId,
-      mode: existing?.mode ?? "sandbox",
-      creds: existing?.credentials ?? {},
+      id: r.id,
+      provider: r.provider,
+      mode: r.mode,
+      label: r.label ?? "",
+      creds: r.credentials ?? {},
     });
   };
 
@@ -73,21 +87,21 @@ function ByoPage() {
       if (f.required && !draft.creds[f.key]?.trim()) return toast.error(`Missing ${f.label}`);
     }
     setBusy(true);
-    const { error } = await supabase.from("byo_gateways").upsert(
-      {
-        merchant_id: user.id,
-        provider: draft.provider,
-        mode: draft.mode,
-        credentials: draft.creds,
-        is_active: true,
-      },
-      { onConflict: "merchant_id,provider" },
-    );
+    const payload = {
+      merchant_id: user.id,
+      provider: draft.provider,
+      mode: draft.mode,
+      label: draft.label.trim() || null,
+      credentials: draft.creds,
+      is_active: true,
+    };
+    const { error } = draft.id
+      ? await supabase.from("byo_gateways").update(payload).eq("id", draft.id)
+      : await supabase.from("byo_gateways").insert(payload);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success(`${spec.label} saved`);
     setDraft(null);
-    setEditId(null);
     load();
   };
 
@@ -101,7 +115,7 @@ function ByoPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Disconnect this gateway?")) return;
+    if (!confirm("Disconnect this gateway configuration?")) return;
     const { error } = await supabase.from("byo_gateways").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Disconnected");
@@ -113,7 +127,6 @@ function ByoPage() {
 
   return (
     <div>
-
       <div className="mb-4 flex gap-2">
         {(["BD", "GLOBAL", "CRYPTO"] as const).map((t) => (
           <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>
@@ -124,8 +137,8 @@ function ByoPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((g) => {
-          const row = byProvider.get(g.id);
-          const connected = !!row;
+          const configs = byProvider.get(g.id) ?? [];
+          const connected = configs.length > 0;
           return (
             <Card key={g.id} className="flex flex-col gap-3 p-5">
               <div className="flex items-start justify-between gap-2">
@@ -139,20 +152,11 @@ function ByoPage() {
                   </div>
                 </div>
                 {connected ? (
-                  <Badge className="gap-1"><Check className="h-3 w-3" /> Connected</Badge>
+                  <Badge className="gap-1"><Check className="h-3 w-3" /> {configs.length} config{configs.length > 1 ? "s" : ""}</Badge>
                 ) : (
                   <Badge variant="outline">Not connected</Badge>
                 )}
               </div>
-
-              {connected && row && (
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <Badge variant={row.mode === "live" ? "default" : "outline"} className="capitalize">{row.mode}</Badge>
-                  <Badge variant={row.is_active ? "default" : "outline"}>
-                    {row.is_active ? "Enabled" : "Disabled"}
-                  </Badge>
-                </div>
-              )}
 
               {g.docsUrl && (
                 <a
@@ -165,21 +169,44 @@ function ByoPage() {
                 </a>
               )}
 
-              <div className="mt-auto flex flex-wrap gap-2">
-                <Button size="sm" onClick={() => openNew(g.id)}>
-                  <Settings2 className="mr-1 h-3 w-3" />
-                  {connected ? "Edit" : "Connect"}
+              {configs.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {configs.map((r) => (
+                    <div key={r.id} className="rounded-lg border border-glass-border bg-background/40 p-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium">
+                            {r.label || <span className="text-muted-foreground">Unnamed</span>}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+                            <Badge variant={r.mode === "live" ? "default" : "outline"} className="capitalize">{r.mode}</Badge>
+                            <Badge variant={r.is_active ? "default" : "outline"}>
+                              {r.is_active ? "Enabled" : "Disabled"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(r)} className="h-7 px-2">
+                            <Settings2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => toggleActive(r)} className="h-7 px-2 text-xs">
+                            {r.is_active ? "Off" : "On"}
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => remove(r.id)} className="h-7 px-2">
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-auto">
+                <Button size="sm" onClick={() => openNew(g.id)} variant={connected ? "outline" : "default"} className="w-full">
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  {connected ? "Add another configuration" : "Connect"}
                 </Button>
-                {connected && row && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={() => toggleActive(row)}>
-                      {row.is_active ? "Disable" : "Enable"}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(row.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </>
-                )}
               </div>
             </Card>
           );
@@ -197,10 +224,9 @@ function ByoPage() {
           >
             <DraftEditor
               draft={draft}
-              editing={!!editId}
               onChange={setDraft}
               onSave={save}
-              onClose={() => { setDraft(null); setEditId(null); }}
+              onClose={() => setDraft(null)}
               busy={busy}
               origin={origin}
             />
@@ -212,10 +238,9 @@ function ByoPage() {
 }
 
 function DraftEditor({
-  draft, editing, onChange, onSave, onClose, busy, origin,
+  draft, onChange, onSave, onClose, busy, origin,
 }: {
   draft: Draft;
-  editing: boolean;
   onChange: (d: Draft) => void;
   onSave: () => void;
   onClose: () => void;
@@ -223,11 +248,12 @@ function DraftEditor({
   origin: string;
 }) {
   const spec = getGateway(draft.provider)!;
+  const editing = !!draft.id;
   return (
     <div>
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <div className="text-xs uppercase text-muted-foreground">{editing ? "Edit gateway" : "Connect gateway"}</div>
+          <div className="text-xs uppercase text-muted-foreground">{editing ? "Edit configuration" : "New configuration"}</div>
           <h2 className="font-display text-xl font-semibold">{spec.label}</h2>
         </div>
         <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
@@ -236,6 +262,15 @@ function DraftEditor({
       </div>
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs uppercase text-muted-foreground">Label (shown to customers)</label>
+          <Input
+            className="mt-1"
+            placeholder="e.g. Store A · SSLCommerz"
+            value={draft.label}
+            onChange={(e) => onChange({ ...draft, label: e.target.value })}
+          />
+        </div>
         <div>
           <label className="text-xs uppercase text-muted-foreground">Mode</label>
           <select
@@ -247,7 +282,7 @@ function DraftEditor({
             <option value="live">Live</option>
           </select>
         </div>
-        <div className="text-xs text-muted-foreground">
+        <div className="sm:col-span-2 text-xs text-muted-foreground">
           Webhook URL to paste in the provider dashboard:
           <div className="mt-1 break-all rounded-md bg-muted px-2 py-1 font-mono text-[11px]">
             {origin}/api/public/webhooks/{spec.id}
@@ -291,7 +326,7 @@ function DraftEditor({
 
       <div className="mt-6 flex justify-end gap-2">
         <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button onClick={onSave} disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Connect"}</Button>
+        <Button onClick={onSave} disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Save"}</Button>
       </div>
     </div>
   );
