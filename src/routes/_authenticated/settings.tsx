@@ -22,6 +22,8 @@ type Profile = {
   support_email: string | null;
   checkout_footer: string | null;
   checkout_style: CheckoutStyle | null;
+  custom_head_html: string | null;
+  custom_footer_html: string | null;
   slug: string | null;
   public_bio: string | null;
   accept_tips: boolean;
@@ -39,7 +41,7 @@ function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, slug, public_bio, accept_tips, tip_min_amount",
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, custom_head_html, custom_footer_html, slug, public_bio, accept_tips, tip_min_amount",
       )
       .eq("id", user.id)
       .maybeSingle()
@@ -59,6 +61,8 @@ function SettingsPage() {
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
       checkout_style: p.checkout_style,
+      custom_head_html: p.custom_head_html,
+      custom_footer_html: p.custom_footer_html,
 
       slug: p.slug,
       public_bio: p.public_bio,
@@ -154,6 +158,46 @@ function SettingsPage() {
             <span className="text-xs text-muted-foreground">Preview</span>
           </div>
         )}
+      </div>
+
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Custom code</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Inject your own HTML / CSS / JS into <code className="font-mono text-xs">/pay/&lt;invoice&gt;</code> and{" "}
+          <code className="font-mono text-xs">/m/&lt;slug&gt;</code>. Applies only to your own pages — other merchants are not affected.
+          Great for custom fonts, analytics beacons, chat widgets, or overriding the checkout look.
+        </p>
+        <div className="mt-4 grid gap-4">
+          <label className="block">
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Head HTML — injected inside &lt;head&gt;
+            </div>
+            <textarea
+              value={p.custom_head_html ?? ""}
+              onChange={(e) => setP({ ...p, custom_head_html: e.target.value })}
+              rows={6}
+              spellCheck={false}
+              placeholder={`<style>\n  .paynoc-checkout { font-family: 'Poppins', sans-serif; }\n</style>\n<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins" />`}
+              className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 font-mono text-xs outline-none focus:border-brand"
+            />
+          </label>
+          <label className="block">
+            <div className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Footer HTML — injected before &lt;/body&gt;
+            </div>
+            <textarea
+              value={p.custom_footer_html ?? ""}
+              onChange={(e) => setP({ ...p, custom_footer_html: e.target.value })}
+              rows={6}
+              spellCheck={false}
+              placeholder={`<script>\n  // Your custom JS runs on your checkout only\n</script>`}
+              className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 font-mono text-xs outline-none focus:border-brand"
+            />
+          </label>
+          <p className="text-[11px] text-muted-foreground">
+            ⚠️ Anything you paste here runs on your customers' browsers. Only add code from sources you trust.
+          </p>
+        </div>
       </div>
 
 
