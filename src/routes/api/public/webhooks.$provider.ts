@@ -92,7 +92,7 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
         // Reconcile with invoice/transaction.
         if (result.invoiceRef && result.status === "completed") {
           // Validate amount/currency against the invoice before crediting.
-          const invRes = await admin.from("invoices")
+          const invRes = await supabaseAdmin.from("invoices")
             .select("id, amount, currency, merchant_id, status")
             .eq("id", result.invoiceRef)
             .maybeSingle();
