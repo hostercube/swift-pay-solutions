@@ -100,6 +100,8 @@ function MerchantsPage() {
     {
       key: "business",
       label: "Business",
+      sortable: true,
+      accessor: (r) => r.business_name ?? "",
       render: (r) => (
         <Link to="/admin/merchants/$id" params={{ id: r.id }} className="group inline-flex items-center gap-1.5">
           <div>
@@ -110,10 +112,10 @@ function MerchantsPage() {
         </Link>
       ),
     },
-    { key: "email", label: "Email", render: (r) => <span className="text-muted-foreground">{r.email}</span> },
-    { key: "status", label: "Status", render: (r) => <StatusBadge status={r.status} /> },
-    { key: "kyc_status", label: "KYC", render: (r) => <KycBadge status={r.kyc_status ?? "unverified"} /> },
-    { key: "created_at", label: "Joined", render: (r) => <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span> },
+    { key: "email", label: "Email", sortable: true, accessor: (r) => r.email, render: (r) => <span className="text-muted-foreground">{r.email}</span> },
+    { key: "status", label: "Status", sortable: true, accessor: (r) => r.status, render: (r) => <StatusBadge status={r.status} /> },
+    { key: "kyc_status", label: "KYC", sortable: true, accessor: (r) => r.kyc_status ?? "unverified", render: (r) => <KycBadge status={r.kyc_status ?? "unverified"} /> },
+    { key: "created_at", label: "Joined", sortable: true, accessor: (r) => new Date(r.created_at), render: (r) => <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span> },
   ];
 
   const filters: DataTableFilter<Row>[] = [
