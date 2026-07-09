@@ -125,40 +125,56 @@ function PlatformGatewaysPage() {
         </div>
       </Card>
 
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Provider</th>
-              <th className="px-4 py-3">Mode</th>
-              <th className="px-4 py-3">Fee</th>
-              <th className="px-4 py-3">Available</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No platform gateways configured</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 capitalize">{r.provider.replace("_", " ")}</td>
-                <td className="px-4 py-3"><Badge variant={r.mode === "live" ? "default" : "outline"}>{r.mode}</Badge></td>
-                <td className="px-4 py-3">{r.commission_percent}% + {r.commission_flat}</td>
-                <td className="px-4 py-3">
-                  <Button size="sm" variant={r.is_enabled_for_merchants ? "default" : "outline"} onClick={() => toggle(r)}>
-                    {r.is_enabled_for_merchants ? "Enabled" : "Disabled"}
-                  </Button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+      <div className="mt-6">
+        <DataTable<Row>
+          columns={[
+            { key: "provider", label: "Provider", sortable: true, render: (r) => <span className="capitalize">{r.provider.replace("_", " ")}</span> },
+            { key: "mode", label: "Mode", sortable: true, render: (r) => <Badge variant={r.mode === "live" ? "default" : "outline"}>{r.mode}</Badge> },
+            { key: "fee", label: "Fee", render: (r) => `${r.commission_percent}% + ${r.commission_flat}` },
+            {
+              key: "is_enabled_for_merchants",
+              label: "Available",
+              sortable: true,
+              accessor: (r) => (r.is_enabled_for_merchants ? "enabled" : "disabled"),
+              render: (r) => (
+                <Button size="sm" variant={r.is_enabled_for_merchants ? "default" : "outline"} onClick={() => toggle(r)}>
+                  {r.is_enabled_for_merchants ? "Enabled" : "Disabled"}
+                </Button>
+              ),
+            },
+          ] as DataTableColumn<Row>[]}
+          rows={rows}
+          rowKey={(r) => r.id}
+          emptyMessage="No platform gateways configured"
+          searchable={(r) => `${r.provider} ${r.mode}`}
+          filters={[
+            {
+              key: "mode",
+              label: "Mode",
+              options: [
+                { value: "sandbox", label: "Sandbox" },
+                { value: "live", label: "Live" },
+              ],
+              match: (r, v) => r.mode === v,
+            },
+            {
+              key: "available",
+              label: "Available",
+              options: [
+                { value: "enabled", label: "Enabled" },
+                { value: "disabled", label: "Disabled" },
+              ],
+              match: (r, v) => (v === "enabled" ? r.is_enabled_for_merchants : !r.is_enabled_for_merchants),
+            },
+          ] as DataTableFilter<Row>[]}
+          actions={(r) => (
+            <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+          exportFilename="platform-gateways"
+        />
+      </div>
     </AdminShell>
   );
 }
