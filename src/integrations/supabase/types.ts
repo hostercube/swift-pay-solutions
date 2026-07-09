@@ -176,6 +176,7 @@ export type Database = {
           credentials: Json
           id: string
           is_active: boolean
+          label: string | null
           merchant_id: string
           mode: string
           provider: string
@@ -186,6 +187,7 @@ export type Database = {
           credentials?: Json
           id?: string
           is_active?: boolean
+          label?: string | null
           merchant_id: string
           mode?: string
           provider: string
@@ -196,6 +198,7 @@ export type Database = {
           credentials?: Json
           id?: string
           is_active?: boolean
+          label?: string | null
           merchant_id?: string
           mode?: string
           provider?: string
@@ -2117,6 +2120,8 @@ export type Database = {
       get_checkout_gateways: {
         Args: { _merchant_id: string }
         Returns: {
+          id: string
+          label: string
           mode: string
           provider: string
         }[]
