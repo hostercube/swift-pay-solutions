@@ -444,15 +444,17 @@ function CheckoutPage() {
 
   const autoGateways = gateways.filter((g) => AUTO_GATEWAYS.has(g.provider));
   const trxId = `TXN-${inv.invoice_number}`;
+  const style = STYLES[(brand?.checkout_style as CheckoutStyle) ?? "premium"];
 
   return (
     <Shell brand={brand} inv={inv} trxId={trxId}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
         {/* ── Left: Order summary ─────────────────────────── */}
         <aside className="lg:sticky lg:top-6 lg:self-start">
-          <div className="glass overflow-hidden rounded-2xl border border-glass-border">
+          <div className={`overflow-hidden ${style.card}`}>
             {inv.mode === "test" && (
               <div className="bg-amber-500/15 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-amber-600">
+
                 Test mode — no real money will be moved
               </div>
             )}
