@@ -1212,6 +1212,7 @@ export type Database = {
           brand_color: string | null
           business_name: string | null
           checkout_footer: string | null
+          checkout_style: string
           created_at: string
           custom_footer_html: string | null
           custom_head_html: string | null
@@ -1253,6 +1254,7 @@ export type Database = {
           brand_color?: string | null
           business_name?: string | null
           checkout_footer?: string | null
+          checkout_style?: string
           created_at?: string
           custom_footer_html?: string | null
           custom_head_html?: string | null
@@ -1294,6 +1296,7 @@ export type Database = {
           brand_color?: string | null
           business_name?: string | null
           checkout_footer?: string | null
+          checkout_style?: string
           created_at?: string
           custom_footer_html?: string | null
           custom_head_html?: string | null
@@ -2097,6 +2100,7 @@ export type Database = {
           brand_color: string
           business_name: string
           checkout_footer: string
+          checkout_style: string
           custom_footer_html: string
           custom_head_html: string
           ga4_measurement_id: string
