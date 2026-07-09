@@ -904,15 +904,25 @@ function ManualForm({
           </div>
         </div>
 
-        {method.qr_code_url && (
-          <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Scan to pay {method.qr_type ? `· ${method.qr_type.replace("_", " ")}` : ""}
+        {(() => {
+          const fallback = defaultQrFor(method);
+          if (!method.qr_code_url && !fallback) return null;
+          return (
+            <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Scan to pay {method.qr_type ? `· ${method.qr_type.replace("_", " ")}` : ""}
+              </div>
+              {method.qr_code_url
+                ? <PayQr path={method.qr_code_url} />
+                : <img src={fallback!} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />}
+              <div className="text-[11px] text-muted-foreground">
+                {method.qr_code_url
+                  ? "Open your mobile banking app and scan the QR"
+                  : `Scan with ${labelForType(method.type)} app · ${method.account_number}`}
+              </div>
             </div>
-            <PayQr path={method.qr_code_url} />
-            <div className="text-[11px] text-muted-foreground">Open your mobile banking app and scan the QR</div>
-          </div>
-        )}
+          );
+        })()}
 
         {method.instructions && (
           <div className="mt-3 whitespace-pre-line rounded-lg bg-background/40 p-3 text-xs text-muted-foreground">
