@@ -973,11 +973,21 @@ function ManualForm({
       </div>
 
 
+      {pending && (
+        <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+          <div className="font-semibold text-amber-600">Awaiting verification</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            You already submitted TrxID <span className="font-mono">{pending.provider_txn_id}</span> on{" "}
+            {new Date(pending.created_at).toLocaleString()}. The merchant will confirm shortly.
+          </div>
+        </div>
+      )}
+
       <button
-        onClick={onSubmit} disabled={submitting}
-        className="mt-6 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)] transition hover:brightness-110 disabled:opacity-60"
+        onClick={onSubmit} disabled={submitting || !!pending}
+        className="mt-6 w-full rounded-xl bg-gradient-brand py-3.5 text-sm font-bold text-brand-foreground shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {submitting ? "Submitting…" : `Confirm & Pay ${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`}
+        {pending ? "Submission pending review" : submitting ? "Submitting…" : `Confirm & Pay ${currencySymbol(inv.currency)}${Number(inv.amount).toLocaleString()}`}
       </button>
     </div>
   );
