@@ -26,7 +26,7 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     items: [
       { to: "/admin/transactions", label: "Transactions", icon: ArrowRightLeft },
       { to: "/admin/invoices", label: "Invoices", icon: Receipt },
-      { to: "/admin/payouts", label: "Payouts", icon: Wallet },
+      
       { to: "/admin/fx", label: "FX rates", icon: DollarSign },
     ],
   },
