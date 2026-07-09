@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/public/v1/invoices/$id")({
 
       GET: async ({ request, params }) => {
         const auth = await authenticateApiKey(request);
-        if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
+        if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status, auth.headers ?? {});
         const started = Date.now();
 
         const { supabaseAdmin } = await import("@/lib/supabase-admin.server");

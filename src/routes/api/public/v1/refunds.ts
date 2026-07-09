@@ -6,7 +6,7 @@ import { logApiRequest } from "@/lib/api-log.server";
 
 async function handleGet(request: Request): Promise<Response> {
   const auth = await authenticateApiKey(request);
-  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
+  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status, auth.headers ?? {});
   const started = Date.now();
 
   const url = new URL(request.url);
@@ -44,7 +44,7 @@ async function handleGet(request: Request): Promise<Response> {
 
 async function handlePost(request: Request): Promise<Response> {
   const auth = await authenticateApiKey(request);
-  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
+  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status, auth.headers ?? {});
   const started = Date.now();
 
   const finish = (res: Response, err?: string | null) => {
