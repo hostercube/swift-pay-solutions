@@ -5,7 +5,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, BookOpen, Github, Package } from "lucide-react";
+import { Download, BookOpen, Github, Package, Copy, Check } from "lucide-react";
+
 
 export const Route = createFileRoute("/docs")({
   head: () => ({
