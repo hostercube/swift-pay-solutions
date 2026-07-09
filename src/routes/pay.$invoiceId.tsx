@@ -108,13 +108,15 @@ function CheckoutPage() {
       setInv((i ?? null) as Invoice | null);
       if (i) {
         const merchantId = (i as Invoice).merchant_id;
-        const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
+        const [{ data: m }, { data: t }, { data: b }, { data: g }] = await Promise.all([
           rpc("get_checkout_methods", { _merchant_id: merchantId }),
           rpc("get_checkout_transactions", { _invoice_id: invoiceId }),
           rpc("get_checkout_brand", { _merchant_id: merchantId }),
+          rpc("get_checkout_gateways", { _merchant_id: merchantId }),
         ]);
         setMethods(((m as Method[]) ?? []));
         setTxns(((t as Txn[]) ?? []));
+        setGateways(((g as { provider: string; mode: string }[]) ?? []));
         const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
         setBrand((brandRow ?? null) as Brand | null);
       }
