@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useServerFn } from "@tanstack/react-start";
 import { adminCreateMerchant, adminImpersonate } from "@/lib/admin.functions";
-import { UserPlus, LogIn, ExternalLink } from "lucide-react";
+import { UserPlus, LogIn, ExternalLink, Eye } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/admin/merchants")({
   head: () => ({ meta: [{ title: "Merchants · Admin" }] }),
