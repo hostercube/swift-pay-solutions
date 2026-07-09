@@ -359,7 +359,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin
       .from("merchant_subscriptions")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.subscription_id);
     if (error) throw new Error(error.message);
 
