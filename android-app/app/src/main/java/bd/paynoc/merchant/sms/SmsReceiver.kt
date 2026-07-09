@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
+import androidx.work.BackoffPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -14,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 /**
  * Fires on every incoming SMS. Parses the body, saves anything that looks
@@ -48,6 +50,7 @@ class SmsReceiver : BroadcastReceiver() {
                         ExistingWorkPolicy.APPEND_OR_REPLACE,
                         OneTimeWorkRequestBuilder<UploadWorker>()
                             .setConstraints(UploadWorker.constraints())
+                            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                             .build(),
                     )
                 }

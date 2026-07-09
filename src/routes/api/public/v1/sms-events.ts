@@ -59,24 +59,54 @@ async function handlePost(request: Request): Promise<Response> {
     const trxId = String(ev.trx_id ?? "").trim();
     const amount = Number(ev.amount);
 
-    if (!provider || !trxId) {
-      results.push({ trx_id: trxId, matched: false, reason: "missing provider/trx_id" });
+    if (!provider) {
+      results.push({ trx_id: trxId, matched: false, reason: "missing provider" });
       continue;
     }
 
-    // Look up pending transaction for this merchant with the exact trxId
-    const { data: txn } = await supabaseAdmin
-      .from("transactions")
-      .select("id, invoice_id, merchant_id, method_type, gross_amount, fee_amount, net_amount, status")
-      .eq("merchant_id", auth.merchantId)
-      .eq("provider_txn_id", trxId)
-      .eq("status", "pending")
-      .maybeSingle();
+    // 1) Case-insensitive exact trxId match against pending txns for this merchant.
+    type Txn = {
+      id: string; invoice_id: string; merchant_id: string; method_type: string;
+      gross_amount: number; fee_amount: number; net_amount: number; status: string;
+    };
+    let txn: Txn | null = null;
+
+    if (trxId) {
+      const { data } = await supabaseAdmin
+        .from("transactions")
+        .select("id, invoice_id, merchant_id, method_type, gross_amount, fee_amount, net_amount, status")
+        .eq("merchant_id", auth.merchantId)
+        .ilike("provider_txn_id", trxId)
+        .eq("status", "pending")
+        .maybeSingle();
+      txn = (data as unknown as Txn | null) ?? null;
+    }
+
+    // 2) Fallback: match by sender phone (last 10 digits) + amount within 1 unit,
+    //    when trxId isn't parseable or the merchant hasn't entered it yet.
+    if (!txn && Number.isFinite(amount) && amount > 0) {
+      const senderTail = String(ev.sender ?? "").replace(/\D/g, "").slice(-10);
+      const lo = amount - 1;
+      const hi = amount + 1;
+      let q = supabaseAdmin
+        .from("transactions")
+        .select("id, invoice_id, merchant_id, method_type, gross_amount, fee_amount, net_amount, status, sender_number, created_at")
+        .eq("merchant_id", auth.merchantId)
+        .eq("status", "pending")
+        .gte("gross_amount", lo)
+        .lte("gross_amount", hi)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (senderTail.length >= 10) q = q.ilike("sender_number", `%${senderTail}`);
+      const { data: candidates } = await q;
+      if (candidates && candidates.length === 1) txn = candidates[0] as unknown as Txn;
+    }
 
     if (!txn) {
-      results.push({ trx_id: trxId, matched: false, reason: "no pending txn with this trx_id" });
+      results.push({ trx_id: trxId, matched: false, reason: "no matching pending txn" });
       continue;
     }
+    const matched: Txn = txn;
 
     // Amount sanity — allow 1 unit tolerance
     if (Number.isFinite(amount) && amount > 0) {
@@ -101,7 +131,7 @@ async function handlePost(request: Request): Promise<Response> {
       paid_at: nowIso,
       fee_amount: txn.fee_amount,
       net_amount: txn.net_amount,
-      method_type: txn.method_type,
+      method_type: txn.method_type as never,
     }).eq("id", txn.invoice_id).select("*").single();
 
     if (invoice) {
