@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Download, BookOpen, Github, Package } from "lucide-react";
 
-export const Route = createFileRoute("/api-reference")({
+export const Route = createFileRoute("/docs")({
   head: () => ({
     meta: [
       { title: "API Reference · PayNOC" },

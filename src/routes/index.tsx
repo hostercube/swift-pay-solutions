@@ -144,7 +144,7 @@ function HomePage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
-                to="/api-reference"
+                to="/docs"
                 className="glass inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-foreground shadow-card hover:bg-surface-2"
               >
                 <FileCode2 className="h-4 w-4" />
@@ -310,7 +310,7 @@ function HomePage() {
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
-                  to="/api-reference"
+                  to="/docs"
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-brand px-5 py-3 text-sm font-semibold text-brand-foreground shadow-glow"
                 >
                   <FileCode2 className="h-4 w-4" />
@@ -408,7 +408,7 @@ app.post("/hooks/paynoc", (req, res) => {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  to="/api-reference"
+                  to="/docs"
                   className="glass inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-foreground shadow-card sm:w-auto"
                 >
                   <FileCode2 className="h-4 w-4" />

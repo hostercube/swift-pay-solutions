@@ -18,7 +18,6 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AymanLoginRouteImport } from './routes/ayman-login'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ApiReferenceRouteImport } from './routes/api-reference'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PayInvoiceIdRouteImport } from './routes/pay.$invoiceId'
@@ -132,11 +131,6 @@ const AymanLoginRoute = AymanLoginRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiReferenceRoute = ApiReferenceRouteImport.update({
-  id: '/api-reference',
-  path: '/api-reference',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -523,7 +517,6 @@ const ApiPublicV1InvoicesIdRoute = ApiPublicV1InvoicesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
@@ -603,7 +596,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
@@ -680,7 +672,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/api-reference': typeof ApiReferenceRoute
   '/auth': typeof AuthRoute
   '/ayman-login': typeof AymanLoginRoute
   '/contact': typeof ContactRoute
@@ -762,7 +753,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/api-reference'
     | '/auth'
     | '/ayman-login'
     | '/contact'
@@ -842,7 +832,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/api-reference'
     | '/auth'
     | '/ayman-login'
     | '/contact'
@@ -918,7 +907,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/api-reference'
     | '/auth'
     | '/ayman-login'
     | '/contact'
@@ -1000,7 +988,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  ApiReferenceRoute: typeof ApiReferenceRoute
   AuthRoute: typeof AuthRoute
   AymanLoginRoute: typeof AymanLoginRoute
   ContactRoute: typeof ContactRoute
@@ -1087,13 +1074,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api-reference': {
-      id: '/api-reference'
-      path: '/api-reference'
-      fullPath: '/api-reference'
-      preLoaderRoute: typeof ApiReferenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1779,7 +1759,6 @@ const ApiPublicV1InvoicesRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  ApiReferenceRoute: ApiReferenceRoute,
   AuthRoute: AuthRoute,
   AymanLoginRoute: AymanLoginRoute,
   ContactRoute: ContactRoute,
@@ -1805,13 +1784,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
