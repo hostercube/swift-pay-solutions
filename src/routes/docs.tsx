@@ -463,7 +463,9 @@ function PluginsGrid() {
 /* ---------------------- page ---------------------- */
 
 function ApiReferencePage() {
+  const liveBase = useBaseUrl();
   return (
+
     <div className="min-h-screen bg-background">
       <div className="grid-radial pointer-events-none absolute inset-0 opacity-30" />
       <div className="relative">
