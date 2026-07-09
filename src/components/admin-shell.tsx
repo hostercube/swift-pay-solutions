@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Shield, LayoutDashboard, Users, Settings, ScrollText, LogOut, ArrowLeft,
   Wallet, DollarSign, Activity, UserCog, ShieldCheck, Plug, Package,
-  Receipt, ArrowRightLeft, Webhook, Megaphone,
+  Receipt, ArrowRightLeft, Webhook, Megaphone, MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import type { ReactNode } from "react";
@@ -48,6 +48,7 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     label: "System",
     items: [
       { to: "/admin/settings", label: "Platform settings", icon: Settings },
+      { to: "/admin/smsnoc", label: "SMS NOC", icon: MessageSquare },
       { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
     ],
   },

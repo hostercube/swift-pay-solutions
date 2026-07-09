@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { CreditCard, Plug, Code2 } from "lucide-react";
+import { CreditCard, Plug, Code2, MessageSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
   component: IntegrationsLayout,
@@ -9,6 +9,7 @@ const TABS = [
   { to: "/integrations", label: "Payment methods", icon: CreditCard, exact: true },
   { to: "/integrations/byo", label: "BYO Gateways", icon: Plug },
   { to: "/integrations/api", label: "API / Embed", icon: Code2 },
+  { to: "/integrations/smsnoc", label: "SMS NOC", icon: MessageSquare },
 ];
 
 function IntegrationsLayout() {

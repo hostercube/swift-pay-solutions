@@ -56,10 +56,12 @@ import { Route as AuthenticatedNotificationsSettingsRouteImport } from './routes
 import { Route as AuthenticatedNotificationsDigestRouteImport } from './routes/_authenticated/notifications.digest'
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
+import { Route as AuthenticatedIntegrationsSmsnocRouteImport } from './routes/_authenticated/integrations.smsnoc'
 import { Route as AuthenticatedIntegrationsByoRouteImport } from './routes/_authenticated/integrations.byo'
 import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_authenticated/integrations.api'
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
+import { Route as AuthenticatedAdminSmsnocRouteImport } from './routes/_authenticated/admin/smsnoc'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
@@ -334,6 +336,12 @@ const AuthenticatedInvoicesIdRoute = AuthenticatedInvoicesIdRouteImport.update({
   path: '/invoices/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIntegrationsSmsnocRoute =
+  AuthenticatedIntegrationsSmsnocRouteImport.update({
+    id: '/smsnoc',
+    path: '/smsnoc',
+    getParentRoute: () => AuthenticatedIntegrationsRoute,
+  } as any)
 const AuthenticatedIntegrationsByoRoute =
   AuthenticatedIntegrationsByoRouteImport.update({
     id: '/byo',
@@ -357,6 +365,12 @@ const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminSmsnocRoute =
+  AuthenticatedAdminSmsnocRouteImport.update({
+    id: '/smsnoc',
+    path: '/smsnoc',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -546,10 +560,12 @@ export interface FileRoutesByFullPath {
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
@@ -618,10 +634,12 @@ export interface FileRoutesByTo {
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
@@ -697,10 +715,12 @@ export interface FileRoutesById {
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/_authenticated/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/_authenticated/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/_authenticated/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
   '/_authenticated/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
@@ -776,10 +796,12 @@ export interface FileRouteTypes {
     | '/admin/payouts'
     | '/admin/platform'
     | '/admin/settings'
+    | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
     | '/integrations/api'
     | '/integrations/byo'
+    | '/integrations/smsnoc'
     | '/invoices/$id'
     | '/invoices/new'
     | '/notifications/digest'
@@ -848,10 +870,12 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/settings'
+    | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
     | '/integrations/api'
     | '/integrations/byo'
+    | '/integrations/smsnoc'
     | '/invoices/$id'
     | '/invoices/new'
     | '/notifications/digest'
@@ -926,10 +950,12 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/smsnoc'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/transactions'
     | '/_authenticated/integrations/api'
     | '/_authenticated/integrations/byo'
+    | '/_authenticated/integrations/smsnoc'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
     | '/_authenticated/notifications/digest'
@@ -1316,6 +1342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvoicesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/integrations/smsnoc': {
+      id: '/_authenticated/integrations/smsnoc'
+      path: '/smsnoc'
+      fullPath: '/integrations/smsnoc'
+      preLoaderRoute: typeof AuthenticatedIntegrationsSmsnocRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsRoute
+    }
     '/_authenticated/integrations/byo': {
       id: '/_authenticated/integrations/byo'
       path: '/byo'
@@ -1342,6 +1375,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/admin/staff'
       preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/smsnoc': {
+      id: '/_authenticated/admin/smsnoc'
+      path: '/smsnoc'
+      fullPath: '/admin/smsnoc'
+      preLoaderRoute: typeof AuthenticatedAdminSmsnocRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/admin/settings': {
@@ -1570,6 +1610,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSmsnocRoute: typeof AuthenticatedAdminSmsnocRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1589,6 +1630,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+    AuthenticatedAdminSmsnocRoute: AuthenticatedAdminSmsnocRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -1602,6 +1644,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedIntegrationsRouteChildren {
   AuthenticatedIntegrationsApiRoute: typeof AuthenticatedIntegrationsApiRoute
   AuthenticatedIntegrationsByoRoute: typeof AuthenticatedIntegrationsByoRoute
+  AuthenticatedIntegrationsSmsnocRoute: typeof AuthenticatedIntegrationsSmsnocRoute
   AuthenticatedIntegrationsIndexRoute: typeof AuthenticatedIntegrationsIndexRoute
 }
 
@@ -1609,6 +1652,7 @@ const AuthenticatedIntegrationsRouteChildren: AuthenticatedIntegrationsRouteChil
   {
     AuthenticatedIntegrationsApiRoute: AuthenticatedIntegrationsApiRoute,
     AuthenticatedIntegrationsByoRoute: AuthenticatedIntegrationsByoRoute,
+    AuthenticatedIntegrationsSmsnocRoute: AuthenticatedIntegrationsSmsnocRoute,
     AuthenticatedIntegrationsIndexRoute: AuthenticatedIntegrationsIndexRoute,
   }
 

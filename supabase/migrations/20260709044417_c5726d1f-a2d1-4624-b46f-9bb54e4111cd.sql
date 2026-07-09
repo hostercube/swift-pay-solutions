@@ -1,0 +1,1 @@
+ALTER TABLE public.notification_log ALTER COLUMN merchant_id DROP NOT NULL;

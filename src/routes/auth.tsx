@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Turnstile } from "@/components/turnstile";
 import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
+import { smsNocNotifyUserRegistered } from "@/lib/smsnoc.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -130,6 +131,10 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // Best-effort platform welcome notification via SMS NOC.
+        smsNocNotifyUserRegistered({
+          data: { email, name: fullName || businessName || undefined },
+        }).catch(() => undefined);
         toast.success("Account created! You're signed in.");
         navigate({ to: "/dashboard" });
       } else {
