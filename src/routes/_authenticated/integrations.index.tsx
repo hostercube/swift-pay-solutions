@@ -345,13 +345,7 @@ function MethodsPage() {
               </Field>
               <Field label="QR image" full>
                 <div className="flex flex-wrap items-center gap-3">
-                  {editing.qr_code_url && (
-                    <img
-                      src={publicQrUrl(editing.qr_code_url)}
-                      alt="QR"
-                      className="h-24 w-24 rounded-lg border border-glass-border object-contain bg-background/60"
-                    />
-                  )}
+                  {editing.qr_code_url && <QrThumb path={editing.qr_code_url} />}
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
                     <input
                       type="file"
