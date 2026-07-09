@@ -24,6 +24,7 @@ type Row = {
   full_name: string | null;
   business_name: string | null;
   status: string;
+  kyc_status: string | null;
   created_at: string;
   is_super_admin?: boolean;
 };
@@ -32,6 +33,9 @@ function MerchantsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [kycFilter, setKycFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   async function load() {
     setLoading(true);
