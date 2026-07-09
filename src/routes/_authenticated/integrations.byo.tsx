@@ -112,10 +112,8 @@ function ByoPage() {
   const filtered = gatewaysByRegion(tab);
 
   return (
-    <MerchantShell
-      title="Payment Gateways"
-      subtitle="Connect your own accounts for any supported gateway. Toggle sandbox / live and enable / disable at any time."
-    >
+    <div>
+
       <div className="mb-4 flex gap-2">
         {(["BD", "GLOBAL", "CRYPTO"] as const).map((t) => (
           <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>
