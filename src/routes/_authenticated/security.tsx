@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { ShieldCheck, KeyRound, Lock, ShieldAlert, Smartphone } from "lucide-react";
+import { MerchantShell } from "@/components/merchant-shell";
 
 export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityLayout,
@@ -11,16 +12,15 @@ const TABS = [
   { to: "/security/devices", label: "Devices (APK)", icon: Smartphone },
   { to: "/security/ip-whitelist", label: "IP whitelist", icon: Lock },
   { to: "/security/fraud", label: "Fraud rules", icon: ShieldAlert },
-];
+] as const;
 
 function SecurityLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
-      <h1 className="font-display text-2xl font-bold mb-4">Security</h1>
+    <MerchantShell title="Security" subtitle="Protect your account and API access">
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
-          const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);
+          const active = "exact" in t && t.exact ? pathname === t.to : pathname.startsWith(t.to);
           return (
             <Link
               key={t.to}
@@ -38,6 +38,6 @@ function SecurityLayout() {
         })}
       </div>
       <Outlet />
-    </div>
+    </MerchantShell>
   );
 }

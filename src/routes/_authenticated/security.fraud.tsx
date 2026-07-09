@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -58,7 +57,7 @@ function FraudPage() {
   };
 
   return (
-    <MerchantShell title="Fraud rules" subtitle="Block emails, phones, IPs, or sender numbers">
+    <>
       <Card className="p-5">
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-glass-border bg-muted/30 p-3 text-sm text-muted-foreground">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
@@ -115,6 +114,6 @@ function FraudPage() {
           </tbody>
         </table>
       </Card>
-    </MerchantShell>
+    </>
   );
 }
