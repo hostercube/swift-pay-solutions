@@ -90,16 +90,23 @@ function AdminStaffPage() {
         </div>
       </Card>
 
-      <div className="mt-6 space-y-4">
-        {rows.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">No admin staff yet</Card>
-        ) : (
-          rows.map((r) => <StaffRow key={r.id} row={r} onSave={savePerms} onRemove={remove} />)
-        )}
+      <div className="mt-6">
+        <FilteredList
+          rows={rows}
+          rowKey={(r) => r.id}
+          searchable={(r) => `${r.email} ${r.full_name ?? ""} ${r.permissions.join(" ")}`}
+          filters={[
+            { key: "status", label: "All statuses", options: [{ value: "invited", label: "Invited" }, { value: "active", label: "Active" }, { value: "revoked", label: "Revoked" }], match: (r, v) => r.status === v },
+          ]}
+          dateField={(r) => r.created_at}
+          emptyMessage="No admin staff yet"
+          render={(r) => <StaffRow row={r} onSave={savePerms} onRemove={remove} />}
+        />
       </div>
     </AdminShell>
   );
 }
+
 
 function PermissionMatrix({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const toggle = (key: string) =>
