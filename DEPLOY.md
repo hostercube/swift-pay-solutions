@@ -7,6 +7,37 @@ Domains:
 
 ---
 
+## Auto-Deploy (GitHub → Coolify)
+
+Lovable-এ edit করলে সেটা GitHub-এ push হয়, GitHub push হলে Coolify auto-rebuild করে। দুইটা path — যেকোনো একটা যথেষ্ট, দুইটাই দিলে backup।
+
+### Option A — Coolify built-in GitHub App (recommended, সবচেয়ে সহজ)
+
+1. Coolify → PayNOC app resource → **Source** tab → GitHub App connect করো (একবারই)।
+2. একই page-এ **"Auto Deploy on push"** toggle **ON**।
+3. Branch = `main` set করো।
+4. এখন Lovable-এ যেকোনো edit → GitHub-এ push → Coolify auto-deploy। কিছুই manually করতে হয় না।
+
+### Option B — GitHub Actions workflow (repo-তে already আছে: `.github/workflows/deploy.yml`)
+
+Option A না চাইলে বা backup হিসেবে use করতে চাইলে:
+
+1. Coolify → PayNOC app → **Webhooks** tab → **Deploy webhook URL** copy করো (example: `https://coolify.yourhost.com/api/v1/deploy?uuid=...&force=false`)।
+2. Coolify → **Keys & Tokens** → **Create new token** (read+write) → copy।
+3. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**:
+   - `COOLIFY_WEBHOOK_URL` = step 1 এর URL
+   - `COOLIFY_API_TOKEN` = step 2 এর token
+4. `main`-এ push হলে workflow auto-run হবে এবং Coolify-কে deploy trigger করবে। Actions tab-এ status দেখা যাবে।
+
+### Verify auto-deploy
+
+- Lovable-এ একটা ছোট edit করো (e.g. footer text) → GitHub commit হবে → Coolify dashboard-এ new deployment start হতে দেখা যাবে (~30-60 sec)।
+- Fail করলে Coolify → app → **Deployments** log check করো।
+
+---
+
+
+
 ## Part 0 — Cloudflare DNS
 
 সব A record → Coolify server IP, Proxy = **DNS only** (grey cloud)।
