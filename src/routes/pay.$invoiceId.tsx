@@ -513,14 +513,24 @@ function CheckoutPage() {
 
         {/* ── Right: Method picker ────────────────────────── */}
         <section className="min-w-0">
-          {pending && (
-            <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-              <Clock className="h-5 w-5 shrink-0 text-amber-500" />
-              <div className="text-sm">Your payment is awaiting merchant verification. This page updates automatically.</div>
+          {pending ? (
+            <div className="glass rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
+              <Clock className="mx-auto h-10 w-10 text-amber-500" />
+              <h2 className="mt-3 font-display text-xl font-bold">Awaiting verification</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                We received your payment claim (TrxID <span className="font-mono">{pending.provider_txn_id || pending.reference}</span>).
+                This page will update automatically once the merchant confirms — usually within a few minutes.
+              </p>
+              {inv.redirect_url && (
+                <a
+                  href={inv.redirect_url}
+                  className="mt-5 inline-flex rounded-lg border border-glass-border px-4 py-2 text-sm font-semibold hover:border-brand"
+                >
+                  Return to merchant
+                </a>
+              )}
             </div>
-          )}
-
-          {!selected ? (
+          ) : !selected ? (
             <MethodPicker
               autoGateways={autoGateways}
               methods={methods}
