@@ -807,7 +807,16 @@ function ManualForm({
   const isBank = method.type === "bank_transfer";
   const [uploading, setUploading] = useState(false);
 
+  const ALLOWED_SLIP_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+  const MAX_SLIP_BYTES = 5 * 1024 * 1024; // 5 MB
+
   async function uploadSlip(file: File) {
+    if (!ALLOWED_SLIP_MIME.includes(file.type)) {
+      return toast.error("Only JPG, PNG, WEBP, or PDF files are allowed");
+    }
+    if (file.size > MAX_SLIP_BYTES) {
+      return toast.error(`File is too large — max ${Math.round(MAX_SLIP_BYTES / (1024 * 1024))}MB`);
+    }
     setUploading(true);
     try {
       const path = `slips/${inv.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
