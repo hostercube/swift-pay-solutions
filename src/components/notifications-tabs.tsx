@@ -16,7 +16,7 @@ export function NotificationsTabs() {
         return (
           <Link
             key={t.to}
-            to={t.to}
+            to={t.to as "/notifications"}
             className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               active
                 ? "border-brand text-foreground"
