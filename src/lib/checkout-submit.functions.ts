@@ -98,6 +98,8 @@ export const submitManualPayment = createServerFn({ method: "POST" })
         sender_name: data.senderName || null,
         provider_txn_id: trimmedTxn,
         reference: trimmedTxn,
+        slip_url: data.slipUrl || null,
+        bank_reference: data.bankReference || null,
       })
       .select("id")
       .single();
