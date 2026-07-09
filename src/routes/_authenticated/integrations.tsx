@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { CreditCard, Plug, Code2, MessageSquare } from "lucide-react";
+import { MerchantShell } from "@/components/merchant-shell";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
   component: IntegrationsLayout,
@@ -12,12 +13,13 @@ const TABS = [
   { to: "/integrations/smsnoc", label: "SMS NOC", icon: MessageSquare },
 ];
 
-
 function IntegrationsLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
-      <h1 className="font-display text-2xl font-bold mb-4">Payment integrations</h1>
+    <MerchantShell
+      title="Payment integrations"
+      subtitle="Manual channels, auto gateways, embed and SMS NOC — all in one place."
+    >
       <div className="mb-6 flex flex-wrap gap-1 border-b border-glass-border">
         {TABS.map((t) => {
           const active = (t as { exact?: boolean }).exact ? pathname === t.to : pathname.startsWith(t.to);
@@ -38,6 +40,6 @@ function IntegrationsLayout() {
         })}
       </div>
       <Outlet />
-    </div>
+    </MerchantShell>
   );
 }

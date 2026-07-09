@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/_authenticated/admin/merchants")({
+export const Route = createFileRoute("/_authenticated/admin/merchants/")({
   head: () => ({ meta: [{ title: "Merchants · Admin" }] }),
   component: MerchantsPage,
 });

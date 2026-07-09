@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2, Plus, X } from "lucide-react";
-import { MerchantShell } from "@/components/merchant-shell";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -128,10 +128,8 @@ function MethodsPage() {
   }
 
   return (
-    <MerchantShell
-      title="Manual payment channels"
-      subtitle="Publish your personal bKash / Nagad / Rocket / bank numbers. Customers pay, then paste their Transaction ID for you to verify."
-    >
+    <div>
+
       <div className="mb-4 rounded-xl border border-brand/30 bg-brand/5 p-3 text-xs text-muted-foreground">
         <span className="font-semibold text-foreground">Manual vs Auto:</span> This tab collects proof from the customer &mdash; you approve payments from the Transactions page.
         For fully automated verification via provider APIs (bKash Merchant, SSLCommerz, Stripe, etc.), use the{" "}
@@ -339,7 +337,7 @@ function MethodsPage() {
           </div>
         </div>
       )}
-    </MerchantShell>
+    </div>
   );
 }
 
