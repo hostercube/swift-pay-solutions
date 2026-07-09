@@ -49,7 +49,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
 const EMPTY: Partial<Method> = {
   type: "bkash",
   label: "",
-  mode: "manual",
+  mode: "manual", // manual only — API/auto verification lives in "Auto gateways" tab
   account_number: "",
   account_name: "",
   instructions: "",
@@ -60,6 +60,7 @@ const EMPTY: Partial<Method> = {
   is_active: true,
   sort_order: 0,
 };
+
 
 function MethodsPage() {
   const { user } = useAuth();
@@ -88,7 +89,7 @@ function MethodsPage() {
       merchant_id: user.id,
       type: editing.type as MethodType,
       label: editing.label,
-      mode: editing.mode as Mode,
+      mode: "manual" as Mode,
       account_number: editing.account_number || null,
       account_name: editing.account_name || null,
       instructions: editing.instructions || null,
@@ -128,17 +129,23 @@ function MethodsPage() {
 
   return (
     <MerchantShell
-      title="Payment methods"
-      subtitle="Configure bKash, Nagad, Rocket, bank transfer, and other channels."
+      title="Manual payment channels"
+      subtitle="Publish your personal bKash / Nagad / Rocket / bank numbers. Customers pay, then paste their Transaction ID for you to verify."
     >
+      <div className="mb-4 rounded-xl border border-brand/30 bg-brand/5 p-3 text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground">Manual vs Auto:</span> This tab collects proof from the customer &mdash; you approve payments from the Transactions page.
+        For fully automated verification via provider APIs (bKash Merchant, SSLCommerz, Stripe, etc.), use the{" "}
+        <a href="/integrations/byo" className="font-semibold text-brand hover:underline">Auto gateways (API)</a> tab instead.
+      </div>
       <div className="mb-6 flex justify-end">
         <button
           onClick={() => setEditing({ ...EMPTY })}
           className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
         >
-          <Plus className="h-4 w-4" /> Add method
+          <Plus className="h-4 w-4" /> Add channel
         </button>
       </div>
+
 
       <div className="glass overflow-hidden rounded-2xl border border-glass-border">
         <table className="w-full text-sm">
@@ -213,9 +220,11 @@ function MethodsPage() {
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <h2 className="font-display text-lg font-semibold">
-                  {editing.id ? "Edit method" : "Add payment method"}
+                  {editing.id ? "Edit channel" : "Add manual channel"}
                 </h2>
-                <p className="text-xs text-muted-foreground">Manual mode collects proof, API mode auto-verifies.</p>
+                <p className="text-xs text-muted-foreground">
+                  Customer sees your account number + instructions and submits a Transaction ID for verification.
+                </p>
               </div>
               <button onClick={() => setEditing(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
@@ -223,7 +232,7 @@ function MethodsPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Type">
+              <Field label="Type" full>
                 <select
                   value={editing.type}
                   onChange={(e) => setEditing({ ...editing, type: e.target.value as MethodType })}
@@ -232,16 +241,7 @@ function MethodsPage() {
                   {METHOD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </Field>
-              <Field label="Mode">
-                <select
-                  value={editing.mode}
-                  onChange={(e) => setEditing({ ...editing, mode: e.target.value as Mode })}
-                  className={inputCls}
-                >
-                  <option value="manual">Manual</option>
-                  <option value="api">API (auto-verify)</option>
-                </select>
-              </Field>
+
               <Field label="Label" full>
                 <input
                   value={editing.label ?? ""}
