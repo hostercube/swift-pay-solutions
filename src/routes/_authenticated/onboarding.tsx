@@ -112,7 +112,7 @@ function OnboardingPage() {
           title="2. Add a payment method"
           desc="Add at least one method (bKash, Nagad, bank transfer, card) so customers can pay."
         >
-          <Link to="/methods" className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">
+          <Link to="/integrations" className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">
             Open payment methods <ArrowRight className="h-4 w-4" />
           </Link>
         </Step>
