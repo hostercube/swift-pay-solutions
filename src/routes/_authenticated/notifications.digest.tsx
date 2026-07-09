@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
+import { NotificationsTabs } from "@/components/notifications-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
@@ -63,6 +64,7 @@ function DigestPage() {
       title="Email digest"
       subtitle="Get a periodic email with volume, paid, and failed invoices."
     >
+      <NotificationsTabs />
       <Card className="max-w-xl p-6">
         <div className="flex items-center justify-between">
           <div>
