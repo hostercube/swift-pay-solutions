@@ -51,6 +51,7 @@ import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedSecurityIpWhitelistRouteImport } from './routes/_authenticated/security.ip-whitelist'
 import { Route as AuthenticatedSecurityFraudRouteImport } from './routes/_authenticated/security.fraud'
+import { Route as AuthenticatedSecurityDevicesRouteImport } from './routes/_authenticated/security.devices'
 import { Route as AuthenticatedSecurityApiKeysRouteImport } from './routes/_authenticated/security.api-keys'
 import { Route as AuthenticatedNotificationsSettingsRouteImport } from './routes/_authenticated/notifications.settings'
 import { Route as AuthenticatedNotificationsDigestRouteImport } from './routes/_authenticated/notifications.digest'
@@ -308,6 +309,12 @@ const AuthenticatedSecurityFraudRoute =
   AuthenticatedSecurityFraudRouteImport.update({
     id: '/fraud',
     path: '/fraud',
+    getParentRoute: () => AuthenticatedSecurityRoute,
+  } as any)
+const AuthenticatedSecurityDevicesRoute =
+  AuthenticatedSecurityDevicesRouteImport.update({
+    id: '/devices',
+    path: '/devices',
     getParentRoute: () => AuthenticatedSecurityRoute,
   } as any)
 const AuthenticatedSecurityApiKeysRoute =
@@ -590,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
   '/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
   '/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -667,6 +675,7 @@ export interface FileRoutesByTo {
   '/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
   '/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
   '/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -751,6 +760,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications/digest': typeof AuthenticatedNotificationsDigestRoute
   '/_authenticated/notifications/settings': typeof AuthenticatedNotificationsSettingsRoute
   '/_authenticated/security/api-keys': typeof AuthenticatedSecurityApiKeysRoute
+  '/_authenticated/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/_authenticated/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/_authenticated/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -835,6 +845,7 @@ export interface FileRouteTypes {
     | '/notifications/digest'
     | '/notifications/settings'
     | '/security/api-keys'
+    | '/security/devices'
     | '/security/fraud'
     | '/security/ip-whitelist'
     | '/admin/'
@@ -912,6 +923,7 @@ export interface FileRouteTypes {
     | '/notifications/digest'
     | '/notifications/settings'
     | '/security/api-keys'
+    | '/security/devices'
     | '/security/fraud'
     | '/security/ip-whitelist'
     | '/admin'
@@ -995,6 +1007,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications/digest'
     | '/_authenticated/notifications/settings'
     | '/_authenticated/security/api-keys'
+    | '/_authenticated/security/devices'
     | '/_authenticated/security/fraud'
     | '/_authenticated/security/ip-whitelist'
     | '/_authenticated/admin/'
@@ -1343,6 +1356,13 @@ declare module '@tanstack/react-router' {
       path: '/fraud'
       fullPath: '/security/fraud'
       preLoaderRoute: typeof AuthenticatedSecurityFraudRouteImport
+      parentRoute: typeof AuthenticatedSecurityRoute
+    }
+    '/_authenticated/security/devices': {
+      id: '/_authenticated/security/devices'
+      path: '/devices'
+      fullPath: '/security/devices'
+      preLoaderRoute: typeof AuthenticatedSecurityDevicesRouteImport
       parentRoute: typeof AuthenticatedSecurityRoute
     }
     '/_authenticated/security/api-keys': {
@@ -1733,6 +1753,7 @@ const AuthenticatedNotificationsRouteWithChildren =
 
 interface AuthenticatedSecurityRouteChildren {
   AuthenticatedSecurityApiKeysRoute: typeof AuthenticatedSecurityApiKeysRoute
+  AuthenticatedSecurityDevicesRoute: typeof AuthenticatedSecurityDevicesRoute
   AuthenticatedSecurityFraudRoute: typeof AuthenticatedSecurityFraudRoute
   AuthenticatedSecurityIpWhitelistRoute: typeof AuthenticatedSecurityIpWhitelistRoute
   AuthenticatedSecurityIndexRoute: typeof AuthenticatedSecurityIndexRoute
@@ -1740,6 +1761,7 @@ interface AuthenticatedSecurityRouteChildren {
 
 const AuthenticatedSecurityRouteChildren: AuthenticatedSecurityRouteChildren = {
   AuthenticatedSecurityApiKeysRoute: AuthenticatedSecurityApiKeysRoute,
+  AuthenticatedSecurityDevicesRoute: AuthenticatedSecurityDevicesRoute,
   AuthenticatedSecurityFraudRoute: AuthenticatedSecurityFraudRoute,
   AuthenticatedSecurityIpWhitelistRoute: AuthenticatedSecurityIpWhitelistRoute,
   AuthenticatedSecurityIndexRoute: AuthenticatedSecurityIndexRoute,

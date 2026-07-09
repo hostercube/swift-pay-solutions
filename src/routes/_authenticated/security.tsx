@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, KeyRound, Lock, ShieldAlert } from "lucide-react";
+import { ShieldCheck, KeyRound, Lock, ShieldAlert, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/security")({
   component: SecurityLayout,
@@ -8,6 +8,7 @@ export const Route = createFileRoute("/_authenticated/security")({
 const TABS = [
   { to: "/security", label: "2FA & Sessions", icon: ShieldCheck, exact: true },
   { to: "/security/api-keys", label: "API keys", icon: KeyRound },
+  { to: "/security/devices", label: "Devices (APK)", icon: Smartphone },
   { to: "/security/ip-whitelist", label: "IP whitelist", icon: Lock },
   { to: "/security/fraud", label: "Fraud rules", icon: ShieldAlert },
 ];
