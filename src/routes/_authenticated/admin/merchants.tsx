@@ -194,16 +194,17 @@ function MerchantsPage() {
               <th className="px-4 py-3">Business</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">KYC</th>
               <th className="px-4 py-3">Joined</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
             )}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No merchants found.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No merchants found.</td></tr>
             )}
             {filtered.map((r) => (
               <tr key={r.id} className="border-t border-glass-border hover:bg-muted/30">
@@ -220,6 +221,9 @@ function MerchantsPage() {
                 <td className="px-4 py-3">
                   <StatusBadge status={r.status} />
                 </td>
+                <td className="px-4 py-3">
+                  <KycBadge status={r.kyc_status ?? "unverified"} />
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(r.created_at).toLocaleDateString()}
                 </td>
@@ -228,9 +232,9 @@ function MerchantsPage() {
                     <Link
                       to="/admin/merchants/$id"
                       params={{ id: r.id }}
-                      className="rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand"
+                      className="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-1 text-xs font-medium text-brand hover:bg-brand/20"
                     >
-                      Open
+                      <Eye className="h-3 w-3" /> View profile
                     </Link>
                     {r.status !== "active" && (
                       <button onClick={() => setStatus(r.id, "active")} className="rounded-md border border-glass-border px-2 py-1 text-xs hover:bg-brand/10 hover:text-brand">
