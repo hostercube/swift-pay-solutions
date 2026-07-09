@@ -787,7 +787,7 @@ export type Database = {
           error: string | null
           event: string
           id: string
-          merchant_id: string
+          merchant_id: string | null
           provider: string | null
           provider_response: Json | null
           recipient: string
@@ -801,7 +801,7 @@ export type Database = {
           error?: string | null
           event: string
           id?: string
-          merchant_id: string
+          merchant_id?: string | null
           provider?: string | null
           provider_response?: Json | null
           recipient: string
@@ -815,7 +815,7 @@ export type Database = {
           error?: string | null
           event?: string
           id?: string
-          merchant_id?: string
+          merchant_id?: string | null
           provider?: string | null
           provider_response?: Json | null
           recipient?: string
