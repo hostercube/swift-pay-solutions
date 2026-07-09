@@ -110,16 +110,24 @@ function TeamPage() {
         </div>
       </Card>
 
-      <div className="mt-6 space-y-4">
-        {rows.length === 0 ? (
-          <Card className="p-8 text-center text-muted-foreground">No teammates yet</Card>
-        ) : (
-          rows.map((r) => <TeamRow key={r.id} row={r} onSave={savePerms} onRemove={remove} />)
-        )}
+      <div className="mt-6">
+        <FilteredList
+          rows={rows}
+          rowKey={(r) => r.id}
+          searchable={(r) => `${r.member_email} ${r.role} ${r.status}`}
+          filters={[
+            { key: "role", label: "All roles", options: [{ value: "viewer", label: "Viewer" }, { value: "operator", label: "Operator" }, { value: "admin", label: "Admin" }], match: (r, v) => r.role === v },
+            { key: "status", label: "All statuses", options: [{ value: "invited", label: "Invited" }, { value: "active", label: "Active" }, { value: "revoked", label: "Revoked" }], match: (r, v) => r.status === v },
+          ]}
+          dateField={(r) => r.invited_at}
+          emptyMessage="No teammates yet"
+          render={(r) => <TeamRow row={r} onSave={savePerms} onRemove={remove} />}
+        />
       </div>
     </MerchantShell>
   );
 }
+
 
 function TeamRow({
   row, onSave, onRemove,
