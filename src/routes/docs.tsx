@@ -812,8 +812,8 @@ function ApiReferencePage() {
 
 
             <div className="mt-16 rounded-lg border border-glass-border bg-card/40 p-6 text-sm text-muted-foreground">
-              Need help? Email <span className="font-mono text-foreground">developers@paynoc.example</span> or
-              open an issue in your merchant dashboard — we typically reply within one business day.
+              Need help? Email <a href="mailto:developers@paynoc.bd" className="font-mono text-foreground underline">developers@paynoc.bd</a> or
+              open a support ticket from your merchant dashboard — we typically reply within one business day.
             </div>
           </main>
         </div>
