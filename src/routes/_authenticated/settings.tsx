@@ -22,6 +22,8 @@ type Profile = {
   support_email: string | null;
   checkout_footer: string | null;
   checkout_style: CheckoutStyle | null;
+  custom_head_html: string | null;
+  custom_footer_html: string | null;
   slug: string | null;
   public_bio: string | null;
   accept_tips: boolean;
