@@ -49,7 +49,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
 const EMPTY: Partial<Method> = {
   type: "bkash",
   label: "",
-  mode: "manual",
+  mode: "manual", // manual only — API/auto verification lives in "Auto gateways" tab
   account_number: "",
   account_name: "",
   instructions: "",
@@ -60,6 +60,7 @@ const EMPTY: Partial<Method> = {
   is_active: true,
   sort_order: 0,
 };
+
 
 function MethodsPage() {
   const { user } = useAuth();
