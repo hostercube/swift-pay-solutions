@@ -11,6 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, UserPlus, Save } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_PERM_GROUPS } from "@/lib/permissions";
+import { FilteredList } from "@/components/filtered-list";
+
 
 export const Route = createFileRoute("/_authenticated/admin/staff")({
   head: () => ({ meta: [{ title: "Admin staff · PayNOC" }] }),
