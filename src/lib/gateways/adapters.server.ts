@@ -6,7 +6,7 @@
 // NOTE: This module is imported ONLY by server functions and server routes.
 // It uses process.env inside handlers; never at module scope.
 
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual, publicEncrypt, privateDecrypt, createSign, createHash, constants as cryptoConstants } from "crypto";
 
 export type GatewayCreds = Record<string, string>;
 
