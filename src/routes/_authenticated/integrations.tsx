@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { CreditCard, Plug, Code2, MessageSquare } from "lucide-react";
+import { CreditCard, Plug, Code2, MessageSquare, FileText } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 
 export const Route = createFileRoute("/_authenticated/integrations")({
@@ -8,6 +8,7 @@ export const Route = createFileRoute("/_authenticated/integrations")({
 
 const TABS = [
   { to: "/integrations", label: "Manual channels", icon: CreditCard, exact: true },
+  { to: "/integrations/reviews", label: "Reviews", icon: FileText },
   { to: "/integrations/byo", label: "Auto gateways (API)", icon: Plug },
   { to: "/integrations/api", label: "API / Embed", icon: Code2 },
   { to: "/integrations/smsnoc", label: "SMS NOC", icon: MessageSquare },

@@ -57,6 +57,7 @@ import { Route as AuthenticatedNotificationsDigestRouteImport } from './routes/_
 import { Route as AuthenticatedInvoicesNewRouteImport } from './routes/_authenticated/invoices.new'
 import { Route as AuthenticatedInvoicesIdRouteImport } from './routes/_authenticated/invoices.$id'
 import { Route as AuthenticatedIntegrationsSmsnocRouteImport } from './routes/_authenticated/integrations.smsnoc'
+import { Route as AuthenticatedIntegrationsReviewsRouteImport } from './routes/_authenticated/integrations.reviews'
 import { Route as AuthenticatedIntegrationsByoRouteImport } from './routes/_authenticated/integrations.byo'
 import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_authenticated/integrations.api'
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
@@ -344,6 +345,12 @@ const AuthenticatedIntegrationsSmsnocRoute =
     path: '/smsnoc',
     getParentRoute: () => AuthenticatedIntegrationsRoute,
   } as any)
+const AuthenticatedIntegrationsReviewsRoute =
+  AuthenticatedIntegrationsReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedIntegrationsRoute,
+  } as any)
 const AuthenticatedIntegrationsByoRoute =
   AuthenticatedIntegrationsByoRouteImport.update({
     id: '/byo',
@@ -576,6 +583,7 @@ export interface FileRoutesByFullPath {
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/integrations/reviews': typeof AuthenticatedIntegrationsReviewsRoute
   '/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -652,6 +660,7 @@ export interface FileRoutesByTo {
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/integrations/reviews': typeof AuthenticatedIntegrationsReviewsRoute
   '/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -735,6 +744,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/_authenticated/integrations/api': typeof AuthenticatedIntegrationsApiRoute
   '/_authenticated/integrations/byo': typeof AuthenticatedIntegrationsByoRoute
+  '/_authenticated/integrations/reviews': typeof AuthenticatedIntegrationsReviewsRoute
   '/_authenticated/integrations/smsnoc': typeof AuthenticatedIntegrationsSmsnocRoute
   '/_authenticated/invoices/$id': typeof AuthenticatedInvoicesIdRoute
   '/_authenticated/invoices/new': typeof AuthenticatedInvoicesNewRoute
@@ -818,6 +828,7 @@ export interface FileRouteTypes {
     | '/admin/transactions'
     | '/integrations/api'
     | '/integrations/byo'
+    | '/integrations/reviews'
     | '/integrations/smsnoc'
     | '/invoices/$id'
     | '/invoices/new'
@@ -894,6 +905,7 @@ export interface FileRouteTypes {
     | '/admin/transactions'
     | '/integrations/api'
     | '/integrations/byo'
+    | '/integrations/reviews'
     | '/integrations/smsnoc'
     | '/invoices/$id'
     | '/invoices/new'
@@ -976,6 +988,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/transactions'
     | '/_authenticated/integrations/api'
     | '/_authenticated/integrations/byo'
+    | '/_authenticated/integrations/reviews'
     | '/_authenticated/integrations/smsnoc'
     | '/_authenticated/invoices/$id'
     | '/_authenticated/invoices/new'
@@ -1374,6 +1387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIntegrationsSmsnocRouteImport
       parentRoute: typeof AuthenticatedIntegrationsRoute
     }
+    '/_authenticated/integrations/reviews': {
+      id: '/_authenticated/integrations/reviews'
+      path: '/reviews'
+      fullPath: '/integrations/reviews'
+      preLoaderRoute: typeof AuthenticatedIntegrationsReviewsRouteImport
+      parentRoute: typeof AuthenticatedIntegrationsRoute
+    }
     '/_authenticated/integrations/byo': {
       id: '/_authenticated/integrations/byo'
       path: '/byo'
@@ -1671,6 +1691,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedIntegrationsRouteChildren {
   AuthenticatedIntegrationsApiRoute: typeof AuthenticatedIntegrationsApiRoute
   AuthenticatedIntegrationsByoRoute: typeof AuthenticatedIntegrationsByoRoute
+  AuthenticatedIntegrationsReviewsRoute: typeof AuthenticatedIntegrationsReviewsRoute
   AuthenticatedIntegrationsSmsnocRoute: typeof AuthenticatedIntegrationsSmsnocRoute
   AuthenticatedIntegrationsIndexRoute: typeof AuthenticatedIntegrationsIndexRoute
 }
@@ -1679,6 +1700,8 @@ const AuthenticatedIntegrationsRouteChildren: AuthenticatedIntegrationsRouteChil
   {
     AuthenticatedIntegrationsApiRoute: AuthenticatedIntegrationsApiRoute,
     AuthenticatedIntegrationsByoRoute: AuthenticatedIntegrationsByoRoute,
+    AuthenticatedIntegrationsReviewsRoute:
+      AuthenticatedIntegrationsReviewsRoute,
     AuthenticatedIntegrationsSmsnocRoute: AuthenticatedIntegrationsSmsnocRoute,
     AuthenticatedIntegrationsIndexRoute: AuthenticatedIntegrationsIndexRoute,
   }

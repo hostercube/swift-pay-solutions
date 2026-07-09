@@ -807,7 +807,16 @@ function ManualForm({
   const isBank = method.type === "bank_transfer";
   const [uploading, setUploading] = useState(false);
 
+  const ALLOWED_SLIP_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+  const MAX_SLIP_BYTES = 5 * 1024 * 1024; // 5 MB
+
   async function uploadSlip(file: File) {
+    if (!ALLOWED_SLIP_MIME.includes(file.type)) {
+      return toast.error("Only JPG, PNG, WEBP, or PDF files are allowed");
+    }
+    if (file.size > MAX_SLIP_BYTES) {
+      return toast.error(`File is too large — max ${Math.round(MAX_SLIP_BYTES / (1024 * 1024))}MB`);
+    }
     setUploading(true);
     try {
       const path = `slips/${inv.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`;
@@ -895,15 +904,25 @@ function ManualForm({
           </div>
         </div>
 
-        {method.qr_code_url && (
-          <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-              Scan to pay {method.qr_type ? `· ${method.qr_type.replace("_", " ")}` : ""}
+        {(() => {
+          const fallback = defaultQrFor(method);
+          if (!method.qr_code_url && !fallback) return null;
+          return (
+            <div className="mt-4 flex flex-col items-center gap-2 rounded-lg border border-dashed border-brand/40 bg-background/40 p-4">
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Scan to pay {method.qr_type ? `· ${method.qr_type.replace("_", " ")}` : ""}
+              </div>
+              {method.qr_code_url
+                ? <PayQr path={method.qr_code_url} />
+                : <img src={fallback!} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />}
+              <div className="text-[11px] text-muted-foreground">
+                {method.qr_code_url
+                  ? "Open your mobile banking app and scan the QR"
+                  : `Scan with ${labelForType(method.type)} app · ${method.account_number}`}
+              </div>
             </div>
-            <PayQr path={method.qr_code_url} />
-            <div className="text-[11px] text-muted-foreground">Open your mobile banking app and scan the QR</div>
-          </div>
-        )}
+          );
+        })()}
 
         {method.instructions && (
           <div className="mt-3 whitespace-pre-line rounded-lg bg-background/40 p-3 text-xs text-muted-foreground">
@@ -1003,6 +1022,24 @@ function PayQr({ path }: { path: string }) {
       <img src={url} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />
     </a>
   );
+}
+
+/** Fallback QR: uses api.qrserver.com to render a QR of the account number
+ *  for mobile-banking channels that didn't upload their own image. */
+function defaultQrFor(m: Method): string | null {
+  if (m.qr_code_url) return null;
+  if (!m.account_number) return null;
+  if (!["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type)) return null;
+  const data = encodeURIComponent(m.account_number);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${data}`;
+}
+
+function labelForType(t: string) {
+  const map: Record<string, string> = {
+    bkash: "bKash", nagad: "Nagad", rocket: "Rocket", upay: "Upay",
+    tap: "Tap", mcash: "MCash", sure_cash: "SureCash",
+  };
+  return map[t] ?? t;
 }
 
 function currencySymbol(code: string) {
