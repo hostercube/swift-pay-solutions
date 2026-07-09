@@ -115,6 +115,13 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://developer.sslcommerz.com/",
     webhookHint: "Paste IPN URL in SSLCommerz merchant panel.",
+    setupSteps: [
+      "Sign up at sslcommerz.com and complete merchant onboarding (trade licence, NID, bank details).",
+      "In the Merchant Panel, open Integration → API/IPN. Copy your Store ID and Store Password.",
+      "Sandbox credentials are available immediately from developer.sslcommerz.com — use them first.",
+      "Set the IPN URL to the webhook URL shown below (in the panel: Integration → IPN Setting).",
+      "Switch this configuration to Live once your account is approved.",
+    ],
   },
   {
     id: "shurjopay",
