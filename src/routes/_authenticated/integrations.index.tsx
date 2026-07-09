@@ -458,3 +458,16 @@ function Field({ label, children, full }: { label: string; children: React.React
     </label>
   );
 }
+
+function QrThumb({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    supabase.storage.from("payment-assets").createSignedUrl(path, 3600).then(({ data }) => {
+      if (alive) setUrl(data?.signedUrl ?? null);
+    });
+    return () => { alive = false; };
+  }, [path]);
+  if (!url) return <div className="h-24 w-24 animate-pulse rounded-lg bg-muted" />;
+  return <img src={url} alt="QR" className="h-24 w-24 rounded-lg border border-glass-border object-contain bg-background/60" />;
+}
