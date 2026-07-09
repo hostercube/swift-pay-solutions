@@ -134,19 +134,21 @@ function paynoc_wc_init() {
                 return ['result' => 'failure'];
             }
             $code = wp_remote_retrieve_response_code($response);
-            $body = json_decode(wp_remote_retrieve_body($response), true);
+            $raw  = json_decode(wp_remote_retrieve_body($response), true);
+            // API returns { data: { id, checkout_url, ... } }; tolerate both shapes.
+            $body = isset($raw['data']) && is_array($raw['data']) ? $raw['data'] : (is_array($raw) ? $raw : []);
             if ($code < 200 || $code >= 300 || empty($body['checkout_url'])) {
                 wc_add_notice(__('PayNOC did not return a checkout URL.', 'paynoc'), 'error');
                 return ['result' => 'failure'];
             }
 
-            $order->update_meta_data('_paynoc_invoice_id', $body['id'] ?? '');
+            $order->update_meta_data('_paynoc_invoice_id', (string)($body['id'] ?? ''));
             $order->update_status('pending', __('Awaiting PayNOC payment.', 'paynoc'));
             $order->save();
 
             return [
                 'result'   => 'success',
-                'redirect' => esc_url_raw($body['checkout_url']),
+                'redirect' => esc_url_raw((string)$body['checkout_url']),
             ];
         }
 
