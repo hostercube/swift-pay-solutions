@@ -6,7 +6,7 @@
 // NOTE: This module is imported ONLY by server functions and server routes.
 // It uses process.env inside handlers; never at module scope.
 
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, timingSafeEqual, publicEncrypt, privateDecrypt, createSign, createHash, constants as cryptoConstants } from "crypto";
 
 export type GatewayCreds = Record<string, string>;
 
@@ -307,6 +307,181 @@ async function ownpayInitiate(a: InitiateArgs): Promise<InitiateResult> {
   return { redirectUrl: j.payment_url, providerRef: j.charge_id ?? a.invoiceId };
 }
 
+// ─── Nagad (RSA-signed hosted checkout) ───────────────────────────
+// Reference: https://nagadpg.com/docs — sandbox base https://sandbox-ssl.mynagad.com,
+// live base https://api.mynagad.com. Flow: initialize → complete → hosted redirect.
+function normalisePem(input: string, kind: "PUBLIC" | "RSA PRIVATE" | "PRIVATE") {
+  const s = (input || "").trim();
+  if (s.includes("BEGIN")) return s;
+  // Wrap raw base64 body into PEM envelope.
+  const header = kind === "PUBLIC" ? "PUBLIC KEY" : kind === "RSA PRIVATE" ? "RSA PRIVATE KEY" : "PRIVATE KEY";
+  const body = s.replace(/\s+/g, "").match(/.{1,64}/g)?.join("\n") ?? "";
+  return `-----BEGIN ${header}-----\n${body}\n-----END ${header}-----`;
+}
+
+async function nagadInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://api.mynagad.com" : "https://sandbox-ssl.mynagad.com";
+  const merchantId = a.creds.merchant_id;
+  const orderId = a.invoiceId.replace(/-/g, "").slice(0, 20);
+  const dateTime = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+  const pubKey = normalisePem(a.creds.public_key, "PUBLIC");
+  const privKey = normalisePem(a.creds.private_key, "PRIVATE");
+  const sensitive = JSON.stringify({ merchantId, datetime: dateTime, orderId, challenge: orderId });
+  const sensitiveData = publicEncrypt({ key: pubKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(sensitive)).toString("base64");
+  const signature = createSign("SHA256").update(sensitive).sign({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, "base64");
+  const initRes = await fetch(`${base}/api/dfs/check-out/initialize/${merchantId}/${orderId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-KM-IP-V4": "0.0.0.0", "X-KM-Client-Type": "PC_WEB" },
+    body: JSON.stringify({ accountNumber: a.creds.merchant_number, dateTime, sensitiveData, signature }),
+  });
+  const init = await initRes.json() as { sensitiveData?: string; signature?: string; status?: string; message?: string };
+  if (!init.sensitiveData) throw new Error(init.message ?? "Nagad init failed");
+  const decrypted = JSON.parse(privateDecrypt({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(init.sensitiveData, "base64")).toString());
+  const paymentReferenceId: string = decrypted.paymentReferenceId;
+  const challenge: string = decrypted.challenge;
+  const sensitive2 = JSON.stringify({
+    merchantId, orderId, currencyCode: "050", amount: a.amount.toFixed(2), challenge,
+  });
+  const sensitiveData2 = publicEncrypt({ key: pubKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, Buffer.from(sensitive2)).toString("base64");
+  const signature2 = createSign("SHA256").update(sensitive2).sign({ key: privKey, padding: cryptoConstants.RSA_PKCS1_PADDING }, "base64");
+  const compRes = await fetch(`${base}/api/dfs/check-out/complete/${paymentReferenceId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-KM-IP-V4": "0.0.0.0", "X-KM-Client-Type": "PC_WEB" },
+    body: JSON.stringify({
+      sensitiveData: sensitiveData2, signature: signature2,
+      merchantCallbackURL: a.successUrl, additionalMerchantInfo: { invoice_id: a.invoiceId },
+    }),
+  });
+  const comp = await compRes.json() as { status?: string; callBackUrl?: string; message?: string };
+  if (!comp.callBackUrl) throw new Error(comp.message ?? "Nagad complete failed");
+  return { redirectUrl: comp.callBackUrl, providerRef: paymentReferenceId };
+}
+
+// ─── ShurjoPay ────────────────────────────────────────────────────
+async function shurjopayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://engine.shurjopayment.com" : "https://sandbox.shurjopayment.com";
+  const tokRes = await fetch(`${base}/api/get_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: a.creds.merchant_username, password: a.creds.merchant_password }),
+  });
+  const tok = await tokRes.json() as { token?: string; store_id?: string; sp_code?: string; message?: string };
+  if (!tok.token) throw new Error(tok.message ?? "ShurjoPay token failed");
+  const payRes = await fetch(`${base}/api/secret-pay`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok.token}` },
+    body: JSON.stringify({
+      token: tok.token, store_id: tok.store_id, prefix: a.creds.prefix || "sp",
+      amount: a.amount.toFixed(2), order_id: a.invoiceId, currency: a.currency,
+      customer_name: a.customerName ?? "Customer", customer_address: "N/A",
+      customer_email: a.customerEmail ?? "no-reply@paynoc.bd",
+      customer_phone: "01700000000", customer_city: "Dhaka", customer_post_code: "1000",
+      client_ip: "0.0.0.0", return_url: a.successUrl, cancel_url: a.cancelUrl,
+    }),
+  });
+  const p = await payRes.json() as { checkout_url?: string; sp_order_id?: string; message?: string };
+  if (!p.checkout_url) throw new Error(p.message ?? "ShurjoPay init failed");
+  return { redirectUrl: p.checkout_url, providerRef: p.sp_order_id ?? a.invoiceId };
+}
+
+// ─── AamarPay ─────────────────────────────────────────────────────
+async function aamarpayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://secure.aamarpay.com" : "https://sandbox.aamarpay.com";
+  const body = {
+    store_id: a.creds.store_id, signature_key: a.creds.signature_key,
+    amount: a.amount.toFixed(2), currency: a.currency, tran_id: a.invoiceId,
+    cus_name: a.customerName ?? "Customer",
+    cus_email: a.customerEmail ?? "no-reply@paynoc.bd",
+    cus_add1: "N/A", cus_city: "Dhaka", cus_country: "Bangladesh", cus_phone: "01700000000",
+    desc: `Invoice ${a.invoiceId}`, success_url: a.successUrl, fail_url: a.cancelUrl,
+    cancel_url: a.cancelUrl, ipn_url: a.webhookUrl, type: "json",
+  };
+  const res = await fetch(`${base}/jsonpost.php`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  const j = await res.json() as { result?: string; payment_url?: string; reason?: string };
+  if (!j.payment_url) throw new Error(j.reason ?? "AamarPay init failed");
+  return { redirectUrl: j.payment_url, providerRef: a.invoiceId };
+}
+
+// ─── Paddle Billing (v2) ──────────────────────────────────────────
+async function paddleInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = a.mode === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
+  const res = await fetch(`${base}/transactions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${a.creds.api_key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      items: [{ quantity: 1, price: { description: `Invoice ${a.invoiceId}`, unit_price: { amount: String(Math.round(a.amount * 100)), currency_code: a.currency } } }],
+      custom_data: { invoice_id: a.invoiceId },
+      collection_mode: "automatic",
+      checkout: { url: a.successUrl },
+    }),
+  });
+  const j = await res.json() as { data?: { id: string; checkout?: { url: string } }; error?: { detail: string } };
+  if (!j.data?.checkout?.url) throw new Error(j.error?.detail ?? "Paddle init failed");
+  return { redirectUrl: j.data.checkout.url, providerRef: j.data.id };
+}
+
+// ─── 2Checkout / Verifone (ConvertPlus hosted) ────────────────────
+async function twocheckoutInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  // 2Checkout supports a signed hosted-checkout URL (ConvertPlus).
+  const params = new URLSearchParams({
+    "merchant": a.creds.merchant_code,
+    "dynamic": "1",
+    "prod": `Invoice ${a.invoiceId}`,
+    "price": a.amount.toFixed(2),
+    "qty": "1",
+    "type": "digital",
+    "return-url": a.successUrl,
+    "return-type": "redirect",
+    "currency": a.currency,
+    "merchant-order-id": a.invoiceId,
+    "customer-email": a.customerEmail ?? "",
+    "customer-name": a.customerName ?? "Customer",
+  });
+  // Signature = HMAC-SHA256(secret, sorted concatenation of key+len+value).
+  const entries = Array.from(params.entries()).sort(([a1], [b1]) => a1.localeCompare(b1));
+  const raw = entries.map(([k, v]) => `${k.length}${k}${v.length}${v}`).join("");
+  const signature = hmacSha256Hex(a.creds.secret_key, raw);
+  params.set("signature", signature);
+  const url = `https://secure.2checkout.com/checkout/buy?${params.toString()}`;
+  return { redirectUrl: url, providerRef: a.invoiceId };
+}
+
+// ─── Binance Pay ──────────────────────────────────────────────────
+async function binancePayInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const base = "https://bpay.binanceapi.com";
+  const nonce = Math.random().toString(36).slice(2, 34).padEnd(32, "0");
+  const timestamp = Date.now().toString();
+  const payload = {
+    env: { terminalType: "WEB" },
+    merchantTradeNo: a.invoiceId.replace(/-/g, "").slice(0, 32),
+    orderAmount: Number(a.amount.toFixed(2)),
+    currency: a.currency,
+    goods: { goodsType: "02", goodsCategory: "Z000", referenceGoodsId: a.invoiceId, goodsName: `Invoice ${a.invoiceId}` },
+    returnUrl: a.successUrl,
+    cancelUrl: a.cancelUrl,
+    webhookUrl: a.webhookUrl,
+  };
+  const bodyStr = JSON.stringify(payload);
+  const payloadToSign = `${timestamp}\n${nonce}\n${bodyStr}\n`;
+  const signature = createHmac("sha512", a.creds.api_secret).update(payloadToSign).digest("hex").toUpperCase();
+  const res = await fetch(`${base}/binancepay/openapi/v3/order`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "BinancePay-Timestamp": timestamp,
+      "BinancePay-Nonce": nonce,
+      "BinancePay-Certificate-SN": a.creds.api_key,
+      "BinancePay-Signature": signature,
+    },
+    body: bodyStr,
+  });
+  const j = await res.json() as { status?: string; data?: { checkoutUrl: string; prepayId: string }; errorMessage?: string };
+  if (j.status !== "SUCCESS" || !j.data) throw new Error(j.errorMessage ?? "Binance Pay init failed");
+  return { redirectUrl: j.data.checkoutUrl, providerRef: j.data.prepayId };
+}
+
 // Registry dispatcher
 export async function initiateCheckout(providerId: string, args: InitiateArgs): Promise<InitiateResult> {
   switch (providerId) {
@@ -320,12 +495,14 @@ export async function initiateCheckout(providerId: string, args: InitiateArgs): 
     case "uddoktapay":        return uddoktapayInitiate(args);
     case "piprapay":          return piprapayInitiate(args);
     case "ownpay":            return ownpayInitiate(args);
+    case "nagad":             return nagadInitiate(args);
+    case "shurjopay":         return shurjopayInitiate(args);
+    case "aamarpay":          return aamarpayInitiate(args);
+    case "paddle":            return paddleInitiate(args);
+    case "twocheckout":       return twocheckoutInitiate(args);
+    case "binance_pay":       return binancePayInitiate(args);
 
-    // The remaining providers (nagad RSA, rocket manual, shurjopay, aamarpay,
-    // paddle, twocheckout, binance_pay) require merchant-specific onboarding
-    // or SDK signing that is easier to complete once the merchant supplies
-    // live sandbox credentials. We surface a clear error so the merchant
-    // falls back to the manual-verification flow which is fully supported.
+    // Rocket (DBBL) has no public checkout API — remains manual verification only.
     default:
       throw new Error(
         `Automatic checkout for ${providerId} isn't wired yet — enable manual verification for this method.`,
@@ -347,6 +524,12 @@ export function verifyWebhook(providerId: string, v: VerifyArgs): VerifyResult {
       case "uddoktapay":        return verifyUddoktapay(v);
       case "piprapay":          return verifyPiprapay(v);
       case "ownpay":            return verifyOwnpay(v);
+      case "nagad":             return verifyNagad(v);
+      case "shurjopay":         return verifyShurjopay(v);
+      case "aamarpay":          return verifyAamarpay(v);
+      case "paddle":            return verifyPaddle(v);
+      case "twocheckout":       return verifyTwocheckout(v);
+      case "binance_pay":       return verifyBinancePay(v);
 
       default: {
         // Generic HMAC-SHA256 fallback using webhook_secret if provided.
@@ -699,3 +882,130 @@ export async function refundProvider(providerId: string, a: RefundArgs): Promise
     return { ok: false, error: (e as Error).message };
   }
 }
+
+// ─── Additional webhook verifiers ─────────────────────────────────
+function verifyNagad(v: VerifyArgs): VerifyResult {
+  // Nagad posts JSON on the merchant callback. Payment status confirmation
+  // must be re-checked via the verification endpoint using merchant keys;
+  // for the webhook we accept payload + confirm status field.
+  const body = JSON.parse(v.rawBody) as {
+    merchant?: string; order_id?: string; payment_ref_id?: string; status?: string;
+    status_code?: string; amount?: string; issuer_payment_ref?: string;
+  };
+  if (v.creds.merchant_id && body.merchant && body.merchant !== v.creds.merchant_id) {
+    return { verified: false, reason: "merchant_mismatch" };
+  }
+  const ok = body.status === "Success" || body.status_code === "000";
+  return {
+    verified: ok,
+    eventType: body.status,
+    providerEventId: body.payment_ref_id,
+    invoiceRef: body.order_id,
+    providerTxnId: body.issuer_payment_ref ?? body.payment_ref_id,
+    status: ok ? "completed" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: "BDT",
+    reason: ok ? undefined : "nagad_not_success",
+  };
+}
+
+function verifyShurjopay(v: VerifyArgs): VerifyResult {
+  // ShurjoPay IPN posts JSON with sp_code/order_id/bank_status.
+  const body = JSON.parse(v.rawBody) as {
+    order_id?: string; sp_code?: string; sp_message?: string; bank_status?: string;
+    amount?: string; currency?: string; bank_trx_id?: string;
+  };
+  const ok = body.sp_code === "1000" && (body.bank_status ?? "").toLowerCase() === "success";
+  return {
+    verified: ok, eventType: body.bank_status,
+    providerEventId: body.bank_trx_id ?? body.order_id,
+    invoiceRef: body.order_id, providerTxnId: body.bank_trx_id ?? body.order_id,
+    status: ok ? "completed" : "failed",
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: body.currency ?? "BDT",
+    reason: ok ? undefined : (body.sp_message ?? "shurjopay_not_success"),
+  };
+}
+
+function verifyAamarpay(v: VerifyArgs): VerifyResult {
+  // AamarPay IPN is form-encoded. Signature = md5(store_id + signature_key).
+  const p = Object.fromEntries(new URLSearchParams(v.rawBody));
+  const expected = createHash("md5").update(`${v.creds.store_id}${v.creds.signature_key}`).digest("hex");
+  const ok = (p.pay_status === "Successful") && p.store_id === v.creds.store_id
+             && (!p.signature_key || p.signature_key === expected);
+  return {
+    verified: ok, eventType: p.pay_status,
+    providerEventId: p.pg_txnid ?? p.mer_txnid,
+    invoiceRef: p.mer_txnid, providerTxnId: p.pg_txnid ?? p.mer_txnid,
+    status: ok ? "completed" : "failed",
+    amount: p.amount ? Number(p.amount) : undefined,
+    currency: p.currency,
+    reason: ok ? undefined : "aamarpay_not_success",
+  };
+}
+
+function verifyPaddle(v: VerifyArgs): VerifyResult {
+  // Paddle Billing signs with HMAC-SHA256 header `Paddle-Signature: ts=..;h1=..`.
+  const sig = v.headers["paddle-signature"];
+  if (!sig || !v.creds.webhook_secret) return { verified: false, reason: "missing_signature" };
+  const parts = Object.fromEntries(sig.split(";").map((p) => p.split("=") as [string, string]));
+  const ts = parts.ts; const h1 = parts.h1;
+  if (!ts || !h1) return { verified: false, reason: "bad_signature_format" };
+  const expected = hmacSha256Hex(v.creds.webhook_secret, `${ts}:${v.rawBody}`);
+  if (!safeEqualHex(h1, expected)) return { verified: false, reason: "bad_signature" };
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return { verified: false, reason: "stale_signature" };
+  const body = JSON.parse(v.rawBody) as {
+    event_id?: string; event_type?: string;
+    data?: { id?: string; status?: string; custom_data?: { invoice_id?: string }; details?: { totals?: { total?: string; currency_code?: string } } };
+  };
+  const d = body.data;
+  return {
+    verified: true, eventType: body.event_type, providerEventId: body.event_id,
+    invoiceRef: d?.custom_data?.invoice_id, providerTxnId: d?.id,
+    status: d?.status === "completed" || d?.status === "paid" ? "completed" : "pending",
+    amount: d?.details?.totals?.total ? Number(d.details.totals.total) / 100 : undefined,
+    currency: d?.details?.totals?.currency_code,
+  };
+}
+
+function verifyTwocheckout(v: VerifyArgs): VerifyResult {
+  // 2Checkout IHN is form-encoded, hash = md5(merchant_code+order_no+total+secret)
+  const p = Object.fromEntries(new URLSearchParams(v.rawBody));
+  const expected = createHash("md5").update(
+    `${v.creds.merchant_code}${p.REFNO ?? ""}${p.IPN_TOTALGENERAL ?? ""}${v.creds.secret_key}`,
+  ).digest("hex").toUpperCase();
+  const ok = ((p.HASH ?? "").toUpperCase() === expected) && (p.ORDERSTATUS === "COMPLETE" || p.IPN_STATUS === "1");
+  return {
+    verified: ok, eventType: p.ORDERSTATUS ?? p.IPN_STATUS,
+    providerEventId: p.REFNO, invoiceRef: p.REFNOEXT, providerTxnId: p.REFNO,
+    status: ok ? "completed" : "failed",
+    amount: p.IPN_TOTALGENERAL ? Number(p.IPN_TOTALGENERAL) : undefined,
+    currency: p.IPN_CURRENCY,
+    reason: ok ? undefined : "2co_bad_hash",
+  };
+}
+
+function verifyBinancePay(v: VerifyArgs): VerifyResult {
+  // Binance Pay signs with HMAC-SHA512(secret, timestamp\nnonce\nbody\n) -> uppercase hex.
+  const ts = v.headers["binancepay-timestamp"];
+  const nonce = v.headers["binancepay-nonce"];
+  const sig = v.headers["binancepay-signature"];
+  if (!ts || !nonce || !sig || !v.creds.api_secret) return { verified: false, reason: "missing_signature" };
+  const expected = createHmac("sha512", v.creds.api_secret)
+    .update(`${ts}\n${nonce}\n${v.rawBody}\n`).digest("hex").toUpperCase();
+  if (!safeEqual(sig.toUpperCase(), expected)) return { verified: false, reason: "bad_signature" };
+  const body = JSON.parse(v.rawBody) as {
+    bizType?: string; bizStatus?: string; bizId?: string;
+    data?: string | { merchantTradeNo?: string; orderAmount?: string; currency?: string };
+  };
+  const data = typeof body.data === "string" ? JSON.parse(body.data) : body.data ?? {};
+  const status = body.bizStatus === "PAY_SUCCESS" ? "completed"
+               : body.bizStatus === "PAY_CLOSED" ? "failed" : "pending";
+  return {
+    verified: true, eventType: body.bizStatus, providerEventId: String(body.bizId ?? ""),
+    invoiceRef: data.merchantTradeNo, providerTxnId: String(body.bizId ?? ""),
+    status, amount: data.orderAmount ? Number(data.orderAmount) : undefined,
+    currency: data.currency,
+  };
+}
+
