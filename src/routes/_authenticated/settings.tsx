@@ -61,6 +61,8 @@ function SettingsPage() {
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
       checkout_style: p.checkout_style,
+      custom_head_html: p.custom_head_html,
+      custom_footer_html: p.custom_footer_html,
 
       slug: p.slug,
       public_bio: p.public_bio,
