@@ -48,6 +48,7 @@ const navGroups: Array<{ label: string; items: Array<{ to: string; label: string
     label: "System",
     items: [
       { to: "/admin/settings", label: "Platform settings", icon: Settings },
+      { to: "/admin/smsnoc", label: "SMS NOC", icon: MessageSquare },
       { to: "/admin/audit", label: "Audit logs", icon: ScrollText },
     ],
   },
