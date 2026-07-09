@@ -362,7 +362,9 @@ const nav = [
     { id: "retrieve-invoice", label: "Retrieve an invoice" },
     { id: "list-invoices", label: "List invoices" },
     { id: "checkout", label: "Hosted checkout" },
+    { id: "balance", label: "Balance summary" },
   ]},
+
   { group: "Webhooks", items: [
     { id: "webhooks", label: "Overview" },
     { id: "webhook-verify", label: "Verify signature" },
