@@ -685,7 +685,11 @@ function ApiReferencePage() {
                     <tr><td className="px-4 py-2 font-mono">invoice.completed</td><td className="px-4 py-2 text-muted-foreground">Payment verified by the underlying gateway.</td></tr>
                     <tr><td className="px-4 py-2 font-mono">invoice.failed</td><td className="px-4 py-2 text-muted-foreground">Buyer cancelled or gateway rejected the payment.</td></tr>
                     <tr><td className="px-4 py-2 font-mono">invoice.expired</td><td className="px-4 py-2 text-muted-foreground">Invoice passed its <span className="font-mono">expires_at</span> unpaid.</td></tr>
-                    <tr><td className="px-4 py-2 font-mono">refund.processed</td><td className="px-4 py-2 text-muted-foreground">Admin issued a refund for the invoice.</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">refund.requested</td><td className="px-4 py-2 text-muted-foreground">Merchant (dashboard or API) opened a refund request.</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">refund.approved</td><td className="px-4 py-2 text-muted-foreground">Admin approved the refund for processing.</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">refund.rejected</td><td className="px-4 py-2 text-muted-foreground">Admin rejected the refund request.</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">refund.processed</td><td className="px-4 py-2 text-muted-foreground">Refund completed at the gateway; funds returned to buyer.</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">invoice.refunded</td><td className="px-4 py-2 text-muted-foreground">Invoice has been fully refunded.</td></tr>
                     <tr><td className="px-4 py-2 font-mono">payout.processed</td><td className="px-4 py-2 text-muted-foreground">Merchant payout has been sent.</td></tr>
                   </tbody>
                 </table>
