@@ -58,6 +58,8 @@ function SettingsPage() {
       logo_url: p.logo_url,
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
+      checkout_style: p.checkout_style,
+
       slug: p.slug,
       public_bio: p.public_bio,
       accept_tips: p.accept_tips,
