@@ -318,6 +318,8 @@ const nav = [
     { id: "testing", label: "Testing" },
     { id: "sdks", label: "SDKs & Postman" },
     { id: "plugins", label: "Plugins & integrations" },
+    { id: "connect-site", label: "Connect your site / app" },
+    { id: "connect-apk", label: "Connect the Android APK" },
   ]},
 ];
 
@@ -824,6 +826,147 @@ function ApiReferencePage() {
                 accepting payments in minutes.
               </p>
               <PluginsGrid />
+            </Section>
+
+            {/* Connect your site / app — credential sources per provider */}
+            <Section id="connect-site" eyebrow="Merchant setup" title="Connect your site or app">
+              <p className="text-sm text-muted-foreground">
+                PayNOC accepts payments in two ways: <strong className="text-foreground">PayNOC-hosted checkout</strong>{" "}
+                (create an invoice → redirect to <code className="font-mono">checkout_url</code>) or a{" "}
+                <strong className="text-foreground">Bring-Your-Own gateway</strong> where PayNOC talks to your own
+                bKash / Nagad / SSLCommerz / Uddoktapay / PipraPay account. Either way, you paste credentials once in
+                the dashboard — never in your code.
+              </p>
+
+              <div className="rounded-lg border border-glass-border bg-card/40 p-4 text-sm">
+                <p className="font-semibold">Where credentials go</p>
+                <ol className="mt-2 ml-5 list-decimal space-y-1 text-muted-foreground">
+                  <li>Merchant dashboard → <span className="font-mono text-foreground">Integrations → Auto gateways (API)</span>.</li>
+                  <li>Pick the provider (bKash, Nagad, SSLCommerz, UddoktaPay, PipraPay, OwnPay, Stripe…).</li>
+                  <li>Open the <em>Where do I get these credentials?</em> guide inside the form.</li>
+                  <li>Paste values, save in <em>Sandbox</em> mode, verify one test payment, then flip to <em>Live</em>.</li>
+                </ol>
+              </div>
+
+              <div className="overflow-hidden rounded-lg border border-glass-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/30 text-left text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2">Provider</th>
+                      <th className="px-4 py-2">What PayNOC needs</th>
+                      <th className="px-4 py-2">Where to find it</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-glass-border">
+                    <tr>
+                      <td className="px-4 py-2 font-medium">bKash PGW</td>
+                      <td className="px-4 py-2 font-mono text-xs">app_key · app_secret · username · password</td>
+                      <td className="px-4 py-2 text-muted-foreground">Emailed by bKash after PGW merchant approval (developer.bka.sh).</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">Nagad</td>
+                      <td className="px-4 py-2 font-mono text-xs">merchant_id · merchant_number · nagad_public_key · your_private_key</td>
+                      <td className="px-4 py-2 text-muted-foreground">Nagad issues the merchant IDs + their public key; you generate the RSA keypair and share only the public half with Nagad.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">SSLCommerz</td>
+                      <td className="px-4 py-2 font-mono text-xs">store_id · store_password</td>
+                      <td className="px-4 py-2 text-muted-foreground">SSLCommerz Merchant Panel → Integration → API/IPN. Sandbox creds available immediately at developer.sslcommerz.com.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">UddoktaPay (self-hosted)</td>
+                      <td className="px-4 py-2 font-mono text-xs">base_url · api_key</td>
+                      <td className="px-4 py-2 text-muted-foreground">Your UddoktaPay admin → API Settings. Register PayNOC's webhook URL under Webhook Settings.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">PipraPay</td>
+                      <td className="px-4 py-2 font-mono text-xs">base_url · api_key</td>
+                      <td className="px-4 py-2 text-muted-foreground">PipraPay dashboard → Developers. Sandbox base URL <span className="font-mono">https://sandbox.piprapay.com</span>.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">OwnPay (self-hosted)</td>
+                      <td className="px-4 py-2 font-mono text-xs">base_url · api_key · webhook_secret</td>
+                      <td className="px-4 py-2 text-muted-foreground">OwnPay admin → Settings → API. Verify the X-Signature HMAC on every event.</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">Stripe</td>
+                      <td className="px-4 py-2 font-mono text-xs">secret_key · publishable_key · webhook_secret</td>
+                      <td className="px-4 py-2 text-muted-foreground">Stripe Dashboard → Developers → API keys + Webhooks (paste PayNOC's webhook URL, copy the whsec_… secret).</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-medium">Rocket / Upay / Tap / MCash / MyCash</td>
+                      <td className="px-4 py-2 font-mono text-xs">merchant_number</td>
+                      <td className="px-4 py-2 text-muted-foreground">These MFS have no public API — merchant number only. PayNOC uses the APK SMS ingestion path (below) to auto-verify.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rounded-lg border border-glass-border bg-card/40 p-4 text-sm">
+                <p className="font-semibold">Two ways to accept payments in your own app</p>
+                <ul className="mt-2 ml-5 list-disc space-y-1 text-muted-foreground">
+                  <li>
+                    <strong className="text-foreground">Server-side integration (recommended).</strong> Create an
+                    invoice from your backend with the PayNOC REST API and redirect the buyer to{" "}
+                    <span className="font-mono">data.checkout_url</span>. PayNOC handles gateway selection, SCA, and
+                    the return redirect. See <a href="#quickstart" className="text-brand hover:underline">Quickstart</a>.
+                  </li>
+                  <li>
+                    <strong className="text-foreground">Embed the checkout button.</strong> Drop{" "}
+                    <span className="font-mono">&lt;script src="https://paynoc.bd/embed.js"&gt;</span> on any page — no
+                    backend required for simple flows.
+                  </li>
+                </ul>
+              </div>
+            </Section>
+
+            {/* Connect the Android APK */}
+            <Section id="connect-apk" title="Connect the Android APK">
+              <p className="text-sm text-muted-foreground">
+                For mobile-wallet channels that don't expose an API (Rocket, Upay, Tap, MCash, personal bKash /
+                Nagad numbers), install the <strong className="text-foreground">PayNOC Merchant APK</strong> on the
+                phone that owns the merchant number. The APK reads the provider's SMS confirmation, extracts the
+                amount + TrxID, and POSTs it to{" "}
+                <span className="font-mono">/api/public/v1/sms-events</span>. PayNOC auto-verifies any pending
+                transaction with a matching TrxID.
+              </p>
+
+              <ol className="ml-5 list-decimal space-y-2 text-sm text-muted-foreground">
+                <li>
+                  In your dashboard, open{" "}
+                  <a href="/security/devices" className="text-brand hover:underline">
+                    Security → Devices (APK)
+                  </a>{" "}
+                  and click <em>Create device key</em> — this mints a dedicated <code className="font-mono">sk_live_…</code>{" "}
+                  key labelled after the phone, so you can revoke that device without affecting other integrations.
+                </li>
+                <li>
+                  Install the APK on the merchant phone. Open it and tap <em>Scan to connect</em>, then scan the QR shown on the
+                  Devices page — it encodes <code className="font-mono">{"{"} backend_url, api_key, env {"}"}</code> so both
+                  fields are set in one step.
+                </li>
+                <li>Grant SMS read permission when Android asks. The APK forwards only sender / amount / TrxID over HTTPS.</li>
+                <li>Test one payment end-to-end, then leave the phone running (whitelist the APK from battery optimisation).</li>
+              </ol>
+
+              <div className="rounded-lg border border-glass-border bg-card/40 p-4 text-sm">
+                <p className="font-semibold">Event payload (APK → PayNOC)</p>
+                <Code lang="POST /v1/sms-events" code={`{
+  "events": [{
+    "provider": "bkash",
+    "raw_body": "You have received Tk 1500.00 from 01710000000. TrxID TRX12345XYZ …",
+    "trx_id":  "TRX12345XYZ",
+    "amount":  1500,
+    "sender":  "01710000000",
+    "received_at": "2026-07-08T12:03:00.000Z",
+    "device_id": "a1b2c3d4-…"
+  }]
+}`} />
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Response: <code className="font-mono">{`{ "ok": true, "results": [{ "trx_id": "…", "matched": true, "invoice_id": "…" }] }`}</code>.
+                  Batched up to 50 events. Offline SMS queue and retry.
+                </p>
+              </div>
             </Section>
 
 

@@ -33,6 +33,7 @@ export type GatewaySpec = {
   fields: GatewayField[];     // credentials expected for API mode
   docsUrl?: string;
   webhookHint?: string;       // note for merchants (where to paste webhook URL)
+  setupSteps?: string[];      // "how to get these credentials", shown in the BYO editor
 };
 
 export const GATEWAYS: GatewaySpec[] = [
@@ -55,6 +56,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://developer.bka.sh/docs",
     webhookHint: "bKash uses execute+query API; webhook optional.",
+    setupSteps: [
+      "Sign a bKash Payment Gateway (PGW) merchant agreement — apply at developer.bka.sh.",
+      "Once approved, bKash sends you sandbox + live credentials by email: App Key, App Secret, Username, Password.",
+      "Paste all four values here. Start in Sandbox mode until you test one payment end-to-end.",
+      "When ready, switch this configuration to Live and re-test with a small amount.",
+    ],
   },
   {
     id: "nagad",
@@ -72,6 +79,13 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "private_key", label: "Merchant Private Key (PEM)", type: "textarea", required: true },
     ],
     docsUrl: "https://nagadpg.com/docs",
+    setupSteps: [
+      "Onboard as a Nagad PGW merchant through your Nagad relationship manager.",
+      "Nagad issues a Merchant ID, a Merchant Number, and a Nagad Public Key (PEM).",
+      "Generate your own RSA key pair (2048-bit). Share the public key with Nagad; keep the private key secret and paste it into 'Merchant Private Key' below.",
+      "Paste Nagad's Public Key into 'Nagad Public Key' (starts with -----BEGIN PUBLIC KEY-----).",
+      "Test in sandbox first, then switch this configuration to Live once verified.",
+    ],
   },
   {
     id: "rocket",
@@ -101,6 +115,13 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://developer.sslcommerz.com/",
     webhookHint: "Paste IPN URL in SSLCommerz merchant panel.",
+    setupSteps: [
+      "Sign up at sslcommerz.com and complete merchant onboarding (trade licence, NID, bank details).",
+      "In the Merchant Panel, open Integration → API/IPN. Copy your Store ID and Store Password.",
+      "Sandbox credentials are available immediately from developer.sslcommerz.com — use them first.",
+      "Set the IPN URL to the webhook URL shown below (in the panel: Integration → IPN Setting).",
+      "Switch this configuration to Live once your account is approved.",
+    ],
   },
   {
     id: "shurjopay",
@@ -116,6 +137,12 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "prefix", label: "Prefix", type: "text", required: true, placeholder: "sp" },
     ],
     docsUrl: "https://engineering.shurjopay.com.bd/",
+    setupSteps: [
+      "Register at shurjopay.com.bd and complete KYC.",
+      "ShurjoPay will email you a Merchant Username, Password, and a Prefix (e.g. 'sp', 'NOK') tied to your store.",
+      "Paste all three. Use the sandbox credentials from engineering.shurjopay.com.bd first.",
+      "Switch to Live once your account is approved.",
+    ],
   },
   {
     id: "aamarpay",
@@ -130,6 +157,12 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "signature_key", label: "Signature Key", type: "password", required: true },
     ],
     docsUrl: "https://aamarpay.com/developer",
+    setupSteps: [
+      "Register at aamarpay.com and complete merchant KYC.",
+      "In the AamarPay dashboard → Settings → API, copy your Store ID and Signature Key.",
+      "Sandbox creds: store_id 'aamarpaytest' / signature_key 'dbb74894e82415a2f7ff0ec3a97e4183' — use these for testing.",
+      "Set the IPN URL to the webhook URL below (Dashboard → Settings → IPN).",
+    ],
   },
   {
     id: "upay",
@@ -270,6 +303,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://uddoktapay.readme.io/reference/overview",
     webhookHint: "Add the webhook URL below in UddoktaPay admin → Webhook Settings.",
+    setupSteps: [
+      "Install UddoktaPay on your own domain (e.g. https://pay.your-domain.com) or use your existing licensed instance.",
+      "Log in to the UddoktaPay admin panel → API Settings and copy your API Key.",
+      "Enter the full Base URL (including https://) and the API Key below.",
+      "In UddoktaPay admin → Webhook Settings, paste the webhook URL shown below and enable it.",
+    ],
   },
   {
     id: "piprapay",
@@ -285,6 +324,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://docs.piprapay.com/reference/overview",
     webhookHint: "PipraPay sends webhooks with the mh-piprapay-api-key header for verification.",
+    setupSteps: [
+      "Sign up at piprapay.com and complete merchant verification.",
+      "Sandbox: use https://sandbox.piprapay.com and the sandbox API key from your dashboard.",
+      "Live: use https://api.piprapay.com and your live API Key from Dashboard → Developers.",
+      "Register the webhook URL below in Dashboard → Webhooks so PipraPay can confirm payments.",
+    ],
   },
   {
     id: "ownpay",
@@ -301,6 +346,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://ownpay.org/",
     webhookHint: "OwnPay posts JSON with an X-Signature HMAC-SHA256 header.",
+    setupSteps: [
+      "Deploy OwnPay on your own server or use a licensed hosted instance.",
+      "In OwnPay admin → Settings → API, copy the API Key and (recommended) generate a Webhook Secret.",
+      "Paste the Base URL (https://...), API Key, and Webhook Secret here.",
+      "Register the webhook URL below in OwnPay → Webhooks. PayNOC verifies the X-Signature header on every event.",
+    ],
   },
 
 
@@ -321,6 +372,13 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "webhook_secret", label: "Webhook Signing Secret", type: "password", placeholder: "whsec_..." },
     ],
     docsUrl: "https://stripe.com/docs/api",
+    setupSteps: [
+      "Create a Stripe account at stripe.com and complete the activation checklist.",
+      "In the Dashboard → Developers → API keys, copy the Secret Key (sk_test_… or sk_live_…) and Publishable Key.",
+      "Developers → Webhooks → Add endpoint: paste the webhook URL below and select the events you need (payment_intent.succeeded, charge.refunded, etc.).",
+      "Copy the Signing Secret (whsec_…) from the created endpoint into 'Webhook Signing Secret'.",
+      "Test in Test mode first (sk_test_ keys), then switch this configuration to Live.",
+    ],
   },
   {
     id: "paypal",
