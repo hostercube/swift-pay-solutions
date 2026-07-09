@@ -407,25 +407,53 @@ function PluginsGrid() {
 function ApiReferencePage() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="grid-radial absolute inset-0 opacity-30" />
+      <div className="grid-radial pointer-events-none absolute inset-0 opacity-30" />
       <div className="relative">
         <SiteHeader />
 
-        <div className="mx-auto max-w-7xl px-6 py-12 lg:grid lg:grid-cols-[240px_1fr] lg:gap-10">
+        {/* Docs hero band */}
+        <div className="relative border-b border-glass-border bg-surface-2/40">
+          <div className="hairline-gold absolute inset-x-0 top-0 h-px" />
+          <div className="mx-auto max-w-7xl px-6 py-14">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-brand">
+              <span className="h-1 w-1 rounded-full bg-brand" />
+              Developer Reference · v1
+            </div>
+            <h1 className="mt-3 font-display text-4xl font-bold tracking-tight md:text-6xl">
+              The <span className="text-gradient-brand">PayNOC</span> API
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              REST over HTTPS. JSON in, JSON out. Idempotent writes, HMAC-signed webhooks,
+              predictable errors. Ship a production integration this afternoon.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="border border-glass-border">REST · JSON</Badge>
+              <Badge variant="secondary" className="border border-glass-border">v1 Stable</Badge>
+              <Badge variant="secondary" className="border border-glass-border">HMAC Webhooks</Badge>
+              <Badge variant="secondary" className="border border-glass-border">Test + Live</Badge>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:grid lg:grid-cols-[256px_1fr] lg:gap-12">
           {/* Sidebar */}
           <aside className="hidden lg:block">
-            <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 text-sm">
+            <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 text-sm">
+              <div className="mb-5 rounded-xl border border-glass-border bg-surface/60 p-3">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Base URL</p>
+                <p className="mt-1 truncate font-mono text-xs text-foreground">{BASE}</p>
+              </div>
               {nav.map((g) => (
                 <div key={g.group} className="mb-6">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand/80">
                     {g.group}
                   </p>
-                  <ul className="space-y-1">
+                  <ul className="space-y-0.5 border-l border-glass-border">
                     {g.items.map((i) => (
                       <li key={i.id}>
                         <a
                           href={`#${i.id}`}
-                          className="block rounded px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          className="-ml-px block border-l-2 border-transparent px-3 py-1.5 text-muted-foreground transition-colors hover:border-brand hover:text-foreground"
                         >
                           {i.label}
                         </a>
@@ -439,31 +467,19 @@ function ApiReferencePage() {
 
           {/* Main */}
           <main className="min-w-0">
-            {/* Hero */}
-            <header id="overview" className="scroll-mt-24">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">REST · JSON</Badge>
-                <Badge variant="secondary">v1</Badge>
-                <Badge variant="secondary">Stable</Badge>
-              </div>
-              <h1 className="mt-3 font-display text-4xl md:text-5xl">PayNOC API Reference</h1>
-              <p className="mt-3 max-w-2xl text-muted-foreground">
-                PayNOC is a REST API that runs over HTTPS, speaks JSON, and returns predictable errors.
-                Authenticate with a secret key, create invoices, redirect customers to hosted checkout,
-                and listen for HMAC-signed webhooks. Ship a working integration in an afternoon.
-              </p>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-2">
-                <Card className="p-4">
-                  <p className="text-xs uppercase text-muted-foreground">Base URL</p>
+            {/* Anchor */}
+            <div id="overview" className="scroll-mt-24">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Card className="border-glass-border bg-surface/60 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Base URL</p>
                   <p className="mt-1 font-mono text-sm">{BASE}</p>
                 </Card>
-                <Card className="p-4">
-                  <p className="text-xs uppercase text-muted-foreground">Auth header</p>
+                <Card className="border-glass-border bg-surface/60 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Auth header</p>
                   <p className="mt-1 font-mono text-sm">Authorization: Bearer sk_live_…</p>
                 </Card>
               </div>
-            </header>
+            </div>
 
             {/* Quickstart */}
             <Section id="quickstart" eyebrow="Getting started" title="Quickstart">
