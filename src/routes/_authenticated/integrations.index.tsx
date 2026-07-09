@@ -89,7 +89,7 @@ function MethodsPage() {
       merchant_id: user.id,
       type: editing.type as MethodType,
       label: editing.label,
-      mode: editing.mode as Mode,
+      mode: "manual" as Mode,
       account_number: editing.account_number || null,
       account_name: editing.account_name || null,
       instructions: editing.instructions || null,
