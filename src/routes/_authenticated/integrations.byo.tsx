@@ -289,6 +289,29 @@ function DraftEditor({
           </div>
           {spec.webhookHint && <p className="mt-1 text-[11px]">{spec.webhookHint}</p>}
         </div>
+
+        {spec.setupSteps && spec.setupSteps.length > 0 && (
+          <details className="sm:col-span-2 rounded-lg border border-brand/30 bg-brand/5 p-3 text-sm" open={!editing}>
+            <summary className="cursor-pointer select-none font-medium text-brand">
+              Where do I get these credentials? — {spec.label} setup guide
+            </summary>
+            <ol className="mt-3 ml-5 list-decimal space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+              {spec.setupSteps.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ol>
+            {spec.docsUrl && (
+              <a
+                href={spec.docsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-brand hover:underline"
+              >
+                Open official {spec.label} docs <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </details>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
