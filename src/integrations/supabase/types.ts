@@ -1743,6 +1743,9 @@ export type Database = {
           provider_txn_id: string | null
           raw_response: Json
           reference: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejected_reason: string | null
           sender_name: string | null
           sender_number: string | null
           slip_url: string | null
@@ -1766,6 +1769,9 @@ export type Database = {
           provider_txn_id?: string | null
           raw_response?: Json
           reference?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
           sender_name?: string | null
           sender_number?: string | null
           slip_url?: string | null
@@ -1789,6 +1795,9 @@ export type Database = {
           provider_txn_id?: string | null
           raw_response?: Json
           reference?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejected_reason?: string | null
           sender_name?: string | null
           sender_number?: string | null
           slip_url?: string | null
