@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -58,10 +57,7 @@ function IpWhitelistPage() {
   };
 
   return (
-    <MerchantShell
-      title="IP whitelist"
-      subtitle="Restrict which IPs can call your API keys"
-    >
+    <>
       <Card className="p-5">
         <div className="flex items-start gap-2 rounded-lg border border-glass-border bg-muted/30 p-3 text-sm text-muted-foreground">
           <Lock className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
@@ -97,6 +93,6 @@ function IpWhitelistPage() {
           )}
         </div>
       </Card>
-    </MerchantShell>
+    </>
   );
 }

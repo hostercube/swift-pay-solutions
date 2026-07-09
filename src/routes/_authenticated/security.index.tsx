@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,7 @@ function SecurityPage() {
   const active = factors.filter((f) => f.status === "verified");
 
   return (
-    <MerchantShell title="Security" subtitle="Two-factor authentication (TOTP)">
+    <>
       <Card className="p-6">
         <div className="mb-4 flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-brand" />
@@ -113,6 +112,6 @@ function SecurityPage() {
           </>
         )}
       </Card>
-    </MerchantShell>
+    </>
   );
 }
