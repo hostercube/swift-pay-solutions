@@ -26,11 +26,16 @@ import {
   CalendarClock,
   Code2,
   Globe,
+  Menu,
+  X,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantPerms } from "@/hooks/use-merchant-perms";
 import type { MerchantPerm } from "@/lib/permissions";
+
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; perm?: MerchantPerm };
 type NavGroup = { label: string; items: NavItem[] };
