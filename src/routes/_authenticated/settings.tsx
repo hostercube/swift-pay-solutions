@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+type CheckoutStyle = "premium" | "classic" | "neon" | "minimal";
 type Profile = {
   full_name: string | null;
   business_name: string | null;
@@ -20,11 +21,13 @@ type Profile = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  checkout_style: CheckoutStyle | null;
   slug: string | null;
   public_bio: string | null;
   accept_tips: boolean;
   tip_min_amount: number;
 };
+
 
 function SettingsPage() {
   const { user } = useAuth();
