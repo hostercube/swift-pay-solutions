@@ -50,6 +50,7 @@ class SmsReceiver : BroadcastReceiver() {
                         ExistingWorkPolicy.APPEND_OR_REPLACE,
                         OneTimeWorkRequestBuilder<UploadWorker>()
                             .setConstraints(UploadWorker.constraints())
+                            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                             .build(),
                     )
                 }
