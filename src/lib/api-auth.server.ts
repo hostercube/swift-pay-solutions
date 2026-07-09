@@ -68,8 +68,20 @@ export async function authenticateApiKey(request: Request): Promise<
     _window_seconds: WINDOW_SECONDS,
   });
   if (rlErr) return { error: "Rate limiter unavailable", status: 500 };
+  const remainingNum = Math.max(0, remaining as number);
+  const resetIn = WINDOW_SECONDS;
   if ((remaining as number) < 0) {
-    return { error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`, status: 429 };
+    return {
+      error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`,
+      status: 429,
+      headers: {
+        "Retry-After": String(WINDOW_SECONDS),
+        "X-RateLimit-Limit": String(RATE_LIMIT),
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": String(resetIn),
+        "X-Request-Id": requestId,
+      },
+    };
   }
 
 
@@ -89,7 +101,7 @@ export async function authenticateApiKey(request: Request): Promise<
       resource_id: data.id,
       ip_address: ip,
       user_agent: request.headers.get("user-agent"),
-      metadata: { path: new URL(request.url).pathname, method: request.method } as never,
+      metadata: { path: new URL(request.url).pathname, method: request.method, request_id: requestId } as never,
     })
     .then(() => undefined);
 
@@ -98,8 +110,11 @@ export async function authenticateApiKey(request: Request): Promise<
     environment: data.environment,
     keyId: data.id,
     ip,
+    rateLimit: { limit: RATE_LIMIT, remaining: remainingNum, reset: resetIn },
+    requestId,
   };
 }
+
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
