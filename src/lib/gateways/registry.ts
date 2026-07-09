@@ -33,6 +33,7 @@ export type GatewaySpec = {
   fields: GatewayField[];     // credentials expected for API mode
   docsUrl?: string;
   webhookHint?: string;       // note for merchants (where to paste webhook URL)
+  setupSteps?: string[];      // "how to get these credentials", shown in the BYO editor
 };
 
 export const GATEWAYS: GatewaySpec[] = [
