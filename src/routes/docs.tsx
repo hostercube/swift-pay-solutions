@@ -314,7 +314,7 @@ const nav = [
     { id: "webhook-retries", label: "Retries" },
   ]},
   { group: "Advanced", items: [
-    { id: "refunds", label: "Refunds & payouts" },
+    { id: "refunds", label: "Refunds" },
     { id: "testing", label: "Testing" },
     { id: "sdks", label: "SDKs & Postman" },
     { id: "plugins", label: "Plugins & integrations" },
