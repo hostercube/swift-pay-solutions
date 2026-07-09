@@ -482,6 +482,67 @@ async function binancePayInitiate(a: InitiateArgs): Promise<InitiateResult> {
   return { redirectUrl: j.data.checkoutUrl, providerRef: j.data.prepayId };
 }
 
+// ─── Cryptomus ─────────────────────────────────────────────
+// Docs: https://doc.cryptomus.com/business/payments/creating-invoice
+// Auth: header `merchant` = merchant UUID, `sign` = md5(base64(json_body) + payment_api_key)
+// Webhook: same md5 scheme on payload with `sign` removed.
+function cryptomusSign(payload: object, apiKey: string): string {
+  const b64 = Buffer.from(JSON.stringify(payload)).toString("base64");
+  return createHash("md5").update(b64 + apiKey).digest("hex");
+}
+async function cryptomusInitiate(a: InitiateArgs): Promise<InitiateResult> {
+  const payload = {
+    amount: a.amount.toFixed(2),
+    currency: a.currency,
+    order_id: a.invoiceId,
+    url_return: a.cancelUrl,
+    url_success: a.successUrl,
+    url_callback: a.webhookUrl,
+    lifetime: 3600,
+  };
+  const sign = cryptomusSign(payload, a.creds.payment_api_key);
+  const res = await fetch("https://api.cryptomus.com/v1/payment", {
+    method: "POST",
+    headers: {
+      merchant: a.creds.merchant_id,
+      sign,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const j = await res.json() as { state?: number; result?: { uuid: string; url: string }; message?: string };
+  if (j.state !== 0 || !j.result) throw new Error(j.message ?? "Cryptomus invoice failed");
+  return { redirectUrl: j.result.url, providerRef: j.result.uuid };
+}
+function verifyCryptomus(v: VerifyArgs): VerifyResult {
+  if (!v.creds.payment_api_key) return { verified: false, reason: "missing_secret" };
+  const body = JSON.parse(v.rawBody) as Record<string, unknown> & {
+    sign?: string; status?: string; order_id?: string; uuid?: string;
+    amount?: string; currency?: string; type?: string;
+  };
+  const receivedSign = body.sign;
+  if (!receivedSign) return { verified: false, reason: "missing_signature" };
+  const clone: Record<string, unknown> = { ...body };
+  delete clone.sign;
+  const expected = cryptomusSign(clone, v.creds.payment_api_key);
+  if (!safeEqual(String(receivedSign), expected)) return { verified: false, reason: "bad_signature" };
+  const st = String(body.status ?? "");
+  const status: VerifyResult["status"] =
+    st === "paid" || st === "paid_over" ? "completed"
+    : st === "fail" || st === "cancel" || st === "system_fail" || st === "wrong_amount" ? "failed"
+    : "pending";
+  return {
+    verified: true,
+    eventType: body.type ?? st,
+    providerEventId: body.uuid,
+    invoiceRef: body.order_id,
+    providerTxnId: body.uuid,
+    status,
+    amount: body.amount ? Number(body.amount) : undefined,
+    currency: body.currency ? String(body.currency).toUpperCase() : undefined,
+  };
+}
+
 // Registry dispatcher
 export async function initiateCheckout(providerId: string, args: InitiateArgs): Promise<InitiateResult> {
   switch (providerId) {
