@@ -39,7 +39,7 @@ function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, slug, public_bio, accept_tips, tip_min_amount",
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, slug, public_bio, accept_tips, tip_min_amount",
       )
       .eq("id", user.id)
       .maybeSingle()
