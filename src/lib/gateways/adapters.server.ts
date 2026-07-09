@@ -370,6 +370,11 @@ function verifyStripe(v: VerifyArgs): VerifyResult {
   const signed = `${parts.t}.${v.rawBody}`;
   const expected = hmacSha256Hex(v.creds.webhook_secret, signed);
   if (!safeEqualHex(parts.v1 ?? "", expected)) return { verified: false, reason: "bad_signature" };
+  // Anti-replay: reject events older than 5 minutes.
+  const ts = Number(parts.t);
+  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) {
+    return { verified: false, reason: "stale_signature" };
+  }
   const body = JSON.parse(v.rawBody) as {
     id: string; type: string;
     data: { object: { metadata?: Record<string, string>; id?: string; amount_total?: number; currency?: string; payment_status?: string } };
@@ -542,4 +547,155 @@ function verifyOwnpay(v: VerifyArgs): VerifyResult {
     amount: body.amount ? Number(body.amount) : undefined,
     currency: body.currency,
   };
+}
+
+// ─── Refund dispatcher ────────────────────────────────────────────
+// Calls the real provider refund endpoint. Returns a normalised result.
+// Callers should catch and fall back to manual refund workflow on failure.
+export type RefundArgs = {
+  providerTxnId: string;
+  amount: number;
+  currency: string;
+  creds: GatewayCreds;
+  mode: "sandbox" | "live";
+  reason?: string;
+};
+export type RefundResult = {
+  ok: boolean;
+  providerRefundId?: string;
+  status?: "pending" | "succeeded" | "failed";
+  raw?: unknown;
+  error?: string;
+};
+
+async function refundStripe(a: RefundArgs): Promise<RefundResult> {
+  const body = new URLSearchParams();
+  body.set("payment_intent", a.providerTxnId.startsWith("pi_") ? a.providerTxnId : "");
+  if (!body.get("payment_intent")) {
+    // If we stored a Checkout Session id (cs_...), Stripe accepts `charge` id
+    // instead — but we don't know it here, so fall back to `payment_intent`
+    // omitted and use `metadata` for lookup on admin side.
+    body.delete("payment_intent");
+    body.set("charge", a.providerTxnId);
+  }
+  body.set("amount", String(Math.round(a.amount * 100)));
+  if (a.reason) body.set("reason", "requested_by_customer");
+  const res = await fetch("https://api.stripe.com/v1/refunds", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${a.creds.secret_key}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+  const j = (await res.json()) as { id?: string; status?: string; error?: { message: string } };
+  if (!res.ok || !j.id) return { ok: false, error: j.error?.message ?? "Stripe refund failed", raw: j };
+  return { ok: true, providerRefundId: j.id, status: j.status === "succeeded" ? "succeeded" : "pending", raw: j };
+}
+
+async function refundRazorpay(a: RefundArgs): Promise<RefundResult> {
+  const res = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(a.providerTxnId)}/refund`, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${a.creds.key_id}:${a.creds.key_secret}`).toString("base64"),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ amount: Math.round(a.amount * 100), notes: { reason: a.reason ?? "" } }),
+  });
+  const j = (await res.json()) as { id?: string; status?: string; error?: { description: string } };
+  if (!res.ok || !j.id) return { ok: false, error: j.error?.description ?? "Razorpay refund failed", raw: j };
+  return { ok: true, providerRefundId: j.id, status: j.status === "processed" ? "succeeded" : "pending", raw: j };
+}
+
+async function refundPaypal(a: RefundArgs): Promise<RefundResult> {
+  const base = a.mode === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  const tokRes = await fetch(`${base}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${a.creds.client_id}:${a.creds.client_secret}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const tok = (await tokRes.json()) as { access_token?: string };
+  if (!tok.access_token) return { ok: false, error: "PayPal token failed" };
+  const res = await fetch(`${base}/v2/payments/captures/${encodeURIComponent(a.providerTxnId)}/refund`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${tok.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amount: { value: a.amount.toFixed(2), currency_code: a.currency },
+      note_to_payer: a.reason ?? "",
+    }),
+  });
+  const j = (await res.json()) as { id?: string; status?: string; message?: string };
+  if (!res.ok || !j.id) return { ok: false, error: j.message ?? "PayPal refund failed", raw: j };
+  return { ok: true, providerRefundId: j.id, status: j.status === "COMPLETED" ? "succeeded" : "pending", raw: j };
+}
+
+async function refundBkash(a: RefundArgs): Promise<RefundResult> {
+  const base = a.mode === "live"
+    ? "https://tokenized.pay.bka.sh/v1.2.0-beta"
+    : "https://tokenized.sandbox.bka.sh/v1.2.0-beta";
+  const tokenRes = await fetch(`${base}/tokenized/checkout/token/grant`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", accept: "application/json",
+      username: a.creds.username, password: a.creds.password,
+    },
+    body: JSON.stringify({ app_key: a.creds.app_key, app_secret: a.creds.app_secret }),
+  });
+  const tok = (await tokenRes.json()) as { id_token?: string };
+  if (!tok.id_token) return { ok: false, error: "bKash token failed" };
+  const res = await fetch(`${base}/tokenized/checkout/payment/refund`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", accept: "application/json",
+      Authorization: tok.id_token, "X-App-Key": a.creds.app_key,
+    },
+    body: JSON.stringify({
+      paymentID: a.providerTxnId,
+      amount: a.amount.toFixed(2),
+      trxID: a.providerTxnId,
+      sku: "refund",
+      reason: a.reason ?? "customer refund",
+    }),
+  });
+  const j = (await res.json()) as { refundTrxID?: string; transactionStatus?: string; errorMessage?: string };
+  if (!res.ok || !j.refundTrxID) return { ok: false, error: j.errorMessage ?? "bKash refund failed", raw: j };
+  return { ok: true, providerRefundId: j.refundTrxID, status: j.transactionStatus === "Completed" ? "succeeded" : "pending", raw: j };
+}
+
+async function refundAggregator(url: string, apiKeyHeader: string, a: RefundArgs): Promise<RefundResult> {
+  const base = (a.creds.base_url || "").replace(/\/$/, "");
+  if (!base) return { ok: false, error: "base_url missing" };
+  const res = await fetch(`${base}${url}`, {
+    method: "POST",
+    headers: { [apiKeyHeader]: a.creds.api_key, "Content-Type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      invoice_id: a.providerTxnId,
+      transaction_id: a.providerTxnId,
+      amount: a.amount.toFixed(2),
+      reason: a.reason ?? "",
+    }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { status?: boolean; refund_id?: string; message?: string };
+  if (!res.ok || j.status === false) return { ok: false, error: j.message ?? "Aggregator refund failed", raw: j };
+  return { ok: true, providerRefundId: j.refund_id ?? a.providerTxnId, status: "pending", raw: j };
+}
+
+export async function refundProvider(providerId: string, a: RefundArgs): Promise<RefundResult> {
+  try {
+    switch (providerId) {
+      case "stripe":     return await refundStripe(a);
+      case "razorpay":   return await refundRazorpay(a);
+      case "paypal":     return await refundPaypal(a);
+      case "bkash":      return await refundBkash(a);
+      case "uddoktapay": return await refundAggregator("/api/refund-payment", "RT-UDDOKTAPAY-API-KEY", a);
+      case "piprapay":   return await refundAggregator("/api/refund-payment", "mh-piprapay-api-key", a);
+      default:
+        return { ok: false, error: `Automatic refund not supported for ${providerId}; process manually.` };
+    }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
 }

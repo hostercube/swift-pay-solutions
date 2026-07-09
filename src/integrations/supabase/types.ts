@@ -1495,6 +1495,9 @@ export type Database = {
           merchant_id: string
           processed_at: string | null
           processed_by: string | null
+          provider: string | null
+          provider_refund_id: string | null
+          provider_response: Json | null
           reason: string | null
           requested_via: string
           status: Database["public"]["Enums"]["refund_status"]
@@ -1511,6 +1514,9 @@ export type Database = {
           merchant_id: string
           processed_at?: string | null
           processed_by?: string | null
+          provider?: string | null
+          provider_refund_id?: string | null
+          provider_response?: Json | null
           reason?: string | null
           requested_via?: string
           status?: Database["public"]["Enums"]["refund_status"]
@@ -1527,6 +1533,9 @@ export type Database = {
           merchant_id?: string
           processed_at?: string | null
           processed_by?: string | null
+          provider?: string | null
+          provider_refund_id?: string | null
+          provider_response?: Json | null
           reason?: string | null
           requested_via?: string
           status?: Database["public"]["Enums"]["refund_status"]

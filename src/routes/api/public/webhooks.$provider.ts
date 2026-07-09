@@ -55,7 +55,20 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
           }
         }
 
-        await admin.from("webhook_events").insert({
+        // Idempotency: skip duplicate provider events (retries).
+        if (result?.verified && result.providerEventId) {
+          const { data: dupRow } = await supabaseAdmin
+            .from("webhook_events")
+            .select("id")
+            .eq("provider", provider)
+            .eq("provider_event_id", result.providerEventId)
+            .maybeSingle();
+          if (dupRow) {
+            return Response.json({ ok: true, duplicate: true });
+          }
+        }
+
+        const { error: insErr } = await admin.from("webhook_events").insert({
           provider,
           merchant_id: matched?.merchant_id ?? null,
           invoice_id: result?.invoiceRef ?? null,
@@ -67,6 +80,10 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
           processed: false,
           error: result?.verified ? null : (result?.reason ?? "no_matching_credentials"),
         });
+        // Unique-index race: another concurrent delivery beat us to it.
+        if (insErr && /duplicate key|unique/i.test(String((insErr as { message?: string }).message ?? ""))) {
+          return Response.json({ ok: true, duplicate: true });
+        }
 
         if (!result?.verified) {
           return new Response("Invalid signature", { status: 401 });
@@ -74,13 +91,39 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
 
         // Reconcile with invoice/transaction.
         if (result.invoiceRef && result.status === "completed") {
-          await admin.from("invoices").update({
-            status: "completed",
-            paid_at: new Date().toISOString(),
-          }).eq("id", result.invoiceRef);
+          // Validate amount/currency against the invoice before crediting.
+          const invRes = await supabaseAdmin.from("invoices")
+            .select("id, amount, currency, merchant_id, status")
+            .eq("id", result.invoiceRef)
+            .maybeSingle();
+          const inv = invRes.data as { amount?: number; currency?: string; status?: string; merchant_id?: string } | null;
+          if (!inv) {
+            return new Response("Unknown invoice", { status: 400 });
+          }
+          // Cross-merchant guard: matched creds must own this invoice (unless platform).
+          if (matched?.merchant_id && inv.merchant_id !== matched.merchant_id) {
+            return new Response("Merchant mismatch", { status: 401 });
+          }
+          if (typeof result.amount === "number") {
+            const expected = Number(inv.amount);
+            // Allow ±1 minor unit rounding.
+            if (Math.abs(expected - result.amount) > 0.01) {
+              return new Response("Amount mismatch", { status: 400 });
+            }
+          }
+          if (result.currency && inv.currency && result.currency.toUpperCase() !== String(inv.currency).toUpperCase()) {
+            return new Response("Currency mismatch", { status: 400 });
+          }
+          // Only mark completed if not already refunded/completed.
+          if (inv.status !== "refunded" && inv.status !== "completed") {
+            await admin.from("invoices").update({
+              status: "completed",
+              paid_at: new Date().toISOString(),
+            }).eq("id", result.invoiceRef);
+          }
           if (result.providerTxnId) {
             await admin.from("transactions").update({
-              status: "completed",
+              status: "verified",
               verified_at: new Date().toISOString(),
               provider_txn_id: result.providerTxnId,
             }).eq("provider_txn_id", result.providerTxnId);

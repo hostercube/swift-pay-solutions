@@ -64,6 +64,19 @@ export const submitManualPayment = createServerFn({ method: "POST" })
     const fee = Math.round((gross * Number(method.fee_percent ?? 0) / 100 + Number(method.fee_flat ?? 0)) * 100) / 100;
     const net = Math.round((gross - fee) * 100) / 100;
 
+    // Anti-fraud: same TrxID may not be reused across invoices for this merchant.
+    const trimmedTxn = data.providerTxnId.trim();
+    const { data: dupe } = await supabaseAdmin
+      .from("transactions")
+      .select("id, invoice_id, status")
+      .eq("merchant_id", inv.merchant_id)
+      .eq("provider_txn_id", trimmedTxn)
+      .neq("status", "rejected")
+      .maybeSingle();
+    if (dupe && dupe.invoice_id !== inv.id) {
+      throw new Error("This Transaction ID was already submitted for another invoice.");
+    }
+
     await supabaseAdmin
       .from("invoices")
       .update({ method_id: method.id, method_type: method.type as never, status: "processing" })
@@ -81,12 +94,18 @@ export const submitManualPayment = createServerFn({ method: "POST" })
         net_amount: net,
         sender_number: data.senderNumber,
         sender_name: data.senderName || null,
-        provider_txn_id: data.providerTxnId.trim(),
-        reference: data.providerTxnId.trim(),
+        provider_txn_id: trimmedTxn,
+        reference: trimmedTxn,
       })
       .select("id")
       .single();
-    if (tErr || !txn) throw new Error(tErr?.message ?? "Submit failed");
+    if (tErr || !txn) {
+      const msg = tErr?.message ?? "Submit failed";
+      if (/duplicate key|unique/i.test(msg)) {
+        throw new Error("This Transaction ID was already submitted for another invoice.");
+      }
+      throw new Error(msg);
+    }
 
     dispatchWebhooks({
       merchantId: inv.merchant_id,
