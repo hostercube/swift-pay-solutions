@@ -280,7 +280,9 @@ function CodeTabs({ tabs }: { tabs: { label: string; code: string }[] }) {
 }
 
 
+function Method({ verb, path }: { verb: "GET" | "POST" | "DELETE"; path: string }) {
   const color =
+
     verb === "GET"
       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
       : verb === "POST"
