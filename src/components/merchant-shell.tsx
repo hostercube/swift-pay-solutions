@@ -25,6 +25,7 @@ import {
   Mail,
   CalendarClock,
   Code2,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +91,7 @@ const navGroups: NavGroup[] = [
       { to: "/notifications", label: "Notifications", icon: Bell },
 
       { to: "/marketing", label: "Marketing & SEO", icon: BarChart3, perm: "settings" },
+      { to: "/domains", label: "Custom domains", icon: Globe, perm: "settings" },
       { to: "/settings", label: "Settings", icon: Settings, perm: "settings" },
     ],
   },
