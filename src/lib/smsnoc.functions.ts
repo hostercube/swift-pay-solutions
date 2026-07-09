@@ -285,5 +285,4 @@ export const smsNocNotifyPasswordReset = createServerFn({ method: "POST" })
   });
 
 // Silences unused import lint
-void assertSuperAdminOrPlatformStaff;
 void renderTemplate;
