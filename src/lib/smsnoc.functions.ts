@@ -229,15 +229,16 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
     if (!cfg || !cfg.api_key) throw new Error("Configure your SMS NOC API key first");
     const brand = await loadPlatformBrandName();
     const message = data.message || `Test message via ${brand}/SMS NOC.`;
+    let result;
     if (data.channel === "sms")
-      return sendSms({
+      result = await sendSms({
         apiKey: cfg.api_key,
         to: data.to,
         message,
         senderId: (cfg.sender_id as string) || undefined,
       });
-    if (data.channel === "email")
-      return sendEmail({
+    else if (data.channel === "email")
+      result = await sendEmail({
         apiKey: cfg.api_key,
         to: data.to,
         subject: `${brand} · Test`,
@@ -245,14 +246,15 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
         html: `<p>${message}</p>`,
         configId: (cfg.email_config_id as string) || undefined,
       });
-    if (data.channel === "whatsapp")
-      return sendWhatsApp({
+    else if (data.channel === "whatsapp")
+      result = await sendWhatsApp({
         apiKey: cfg.api_key,
         to: data.to,
         message,
         deviceId: (cfg.whatsapp_device_id as string) || undefined,
       });
-    return sendVoice({ apiKey: cfg.api_key, to: data.to, message });
+    else result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
+    return serializeResult(result);
   });
 
 // ---------- Public platform-level triggers (called from public pages after auth actions) ----------
