@@ -30,8 +30,6 @@ import { Route as AuthenticatedSecurityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedRefundsRouteImport } from './routes/_authenticated/refunds'
 import { Route as AuthenticatedRecurringRouteImport } from './routes/_authenticated/recurring'
-import { Route as AuthenticatedPayoutsRouteImport } from './routes/_authenticated/payouts'
-import { Route as AuthenticatedPayoutScheduleRouteImport } from './routes/_authenticated/payout-schedule'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
@@ -66,7 +64,6 @@ import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSmsnocRouteImport } from './routes/_authenticated/admin/smsnoc'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
-import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin/packages'
 import { Route as AuthenticatedAdminKycRouteImport } from './routes/_authenticated/admin/kyc'
 import { Route as AuthenticatedAdminInvoicesRouteImport } from './routes/_authenticated/admin/invoices'
@@ -83,7 +80,6 @@ import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
 import { Route as ApiPublicHooksRunSubscriptionsRouteImport } from './routes/api/public/hooks/run-subscriptions'
 import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/public/hooks/run-recurring'
-import { Route as ApiPublicHooksRunPayoutScheduleRouteImport } from './routes/api/public/hooks/run-payout-schedule'
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
 import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
@@ -197,17 +193,6 @@ const AuthenticatedRecurringRoute = AuthenticatedRecurringRouteImport.update({
   path: '/recurring',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedPayoutsRoute = AuthenticatedPayoutsRouteImport.update({
-  id: '/payouts',
-  path: '/payouts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPayoutScheduleRoute =
-  AuthenticatedPayoutScheduleRouteImport.update({
-    id: '/payout-schedule',
-    path: '/payout-schedule',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -399,12 +384,6 @@ const AuthenticatedAdminPlatformRoute =
     path: '/platform',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
-const AuthenticatedAdminPayoutsRoute =
-  AuthenticatedAdminPayoutsRouteImport.update({
-    id: '/payouts',
-    path: '/payouts',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
 const AuthenticatedAdminPackagesRoute =
   AuthenticatedAdminPackagesRouteImport.update({
     id: '/packages',
@@ -494,12 +473,6 @@ const ApiPublicHooksRunRecurringRoute =
     path: '/api/public/hooks/run-recurring',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksRunPayoutScheduleRoute =
-  ApiPublicHooksRunPayoutScheduleRouteImport.update({
-    id: '/api/public/hooks/run-payout-schedule',
-    path: '/api/public/hooks/run-payout-schedule',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicHooksRunDigestRoute = ApiPublicHooksRunDigestRouteImport.update({
   id: '/api/public/hooks/run-digest',
   path: '/api/public/hooks/run-digest',
@@ -564,8 +537,6 @@ export interface FileRoutesByFullPath {
   '/marketing': typeof AuthenticatedMarketingRoute
   '/notifications': typeof AuthenticatedNotificationsRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
-  '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -582,7 +553,6 @@ export interface FileRoutesByFullPath {
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
-  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
@@ -611,7 +581,6 @@ export interface FileRoutesByFullPath {
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
-  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
@@ -644,8 +613,6 @@ export interface FileRoutesByTo {
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
-  '/payouts': typeof AuthenticatedPayoutsRoute
   '/recurring': typeof AuthenticatedRecurringRoute
   '/refunds': typeof AuthenticatedRefundsRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -661,7 +628,6 @@ export interface FileRoutesByTo {
   '/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
-  '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
@@ -689,7 +655,6 @@ export interface FileRoutesByTo {
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
-  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
@@ -727,8 +692,6 @@ export interface FileRoutesById {
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
-  '/_authenticated/payout-schedule': typeof AuthenticatedPayoutScheduleRoute
-  '/_authenticated/payouts': typeof AuthenticatedPayoutsRoute
   '/_authenticated/recurring': typeof AuthenticatedRecurringRoute
   '/_authenticated/refunds': typeof AuthenticatedRefundsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -745,7 +708,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/invoices': typeof AuthenticatedAdminInvoicesRoute
   '/_authenticated/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
-  '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
@@ -774,7 +736,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
-  '/api/public/hooks/run-payout-schedule': typeof ApiPublicHooksRunPayoutScheduleRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
@@ -812,8 +773,6 @@ export interface FileRouteTypes {
     | '/marketing'
     | '/notifications'
     | '/onboarding'
-    | '/payout-schedule'
-    | '/payouts'
     | '/recurring'
     | '/refunds'
     | '/reports'
@@ -830,7 +789,6 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/packages'
-    | '/admin/payouts'
     | '/admin/platform'
     | '/admin/settings'
     | '/admin/smsnoc'
@@ -859,7 +817,6 @@ export interface FileRouteTypes {
     | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
-    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
@@ -892,8 +849,6 @@ export interface FileRouteTypes {
     | '/kyc'
     | '/marketing'
     | '/onboarding'
-    | '/payout-schedule'
-    | '/payouts'
     | '/recurring'
     | '/refunds'
     | '/reports'
@@ -909,7 +864,6 @@ export interface FileRouteTypes {
     | '/admin/invoices'
     | '/admin/kyc'
     | '/admin/packages'
-    | '/admin/payouts'
     | '/admin/settings'
     | '/admin/smsnoc'
     | '/admin/staff'
@@ -937,7 +891,6 @@ export interface FileRouteTypes {
     | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
-    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
@@ -974,8 +927,6 @@ export interface FileRouteTypes {
     | '/_authenticated/marketing'
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
-    | '/_authenticated/payout-schedule'
-    | '/_authenticated/payouts'
     | '/_authenticated/recurring'
     | '/_authenticated/refunds'
     | '/_authenticated/reports'
@@ -992,7 +943,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/invoices'
     | '/_authenticated/admin/kyc'
     | '/_authenticated/admin/packages'
-    | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/smsnoc'
@@ -1021,7 +971,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/run-digest'
-    | '/api/public/hooks/run-payout-schedule'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
@@ -1051,7 +1000,6 @@ export interface RootRouteChildren {
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
   ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
-  ApiPublicHooksRunPayoutScheduleRoute: typeof ApiPublicHooksRunPayoutScheduleRoute
   ApiPublicHooksRunRecurringRoute: typeof ApiPublicHooksRunRecurringRoute
   ApiPublicHooksRunSubscriptionsRoute: typeof ApiPublicHooksRunSubscriptionsRoute
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
@@ -1209,20 +1157,6 @@ declare module '@tanstack/react-router' {
       path: '/recurring'
       fullPath: '/recurring'
       preLoaderRoute: typeof AuthenticatedRecurringRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/payouts': {
-      id: '/_authenticated/payouts'
-      path: '/payouts'
-      fullPath: '/payouts'
-      preLoaderRoute: typeof AuthenticatedPayoutsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/payout-schedule': {
-      id: '/_authenticated/payout-schedule'
-      path: '/payout-schedule'
-      fullPath: '/payout-schedule'
-      preLoaderRoute: typeof AuthenticatedPayoutScheduleRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -1463,13 +1397,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPlatformRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
-    '/_authenticated/admin/payouts': {
-      id: '/_authenticated/admin/payouts'
-      path: '/payouts'
-      fullPath: '/admin/payouts'
-      preLoaderRoute: typeof AuthenticatedAdminPayoutsRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
     '/_authenticated/admin/packages': {
       id: '/_authenticated/admin/packages'
       path: '/packages'
@@ -1582,13 +1509,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunRecurringRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/run-payout-schedule': {
-      id: '/api/public/hooks/run-payout-schedule'
-      path: '/api/public/hooks/run-payout-schedule'
-      fullPath: '/api/public/hooks/run-payout-schedule'
-      preLoaderRoute: typeof ApiPublicHooksRunPayoutScheduleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/hooks/run-digest': {
       id: '/api/public/hooks/run-digest'
       path: '/api/public/hooks/run-digest'
@@ -1671,7 +1591,6 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminInvoicesRoute: typeof AuthenticatedAdminInvoicesRoute
   AuthenticatedAdminKycRoute: typeof AuthenticatedAdminKycRoute
   AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
-  AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminSmsnocRoute: typeof AuthenticatedAdminSmsnocRoute
@@ -1690,7 +1609,6 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminInvoicesRoute: AuthenticatedAdminInvoicesRoute,
     AuthenticatedAdminKycRoute: AuthenticatedAdminKycRoute,
     AuthenticatedAdminPackagesRoute: AuthenticatedAdminPackagesRoute,
-    AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -1785,8 +1703,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
-  AuthenticatedPayoutScheduleRoute: typeof AuthenticatedPayoutScheduleRoute
-  AuthenticatedPayoutsRoute: typeof AuthenticatedPayoutsRoute
   AuthenticatedRecurringRoute: typeof AuthenticatedRecurringRoute
   AuthenticatedRefundsRoute: typeof AuthenticatedRefundsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -1813,8 +1729,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
-  AuthenticatedPayoutScheduleRoute: AuthenticatedPayoutScheduleRoute,
-  AuthenticatedPayoutsRoute: AuthenticatedPayoutsRoute,
   AuthenticatedRecurringRoute: AuthenticatedRecurringRoute,
   AuthenticatedRefundsRoute: AuthenticatedRefundsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
@@ -1858,7 +1772,6 @@ const rootRouteChildren: RootRouteChildren = {
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
   ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,
-  ApiPublicHooksRunPayoutScheduleRoute: ApiPublicHooksRunPayoutScheduleRoute,
   ApiPublicHooksRunRecurringRoute: ApiPublicHooksRunRecurringRoute,
   ApiPublicHooksRunSubscriptionsRoute: ApiPublicHooksRunSubscriptionsRoute,
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
