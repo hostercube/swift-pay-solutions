@@ -132,7 +132,7 @@ function CheckoutPage() {
   const [inv, setInv] = useState<Invoice | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
-  const [gateways, setGateways] = useState<{ provider: string; mode: string }[]>([]);
+  const [gateways, setGateways] = useState<{ id?: string; provider: string; mode: string; label?: string | null }[]>([]);
   const [selected, setSelected] = useState<Method | null>(null);
   const [redirecting, setRedirecting] = useState<string | null>(null);
   const [txns, setTxns] = useState<Txn[]>([]);
@@ -164,7 +164,7 @@ function CheckoutPage() {
         ]);
         setMethods(((m as Method[]) ?? []));
         setTxns(((t as Txn[]) ?? []));
-        setGateways(((g as { provider: string; mode: string }[]) ?? []));
+        setGateways(((g as { id?: string; provider: string; mode: string; label?: string | null }[]) ?? []));
         const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
         setBrand((brandRow ?? null) as Brand | null);
       }
@@ -307,9 +307,9 @@ function CheckoutPage() {
   }
 
 
-  async function payViaGateway(provider: string) {
+  async function payViaGateway(provider: string, configId?: string) {
     if (!inv) return;
-    setRedirecting(provider);
+    setRedirecting(configId ?? provider);
     try {
       const origin = window.location.origin;
       const res = await initiateGw({
@@ -317,6 +317,7 @@ function CheckoutPage() {
           invoiceId: inv.id,
           provider,
           source: "byo",
+          configId,
           successUrl: `${origin}/pay/${inv.id}?paid=1`,
           cancelUrl: `${origin}/pay/${inv.id}?cancelled=1`,
         },
@@ -575,7 +576,7 @@ function methodCategory(type: string): CatKey {
   return "other";
 }
 
-type Gw = { provider: string; mode: string };
+type Gw = { id?: string; provider: string; mode: string; label?: string | null };
 
 function MethodPicker({
   autoGateways, methods, redirecting, onSelectMethod, onGateway,
@@ -584,7 +585,7 @@ function MethodPicker({
   methods: Method[];
   redirecting: string | null;
   onSelectMethod: (m: Method) => void;
-  onGateway: (p: string) => void;
+  onGateway: (p: string, configId?: string) => void;
 }) {
   const grouped = useMemo(() => {
     const g: Record<CatKey, Method[]> = { auto: [], mobile: [], bank: [], crypto: [], other: [] };
@@ -650,12 +651,13 @@ function MethodPicker({
         <div className="grid gap-3 sm:grid-cols-2">
           {autoGateways.map((g) => {
             const spec = getGateway(g.provider);
-            const busy = redirecting === g.provider;
+            const key = g.id ?? g.provider;
+            const busy = redirecting === key;
             return (
               <button
-                key={g.provider}
+                key={key}
                 disabled={busy || !!redirecting}
-                onClick={() => onGateway(g.provider)}
+                onClick={() => onGateway(g.provider, g.id)}
                 className="group relative overflow-hidden rounded-xl border border-glass-border bg-card/50 p-4 text-left transition hover:border-brand hover:shadow-[0_10px_30px_-15px_hsl(var(--brand)/0.4)] disabled:opacity-60"
               >
                 <div className="flex items-center justify-between gap-2">
@@ -664,8 +666,12 @@ function MethodPicker({
                       <Zap className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate font-semibold">{spec?.label ?? g.provider}</div>
-                      <div className="text-[11px] text-muted-foreground">{busy ? "Redirecting…" : "Instant · auto-verified"}</div>
+                      <div className="truncate font-semibold">
+                        {g.label || spec?.label || g.provider}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {busy ? "Redirecting…" : g.label ? (spec?.label ?? g.provider) : "Instant · auto-verified"}
+                      </div>
                     </div>
                   </div>
                   {g.mode === "sandbox" && (
