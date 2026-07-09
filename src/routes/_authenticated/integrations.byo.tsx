@@ -242,11 +242,11 @@ function ByoPage() {
 
       {draft && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
           onClick={() => setDraft(null)}
         >
           <div
-            className="glass max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-glass-border p-6"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-glass-border bg-card p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <DraftEditor
