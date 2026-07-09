@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Clock, FileText, ExternalLink, RefreshCw } from 
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/integrations/reviews")({
   head: () => ({ meta: [{ title: "Manual reviews · PayNOC" }] }),
@@ -124,93 +125,96 @@ function ReviewsPage() {
         </button>
       </div>
 
-      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Invoice</th>
-              <th className="px-4 py-3">Method</th>
-              <th className="px-4 py-3">Payer</th>
-              <th className="px-4 py-3">TrxID</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Slip</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!loading && rows.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
-                No {filter === "all" ? "" : filter} records.
-              </td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border align-top">
-                <td className="px-4 py-3">
-                  <div className="font-mono text-xs">{r.invoices?.invoice_number ?? r.invoice_id.slice(0, 8)}</div>
-                  <div className="text-[11px] text-muted-foreground">{r.invoices?.customer_email ?? "—"}</div>
-                </td>
-                <td className="px-4 py-3 uppercase text-muted-foreground">{r.method_type}</td>
-                <td className="px-4 py-3">
-                  <div className="text-xs">{r.sender_name || "—"}</div>
-                  <div className="font-mono text-[11px] text-muted-foreground">{r.sender_number || "—"}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="font-mono text-xs">{r.provider_txn_id || "—"}</div>
-                  {r.bank_reference && <div className="text-[11px] text-muted-foreground">ref: {r.bank_reference}</div>}
-                </td>
-                <td className="px-4 py-3 font-mono text-xs">
-                  {r.invoices?.currency ?? ""} {Number(r.gross_amount).toLocaleString()}
-                </td>
-                <td className="px-4 py-3">
-                  {r.slip_url ? (
-                    <button
-                      onClick={() => openSlip(r.slip_url!)}
-                      className="inline-flex items-center gap-1 rounded border border-glass-border bg-background/50 px-2 py-1 text-[11px] hover:border-brand"
-                    >
-                      <FileText className="h-3 w-3" /> View
-                    </button>
-                  ) : <span className="text-[11px] text-muted-foreground">—</span>}
-                </td>
-                <td className="px-4 py-3">
-                  <StatusPill status={r.status} />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {r.status === "pending" ? (
-                    <div className="inline-flex gap-1">
-                      <button
-                        onClick={() => updateStatus(r, "verified")}
-                        className="inline-flex items-center gap-1 rounded bg-success/15 px-2 py-1 text-[11px] font-semibold text-success hover:bg-success/25"
-                      >
-                        <CheckCircle2 className="h-3 w-3" /> Approve
-                      </button>
-                      <button
-                        onClick={() => updateStatus(r, "rejected")}
-                        className="inline-flex items-center gap-1 rounded bg-destructive/15 px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/25"
-                      >
-                        <XCircle className="h-3 w-3" /> Reject
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-right text-[11px] text-muted-foreground">
-                      <div>
-                        {r.status === "verified" && r.verified_at ? new Date(r.verified_at).toLocaleString() : null}
-                        {r.status === "rejected" && r.rejected_at ? new Date(r.rejected_at).toLocaleString() : null}
-                        {!r.verified_at && !r.rejected_at ? "—" : null}
-                      </div>
-                      {r.status === "rejected" && r.rejected_reason && (
-                        <div className="mt-1 max-w-[220px] whitespace-pre-line rounded bg-destructive/10 px-2 py-1 text-left text-[10px] text-destructive">
-                          {r.rejected_reason}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<Row>
+        rows={rows}
+        loading={loading}
+        rowKey={(r) => r.id}
+        searchable={(r) =>
+          `${r.invoices?.invoice_number ?? ""} ${r.invoices?.customer_email ?? ""} ${r.sender_name ?? ""} ${r.sender_number ?? ""} ${r.provider_txn_id ?? ""} ${r.bank_reference ?? ""}`
+        }
+        dateField={(r) => r.created_at}
+        emptyMessage={`No ${filter === "all" ? "" : filter} records.`}
+        filters={[
+          {
+            key: "method",
+            label: "Method",
+            options: Array.from(new Set(rows.map((r) => r.method_type))).map((m) => ({ value: m, label: m.toUpperCase() })),
+            match: (r, v) => r.method_type === v,
+          },
+        ]}
+        columns={[
+          {
+            key: "invoice",
+            label: "Invoice",
+            render: (r) => (
+              <div>
+                <div className="font-mono text-xs">{r.invoices?.invoice_number ?? r.invoice_id.slice(0, 8)}</div>
+                <div className="text-[11px] text-muted-foreground">{r.invoices?.customer_email ?? "—"}</div>
+              </div>
+            ),
+          },
+          { key: "method", label: "Method", render: (r) => <span className="uppercase text-muted-foreground">{r.method_type}</span> },
+          {
+            key: "payer",
+            label: "Payer",
+            render: (r) => (
+              <div>
+                <div className="text-xs">{r.sender_name || "—"}</div>
+                <div className="font-mono text-[11px] text-muted-foreground">{r.sender_number || "—"}</div>
+              </div>
+            ),
+          },
+          {
+            key: "trxid",
+            label: "TrxID",
+            render: (r) => (
+              <div>
+                <div className="font-mono text-xs">{r.provider_txn_id || "—"}</div>
+                {r.bank_reference && <div className="text-[11px] text-muted-foreground">ref: {r.bank_reference}</div>}
+              </div>
+            ),
+          },
+          { key: "amount", label: "Amount", render: (r) => <span className="font-mono text-xs">{r.invoices?.currency ?? ""} {Number(r.gross_amount).toLocaleString()}</span> },
+          {
+            key: "slip",
+            label: "Slip",
+            render: (r) =>
+              r.slip_url ? (
+                <button onClick={() => openSlip(r.slip_url!)} className="inline-flex items-center gap-1 rounded border border-glass-border bg-background/50 px-2 py-1 text-[11px] hover:border-brand">
+                  <FileText className="h-3 w-3" /> View
+                </button>
+              ) : (
+                <span className="text-[11px] text-muted-foreground">—</span>
+              ),
+          },
+          { key: "status", label: "Status", render: (r) => <StatusPill status={r.status} /> },
+        ] as DataTableColumn<Row>[]}
+        actions={(r) =>
+          r.status === "pending" ? (
+            <div className="inline-flex gap-1">
+              <button onClick={() => updateStatus(r, "verified")} className="inline-flex items-center gap-1 rounded bg-success/15 px-2 py-1 text-[11px] font-semibold text-success hover:bg-success/25">
+                <CheckCircle2 className="h-3 w-3" /> Approve
+              </button>
+              <button onClick={() => updateStatus(r, "rejected")} className="inline-flex items-center gap-1 rounded bg-destructive/15 px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/25">
+                <XCircle className="h-3 w-3" /> Reject
+              </button>
+            </div>
+          ) : (
+            <div className="text-right text-[11px] text-muted-foreground">
+              <div>
+                {r.status === "verified" && r.verified_at ? new Date(r.verified_at).toLocaleString() : null}
+                {r.status === "rejected" && r.rejected_at ? new Date(r.rejected_at).toLocaleString() : null}
+                {!r.verified_at && !r.rejected_at ? "—" : null}
+              </div>
+              {r.status === "rejected" && r.rejected_reason && (
+                <div className="mt-1 max-w-[220px] whitespace-pre-line rounded bg-destructive/10 px-2 py-1 text-left text-[10px] text-destructive">
+                  {r.rejected_reason}
+                </div>
+              )}
+            </div>
+          )
+        }
+      />
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPreview(null)}>

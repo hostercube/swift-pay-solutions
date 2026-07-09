@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -126,24 +127,43 @@ function IncidentsPage() {
         </div>
       </Card>
 
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Started</th>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Severity</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No incidents</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border align-top">
-                <td className="px-4 py-3 text-xs">{new Date(r.started_at).toLocaleString()}</td>
-                <td className="px-4 py-3">
+      <div className="mt-6">
+        <DataTable<Incident>
+          rows={rows}
+          rowKey={(r) => r.id}
+          searchable={(r) => `${r.title} ${r.body ?? ""} ${r.components.join(" ")}`}
+          dateField={(r) => r.started_at}
+          emptyMessage="No incidents"
+          filters={[
+            {
+              key: "severity",
+              label: "Severity",
+              options: [
+                { value: "minor", label: "Minor" },
+                { value: "major", label: "Major" },
+                { value: "critical", label: "Critical" },
+              ],
+              match: (r, v) => r.severity === v,
+            },
+            {
+              key: "status",
+              label: "Status",
+              options: [
+                { value: "investigating", label: "Investigating" },
+                { value: "identified", label: "Identified" },
+                { value: "monitoring", label: "Monitoring" },
+                { value: "resolved", label: "Resolved" },
+              ],
+              match: (r, v) => r.status === v,
+            },
+          ]}
+          columns={[
+            { key: "started", label: "Started", render: (r) => <span className="text-xs">{new Date(r.started_at).toLocaleString()}</span> },
+            {
+              key: "title",
+              label: "Title",
+              render: (r) => (
+                <div>
                   <div className="font-medium">{r.title}</div>
                   {r.body && <div className="text-xs text-muted-foreground">{r.body}</div>}
                   {r.components.length > 0 && (
@@ -153,28 +173,28 @@ function IncidentsPage() {
                       ))}
                     </div>
                   )}
-                </td>
-                <td className="px-4 py-3"><Badge variant="outline">{r.severity}</Badge></td>
-                <td className="px-4 py-3"><Badge>{r.status}</Badge></td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {(["investigating", "identified", "monitoring", "resolved"] as const)
-                      .filter((s) => s !== r.status)
-                      .map((s) => (
-                        <Button key={s} size="sm" variant="outline" onClick={() => updateStatus(r.id, s)}>
-                          → {s}
-                        </Button>
-                      ))}
-                    <Button size="sm" variant="destructive" onClick={() => remove(r.id)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Card>
+                </div>
+              ),
+            },
+            { key: "severity", label: "Severity", render: (r) => <Badge variant="outline">{r.severity}</Badge> },
+            { key: "status", label: "Status", render: (r) => <Badge>{r.status}</Badge> },
+          ] as DataTableColumn<Incident>[]}
+          actions={(r) => (
+            <div className="flex flex-wrap justify-end gap-1">
+              {(["investigating", "identified", "monitoring", "resolved"] as const)
+                .filter((s) => s !== r.status)
+                .map((s) => (
+                  <Button key={s} size="sm" variant="outline" onClick={() => updateStatus(r.id, s)}>
+                    → {s}
+                  </Button>
+                ))}
+              <Button size="sm" variant="destructive" onClick={() => remove(r.id)}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+        />
+      </div>
     </AdminShell>
   );
 }

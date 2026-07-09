@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
@@ -134,65 +135,56 @@ function DiscountsPage() {
         </Button>
       </Card>
 
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Code</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Value</th>
-              <th className="px-4 py-3">Uses</th>
-              <th className="px-4 py-3">Expires</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  No discount codes yet
-                </td>
-              </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-t border-glass-border">
-                  <td className="px-4 py-3 font-mono">{r.code}</td>
-                  <td className="px-4 py-3">{r.discount_type}</td>
-                  <td className="px-4 py-3">
-                    {r.discount_type === "percent" ? `${r.value}%` : `৳ ${r.value}`}
-                  </td>
-                  <td className="px-4 py-3">
-                    {r.uses_count}/{r.max_uses ?? "∞"}
-                  </td>
-                  <td className="px-4 py-3 text-xs">
-                    {r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge className={r.active ? "bg-success/15 text-success" : ""}>
-                      {r.active ? "active" : "disabled"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => toggle(r)}
-                      className="text-xs text-brand hover:underline mr-3"
-                    >
-                      {r.active ? "Disable" : "Enable"}
-                    </button>
-                    <button
-                      onClick={() => remove(r.id)}
-                      className="text-xs text-destructive hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+      <div className="mt-6">
+        <DataTable<Row>
+          rows={rows}
+          rowKey={(r) => r.id}
+          searchable={(r) => `${r.code} ${r.discount_type}`}
+          emptyMessage="No discount codes yet"
+          filters={[
+            {
+              key: "type",
+              label: "Type",
+              options: [
+                { value: "percent", label: "Percent" },
+                { value: "flat", label: "Flat" },
+              ],
+              match: (r, v) => r.discount_type === v,
+            },
+            {
+              key: "status",
+              label: "Status",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "disabled", label: "Disabled" },
+              ],
+              match: (r, v) => (v === "active" ? r.active : !r.active),
+            },
+          ]}
+          columns={[
+            { key: "code", label: "Code", render: (r) => <span className="font-mono">{r.code}</span> },
+            { key: "type", label: "Type", render: (r) => r.discount_type },
+            { key: "value", label: "Value", render: (r) => (r.discount_type === "percent" ? `${r.value}%` : `৳ ${r.value}`) },
+            { key: "uses", label: "Uses", render: (r) => `${r.uses_count}/${r.max_uses ?? "∞"}` },
+            { key: "exp", label: "Expires", render: (r) => <span className="text-xs">{r.expires_at ? new Date(r.expires_at).toLocaleDateString() : "—"}</span> },
+            {
+              key: "status",
+              label: "Status",
+              render: (r) => <Badge className={r.active ? "bg-success/15 text-success" : ""}>{r.active ? "active" : "disabled"}</Badge>,
+            },
+          ] as DataTableColumn<Row>[]}
+          actions={(r) => (
+            <>
+              <button onClick={() => toggle(r)} className="text-xs text-brand hover:underline mr-3">
+                {r.active ? "Disable" : "Enable"}
+              </button>
+              <button onClick={() => remove(r.id)} className="text-xs text-destructive hover:underline">
+                Delete
+              </button>
+            </>
+          )}
+        />
+      </div>
     </MerchantShell>
   );
 }

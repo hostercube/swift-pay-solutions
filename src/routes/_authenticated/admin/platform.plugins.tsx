@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { FilteredList } from "@/components/filtered-list";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Save, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -131,17 +132,35 @@ function AdminPluginsPage() {
 
       {/* List */}
       <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold">Published plugins ({rows.length})</h2>
+        <h2 className="mb-4 font-display text-lg font-semibold">Published plugins ({rows.length})</h2>
         {loading ? (
           <p className="mt-4 text-sm text-muted-foreground">Loading…</p>
-        ) : rows.length === 0 ? (
-          <p className="mt-4 text-sm text-muted-foreground">No plugins yet. Add one above.</p>
         ) : (
-          <div className="mt-4 space-y-3">
-            {rows.map((r) => (
-              <PluginRow key={r.id} row={r} onUpdate={update} onRemove={remove} />
-            ))}
-          </div>
+          <FilteredList
+            rows={rows}
+            rowKey={(r) => r.id}
+            searchable={(r) => `${r.name} ${r.slug} ${r.platform} ${r.description ?? ""}`}
+            pageSize={12}
+            emptyMessage="No plugins yet. Add one above."
+            filters={[
+              {
+                key: "platform",
+                label: "Platform",
+                options: Array.from(new Set(rows.map((r) => r.platform))).map((p) => ({ value: p, label: p })),
+                match: (r, v) => r.platform === v,
+              },
+              {
+                key: "visibility",
+                label: "Visibility",
+                options: [
+                  { value: "active", label: "Visible" },
+                  { value: "hidden", label: "Hidden" },
+                ],
+                match: (r, v) => (v === "active" ? r.is_active : !r.is_active),
+              },
+            ]}
+            render={(r) => <PluginRow row={r} onUpdate={update} onRemove={remove} />}
+          />
         )}
       </section>
     </AdminShell>
