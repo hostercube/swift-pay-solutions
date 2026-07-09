@@ -54,6 +54,12 @@ function ForgotPasswordPage() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
+      smsNocNotifyPasswordReset({
+        data: {
+          email,
+          resetLink: `${window.location.origin}/reset-password`,
+        },
+      }).catch(() => undefined);
       setSent(true);
       toast.success("Reset link sent — check your inbox");
     } catch (err) {
