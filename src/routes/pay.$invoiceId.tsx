@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Shield, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
+import { Shield, CheckCircle2, Clock, XCircle, Download, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadReceipt } from "@/lib/pdf-receipt";
 import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
+import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
+import { getGateway } from "@/lib/gateways/registry";
 
 export const Route = createFileRoute("/pay/$invoiceId")({
   head: () => ({ meta: [{ title: "Checkout · PayNOC" }] }),
@@ -77,10 +80,13 @@ type Brand = {
 
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
+  const initiateGw = useServerFn(initiateGatewayCheckout);
   const [inv, setInv] = useState<Invoice | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
+  const [gateways, setGateways] = useState<{ provider: string; mode: string }[]>([]);
   const [selected, setSelected] = useState<Method | null>(null);
+  const [redirecting, setRedirecting] = useState<string | null>(null);
   const [txns, setTxns] = useState<Txn[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -102,13 +108,15 @@ function CheckoutPage() {
       setInv((i ?? null) as Invoice | null);
       if (i) {
         const merchantId = (i as Invoice).merchant_id;
-        const [{ data: m }, { data: t }, { data: b }] = await Promise.all([
+        const [{ data: m }, { data: t }, { data: b }, { data: g }] = await Promise.all([
           rpc("get_checkout_methods", { _merchant_id: merchantId }),
           rpc("get_checkout_transactions", { _invoice_id: invoiceId }),
           rpc("get_checkout_brand", { _merchant_id: merchantId }),
+          rpc("get_checkout_gateways", { _merchant_id: merchantId }),
         ]);
         setMethods(((m as Method[]) ?? []));
         setTxns(((t as Txn[]) ?? []));
+        setGateways(((g as { provider: string; mode: string }[]) ?? []));
         const brandRow = Array.isArray(b) ? (b[0] ?? null) : b;
         setBrand((brandRow ?? null) as Brand | null);
       }
@@ -279,6 +287,34 @@ function CheckoutPage() {
     load();
   }
 
+  async function payViaGateway(provider: string) {
+    if (!inv) return;
+    setRedirecting(provider);
+    try {
+      const origin = window.location.origin;
+      const res = await initiateGw({
+        data: {
+          invoiceId: inv.id,
+          provider,
+          source: "byo",
+          successUrl: `${origin}/pay/${inv.id}?paid=1`,
+          cancelUrl: `${origin}/pay/${inv.id}?cancelled=1`,
+        },
+      });
+      if (res?.redirectUrl) {
+        window.location.href = res.redirectUrl;
+      } else {
+        toast.success("Payment initiated");
+        load();
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gateway checkout failed");
+      setRedirecting(null);
+    }
+  }
+
+
+
   if (loading) {
     return (
       <Shell brand={brand}><div className="text-center text-sm text-muted-foreground">Loading checkout…</div></Shell>
@@ -432,10 +468,49 @@ function CheckoutPage() {
       )}
 
 
+      {!selected && gateways.length > 0 && (
+        <div className="mb-6">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Zap className="h-4 w-4 text-brand" /> Pay online instantly
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Redirects to the merchant's secure gateway. No manual verification needed.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {gateways.map((g) => {
+              const spec = getGateway(g.provider);
+              const busy = redirecting === g.provider;
+              return (
+                <button
+                  key={g.provider}
+                  disabled={busy || !!redirecting}
+                  onClick={() => payViaGateway(g.provider)}
+                  className="glass rounded-xl border border-glass-border p-4 text-left transition hover:border-brand disabled:opacity-60"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{spec?.label ?? g.provider}</div>
+                    {g.mode === "sandbox" && (
+                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                        Test
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {busy ? "Redirecting…" : `Pay with ${spec?.label ?? g.provider}`}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {!selected && (
         <div>
-          <h2 className="font-display text-lg font-semibold">Select a payment method</h2>
-          {methods.length === 0 && (
+          <h2 className="font-display text-lg font-semibold">
+            {gateways.length > 0 ? "Or pay manually" : "Select a payment method"}
+          </h2>
+          {methods.length === 0 && gateways.length === 0 && (
             <p className="mt-3 text-sm text-muted-foreground">
               The merchant has not configured any payment methods yet.
             </p>
