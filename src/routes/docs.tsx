@@ -573,8 +573,8 @@ function ApiReferencePage() {
               <div className="rounded-lg border border-glass-border bg-card/40 p-4">
                 <Field name="id" type="string" desc="Unique invoice identifier." />
                 <Field name="invoice_number" type="string" desc="Human-readable number shown on checkout, e.g. INV-20260708-A1B2C3." />
-                <Field name="amount" type="integer" desc="Amount in the smallest currency unit (paisa for BDT, cents for USD)." />
-                <Field name="currency" type="string" desc="ISO-4217 currency code (BDT, USD, INR…)." />
+                <Field name="amount" type="number" desc="Amount in major currency units (e.g. 1500 means 1,500 BDT). Must be greater than 0." />
+                <Field name="currency" type="string" desc="ISO-4217 currency code. Defaults to BDT." />
                 <Field name="status" type="enum" desc="pending · completed · failed · expired · refunded" />
                 <Field name="mode" type="enum" desc="test or live — matches the key that created the invoice." />
                 <Field name="checkout_url" type="url" desc="Hosted checkout URL — redirect the customer here." />
