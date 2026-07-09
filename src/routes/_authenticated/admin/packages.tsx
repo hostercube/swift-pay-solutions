@@ -241,6 +241,27 @@ function AdminPackagesPage() {
     );
   });
 
+  const subscriberCounts = subs.reduce<Record<string, { active: number; total: number }>>((acc, s) => {
+    const bucket = acc[s.package_id] ?? { active: 0, total: 0 };
+    bucket.total += 1;
+    if (s.status === "active" || s.status === "trialing") bucket.active += 1;
+    acc[s.package_id] = bucket;
+    return acc;
+  }, {});
+
+  const filteredPackages = packages.filter((p) => {
+    if (pkgCycle !== "all" && p.billing_cycle !== pkgCycle) return false;
+    if (pkgStatus === "active" && !p.is_active) return false;
+    if (pkgStatus === "inactive" && p.is_active) return false;
+    if (pkgStatus === "public" && !p.is_public) return false;
+    if (pkgStatus === "hidden" && p.is_public) return false;
+    if (!pkgQ) return true;
+    const q = pkgQ.toLowerCase();
+    return p.name.toLowerCase().includes(q) ||
+      p.slug.toLowerCase().includes(q) ||
+      (p.description ?? "").toLowerCase().includes(q);
+  });
+
   return (
     <AdminShell title="Subscription packages" subtitle="Plans, pricing, and merchant subscriptions">
       <div className="mb-6 flex flex-wrap gap-2">
@@ -252,8 +273,34 @@ function AdminPackagesPage() {
         </Button>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Input value={pkgQ} onChange={(e) => setPkgQ(e.target.value)} placeholder="Search packages…" className="w-56" />
+        <Select value={pkgCycle} onValueChange={setPkgCycle}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All cycles</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="yearly">Yearly</SelectItem>
+            <SelectItem value="lifetime">Lifetime</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={pkgStatus} onValueChange={setPkgStatus}>
+          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active only</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="public">Public</SelectItem>
+            <SelectItem value="hidden">Hidden</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-xs text-muted-foreground">{filteredPackages.length} of {packages.length}</span>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {packages.map((p) => (
+        {filteredPackages.map((p) => {
+          const counts = subscriberCounts[p.id] ?? { active: 0, total: 0 };
+          return (
           <Card key={p.id} className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -275,6 +322,12 @@ function AdminPackagesPage() {
             {p.trial_days > 0 && (
               <div className="mt-2 text-xs text-brand">{p.trial_days}-day free trial</div>
             )}
+            <div className="mt-3 flex items-center gap-3 text-xs">
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-0.5 font-medium text-brand">
+                <Users className="h-3 w-3" /> {counts.active} active
+              </span>
+              <span className="text-muted-foreground">{counts.total} total</span>
+            </div>
             {p.features.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm">
                 {p.features.slice(0, 5).map((f, i) => (
@@ -301,10 +354,11 @@ function AdminPackagesPage() {
               </Button>
             </div>
           </Card>
-        ))}
-        {packages.length === 0 && (
+          );
+        })}
+        {filteredPackages.length === 0 && (
           <Card className="col-span-full p-8 text-center text-sm text-muted-foreground">
-            No packages yet. Click "New package" to create the first plan.
+            {packages.length === 0 ? 'No packages yet. Click "New package" to create the first plan.' : "No packages match filters."}
           </Card>
         )}
       </div>
