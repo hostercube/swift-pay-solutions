@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Shield, Loader2, ArrowLeft } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Shield, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Turnstile } from "@/components/turnstile";
@@ -28,14 +28,65 @@ async function isAdminUser(userId: string): Promise<boolean> {
 
 type Mode = "signin" | "signup";
 
+const COMPANY_TYPES = [
+  "Sole Proprietorship",
+  "Partnership",
+  "Private Limited",
+  "Public Limited",
+  "LLC",
+  "NGO / Non-profit",
+  "Other",
+];
+
+const BUSINESS_TYPES = [
+  "E-commerce",
+  "Retail",
+  "SaaS / Software",
+  "Digital Services",
+  "Education",
+  "Travel & Hospitality",
+  "Healthcare",
+  "Food & Beverage",
+  "Consulting",
+  "Freelance",
+  "Marketplace",
+  "Other",
+];
+
+const COUNTRY_CODES: { code: string; dial: string; flag: string; label: string }[] = [
+  { code: "BD", dial: "+880", flag: "🇧🇩", label: "Bangladesh" },
+  { code: "IN", dial: "+91", flag: "🇮🇳", label: "India" },
+  { code: "PK", dial: "+92", flag: "🇵🇰", label: "Pakistan" },
+  { code: "US", dial: "+1", flag: "🇺🇸", label: "United States" },
+  { code: "GB", dial: "+44", flag: "🇬🇧", label: "United Kingdom" },
+  { code: "AE", dial: "+971", flag: "🇦🇪", label: "UAE" },
+  { code: "SA", dial: "+966", flag: "🇸🇦", label: "Saudi Arabia" },
+  { code: "MY", dial: "+60", flag: "🇲🇾", label: "Malaysia" },
+  { code: "SG", dial: "+65", flag: "🇸🇬", label: "Singapore" },
+  { code: "AU", dial: "+61", flag: "🇦🇺", label: "Australia" },
+  { code: "CA", dial: "+1", flag: "🇨🇦", label: "Canada" },
+];
+
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signin");
+
+  // shared
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [businessName, setBusinessName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // signup-only
+  const [companyName, setCompanyName] = useState("");
+  const [companyType, setCompanyType] = useState("");
+  const [businessType, setBusinessType] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [dialCode, setDialCode] = useState("+880");
+  const [phone, setPhone] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [captcha, setCaptcha] = useState<{ enabled: boolean; siteKey: string } | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -43,6 +94,15 @@ function AuthPage() {
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
+
+  const passwordStrength = useMemo(() => {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score; // 0..4
+  }, [password]);
 
   useEffect(() => {
     getTurnstileConfig()
@@ -78,10 +138,8 @@ function AuthPage() {
   }, [navigate]);
 
   async function landingForMerchant(userId: string): Promise<"/ayman-login" | "/dashboard"> {
-    // Admins are never allowed through the merchant/staff login.
     return (await isAdminUser(userId)) ? "/ayman-login" : "/dashboard";
   }
-
 
   async function checkCaptcha(): Promise<boolean> {
     if (!captcha?.enabled) return true;
@@ -113,6 +171,21 @@ function AuthPage() {
     navigate({ to: u.user ? await landingForMerchant(u.user.id) : "/dashboard" });
   }
 
+  function validateSignup(): string | null {
+    if (!companyName.trim()) return "Company name is required";
+    if (!companyType) return "Please select a company type";
+    if (!businessType) return "Please select a business type";
+    if (!contactName.trim()) return "Contact person name is required";
+    if (!phone.trim() || !/^\d{6,15}$/.test(phone.replace(/\D/g, "")))
+      return "Please enter a valid mobile number";
+    if (websiteUrl && !/^https?:\/\/.+\..+/i.test(websiteUrl))
+      return "Website URL must start with http:// or https://";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (password !== confirmPassword) return "Passwords do not match";
+    if (!acceptTerms) return "You must accept the terms and conditions";
+    return null;
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -122,18 +195,46 @@ function AuthPage() {
         return;
       }
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const err = validateSignup();
+        if (err) {
+          toast.error(err);
+          setLoading(false);
+          return;
+        }
+        const fullPhone = `${dialCode}${phone.replace(/\D/g, "")}`;
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName, business_name: businessName },
+            data: {
+              full_name: contactName,
+              business_name: companyName,
+              company_type: companyType,
+              business_type: businessType,
+              website_url: websiteUrl || null,
+              phone: fullPhone,
+            },
           },
         });
         if (error) throw error;
-        // Best-effort platform welcome notification via SMS NOC.
+
+        // Persist extras to profile (best-effort — profile row is created by trigger).
+        const uid = signUpData.user?.id;
+        if (uid) {
+          await supabase
+            .from("profiles")
+            .update({
+              phone: fullPhone,
+              kyc_business_type: businessType,
+              full_name: contactName,
+              business_name: companyName,
+            })
+            .eq("id", uid);
+        }
+
         smsNocNotifyUserRegistered({
-          data: { email, name: fullName || businessName || undefined },
+          data: { email, name: contactName || companyName || undefined },
         }).catch(() => undefined);
         toast.success("Account created! You're signed in.");
         navigate({ to: "/dashboard" });
@@ -167,11 +268,12 @@ function AuthPage() {
   }
 
   const showMfa = !!mfaChallengeId;
+  const containerMax = mode === "signup" && !showMfa ? "max-w-2xl" : "max-w-md";
 
   return (
     <div className="relative min-h-screen bg-background">
       <div className="grid-radial absolute inset-0 opacity-40" />
-      <div className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
+      <div className={`relative mx-auto flex min-h-screen ${containerMax} flex-col justify-center px-6 py-12`}>
         <div className="mb-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-brand shadow-glow">
@@ -196,13 +298,7 @@ function AuthPage() {
                 Open your authenticator app and enter the 6-digit code.
               </p>
               <form onSubmit={verifyMfa} className="mt-6 space-y-4">
-                <Field
-                  label="Authentication code"
-                  value={mfaCode}
-                  onChange={setMfaCode}
-                  required
-                  minLength={6}
-                />
+                <Field label="Authentication code" value={mfaCode} onChange={setMfaCode} required minLength={6} />
                 <button
                   type="submit"
                   disabled={loading || mfaCode.length < 6}
@@ -228,37 +324,117 @@ function AuthPage() {
           ) : (
             <>
               <h1 className="font-display text-2xl font-bold text-foreground">
-                {mode === "signin" ? "Sign in" : "Create your merchant account"}
+                {mode === "signin" ? "Sign in" : "Merchant Registration"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "signin"
                   ? "Access your PayNOC dashboard."
-                  : "Start accepting payments in minutes."}
+                  : "Create your PayNOC merchant account and start accepting payments."}
               </p>
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
                 {mode === "signup" && (
                   <>
-                    <Field label="Full name" value={fullName} onChange={setFullName} required />
-                    <Field label="Business name" value={businessName} onChange={setBusinessName} required />
+                    <Field
+                      label="Company name (as per trade license)"
+                      value={companyName}
+                      onChange={setCompanyName}
+                      required
+                    />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Select
+                        label="Company type"
+                        value={companyType}
+                        onChange={setCompanyType}
+                        options={COMPANY_TYPES}
+                        placeholder="Select company type"
+                        required
+                      />
+                      <Select
+                        label="Business type"
+                        value={businessType}
+                        onChange={setBusinessType}
+                        options={BUSINESS_TYPES}
+                        placeholder="Select business type"
+                        required
+                      />
+                    </div>
+                    <Field
+                      label="Website URL (optional)"
+                      value={websiteUrl}
+                      onChange={setWebsiteUrl}
+                      type="url"
+                      placeholder="https://your-site.com"
+                    />
+                    <Field
+                      label="Contact person name"
+                      value={contactName}
+                      onChange={setContactName}
+                      required
+                    />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <PhoneField
+                        label="Mobile number"
+                        dial={dialCode}
+                        onDialChange={setDialCode}
+                        value={phone}
+                        onChange={setPhone}
+                      />
+                      <Field label="Email" type="email" value={email} onChange={setEmail} required />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <PasswordField
+                        label="Password"
+                        value={password}
+                        onChange={setPassword}
+                        show={showPassword}
+                        onToggleShow={() => setShowPassword((s) => !s)}
+                      />
+                      <PasswordField
+                        label="Confirm password"
+                        value={confirmPassword}
+                        onChange={setConfirmPassword}
+                        show={showPassword}
+                        onToggleShow={() => setShowPassword((s) => !s)}
+                      />
+                    </div>
+                    {password && (
+                      <PasswordStrength score={passwordStrength} />
+                    )}
+                    <label className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-glass-border accent-brand"
+                      />
+                      <span>
+                        I have read and accept the{" "}
+                        <Link to="/" className="text-brand hover:underline">
+                          terms and conditions
+                        </Link>{" "}
+                        of PayNOC.
+                      </span>
+                    </label>
                   </>
                 )}
-                <Field label="Email" type="email" value={email} onChange={setEmail} required />
-                <Field
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  required
-                  minLength={8}
-                />
 
                 {mode === "signin" && (
-                  <div className="text-right">
-                    <Link to="/forgot-password" className="text-xs text-brand hover:underline">
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <>
+                    <Field label="Email" type="email" value={email} onChange={setEmail} required />
+                    <PasswordField
+                      label="Password"
+                      value={password}
+                      onChange={setPassword}
+                      show={showPassword}
+                      onToggleShow={() => setShowPassword((s) => !s)}
+                    />
+                    <div className="text-right">
+                      <Link to="/forgot-password" className="text-xs text-brand hover:underline">
+                        Forgot password?
+                      </Link>
+                    </div>
+                  </>
                 )}
 
                 {captcha?.enabled && captcha.siteKey && (
@@ -271,7 +447,7 @@ function AuthPage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:opacity-60"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {mode === "signin" ? "Sign in" : "Create account"}
+                  {mode === "signin" ? "Sign in" : "Create merchant account"}
                 </button>
               </form>
 
@@ -283,7 +459,7 @@ function AuthPage() {
                       className="font-semibold text-foreground hover:underline"
                       onClick={() => setMode("signup")}
                     >
-                      Sign up
+                      Register as merchant
                     </button>
                   </>
                 ) : (
@@ -313,6 +489,7 @@ function Field({
   type = "text",
   required,
   minLength,
+  placeholder,
 }: {
   label: string;
   value: string;
@@ -320,6 +497,7 @@ function Field({
   type?: string;
   required?: boolean;
   minLength?: number;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
@@ -332,8 +510,161 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         required={required}
         minLength={minLength}
+        placeholder={placeholder}
         className="w-full rounded-lg border border-glass-border bg-background/40 px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/30"
       />
     </label>
+  );
+}
+
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        className="w-full rounded-lg border border-glass-border bg-background/40 px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/30"
+      >
+        <option value="" disabled>
+          {placeholder ?? "Select..."}
+        </option>
+        {options.map((o) => (
+          <option key={o} value={o} className="bg-background text-foreground">
+            {o}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function PhoneField({
+  label,
+  dial,
+  onDialChange,
+  value,
+  onChange,
+}: {
+  label: string;
+  dial: string;
+  onDialChange: (v: string) => void;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <div className="flex overflow-hidden rounded-lg border border-glass-border bg-background/40 focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/30">
+        <select
+          value={dial}
+          onChange={(e) => onDialChange(e.target.value)}
+          className="border-r border-glass-border bg-background/40 px-2 py-2.5 text-sm text-foreground outline-none"
+          aria-label="Country code"
+        >
+          {COUNTRY_CODES.map((c) => (
+            <option key={c.code} value={c.dial} className="bg-background text-foreground">
+              {c.flag} {c.code} {c.dial}
+            </option>
+          ))}
+        </select>
+        <input
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ""))}
+          placeholder="1XXXXXXXXX"
+          required
+          className="flex-1 bg-transparent px-3 py-2.5 text-sm text-foreground outline-none"
+        />
+      </div>
+    </label>
+  );
+}
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <div className="relative">
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          minLength={8}
+          className="w-full rounded-lg border border-glass-border bg-background/40 px-3 py-2.5 pr-10 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/30"
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+          aria-label={show ? "Hide password" : "Show password"}
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </label>
+  );
+}
+
+function PasswordStrength({ score }: { score: number }) {
+  const labels = ["Too weak", "Weak", "Fair", "Good", "Strong"];
+  const colors = [
+    "bg-destructive/60",
+    "bg-destructive",
+    "bg-amber-500",
+    "bg-emerald-500",
+    "bg-emerald-600",
+  ];
+  return (
+    <div className="space-y-1">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`h-1.5 flex-1 rounded-full ${i < score ? colors[score] : "bg-glass-border"}`}
+          />
+        ))}
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Strength: <span className="text-foreground">{labels[score]}</span>
+      </p>
+    </div>
   );
 }
