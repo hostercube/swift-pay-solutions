@@ -9,6 +9,11 @@ import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/componen
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
 import { getGateway } from "@/lib/gateways/registry";
 
+const AUTO_GATEWAYS = new Set([
+  "bkash", "sslcommerz", "stripe", "razorpay", "coinbase_commerce",
+  "nowpayments", "paypal", "uddoktapay", "piprapay", "ownpay",
+]);
+
 export const Route = createFileRoute("/pay/$invoiceId")({
   head: () => ({ meta: [{ title: "Checkout · PayNOC" }] }),
   component: CheckoutPage,
@@ -468,7 +473,7 @@ function CheckoutPage() {
       )}
 
 
-      {!selected && gateways.length > 0 && (
+      {!selected && gateways.filter((g) => AUTO_GATEWAYS.has(g.provider)).length > 0 && (
         <div className="mb-6">
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
             <Zap className="h-4 w-4 text-brand" /> Pay online instantly
@@ -477,7 +482,7 @@ function CheckoutPage() {
             Redirects to the merchant's secure gateway. No manual verification needed.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {gateways.map((g) => {
+            {gateways.filter((g) => AUTO_GATEWAYS.has(g.provider)).map((g) => {
               const spec = getGateway(g.provider);
               const busy = redirecting === g.provider;
               return (
