@@ -562,6 +562,7 @@ export async function initiateCheckout(providerId: string, args: InitiateArgs): 
     case "paddle":            return paddleInitiate(args);
     case "twocheckout":       return twocheckoutInitiate(args);
     case "binance_pay":       return binancePayInitiate(args);
+    case "cryptomus":         return cryptomusInitiate(args);
 
     // Rocket (DBBL) has no public checkout API — remains manual verification only.
     default:
