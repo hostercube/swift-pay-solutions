@@ -468,10 +468,49 @@ function CheckoutPage() {
       )}
 
 
+      {!selected && gateways.length > 0 && (
+        <div className="mb-6">
+          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+            <Zap className="h-4 w-4 text-brand" /> Pay online instantly
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Redirects to the merchant's secure gateway. No manual verification needed.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {gateways.map((g) => {
+              const spec = getGateway(g.provider);
+              const busy = redirecting === g.provider;
+              return (
+                <button
+                  key={g.provider}
+                  disabled={busy || !!redirecting}
+                  onClick={() => payViaGateway(g.provider)}
+                  className="glass rounded-xl border border-glass-border p-4 text-left transition hover:border-brand disabled:opacity-60"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-semibold">{spec?.label ?? g.provider}</div>
+                    {g.mode === "sandbox" && (
+                      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                        Test
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {busy ? "Redirecting…" : `Pay with ${spec?.label ?? g.provider}`}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {!selected && (
         <div>
-          <h2 className="font-display text-lg font-semibold">Select a payment method</h2>
-          {methods.length === 0 && (
+          <h2 className="font-display text-lg font-semibold">
+            {gateways.length > 0 ? "Or pay manually" : "Select a payment method"}
+          </h2>
+          {methods.length === 0 && gateways.length === 0 && (
             <p className="mt-3 text-sm text-muted-foreground">
               The merchant has not configured any payment methods yet.
             </p>
