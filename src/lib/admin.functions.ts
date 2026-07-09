@@ -321,3 +321,58 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
     await logAudit(context, "broadcast.sent", null, { audience: data.audience, count: rows.length, title: data.title });
     return { sent: rows.length };
   });
+
+/** Change a merchant subscription: swap package, edit end date, toggle auto-renew, or force a status. */
+export const adminUpdateSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        subscription_id: z.string().uuid(),
+        package_id: z.string().uuid().optional(),
+        current_period_end: z.string().datetime().nullable().optional(),
+        auto_renew: z.boolean().optional(),
+        status: z.enum(["active", "trialing", "cancelled", "expired", "past_due"]).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+
+    const patch: Record<string, unknown> = {};
+    if (data.package_id) patch.package_id = data.package_id;
+    if (data.current_period_end !== undefined) patch.current_period_end = data.current_period_end;
+    if (data.auto_renew !== undefined) patch.auto_renew = data.auto_renew;
+    if (data.status) {
+      patch.status = data.status;
+      if (data.status === "cancelled") patch.cancelled_at = new Date().toISOString();
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+
+    const { data: current, error: readErr } = await supabaseAdmin
+      .from("merchant_subscriptions")
+      .select("merchant_id, package_id")
+      .eq("id", data.subscription_id)
+      .maybeSingle();
+    if (readErr || !current) throw new Error(readErr?.message ?? "Subscription not found");
+
+    const { error } = await supabaseAdmin
+      .from("merchant_subscriptions")
+      .update(patch as never)
+      .eq("id", data.subscription_id);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("subscription_events").insert({
+      subscription_id: data.subscription_id,
+      merchant_id: current.merchant_id,
+      package_id: data.package_id ?? current.package_id,
+      event_type: data.package_id ? "package_changed" : "updated",
+      note: `Admin update: ${Object.keys(patch).join(", ")}`,
+    });
+    await logAudit(context, "subscription.updated", current.merchant_id, {
+      subscription_id: data.subscription_id,
+      fields: Object.keys(patch),
+    });
+    return { ok: true };
+  });

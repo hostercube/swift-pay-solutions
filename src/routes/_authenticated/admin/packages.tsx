@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +15,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Trash2, Pencil, Plus, Users, Save } from "lucide-react";
+import { Trash2, Pencil, Plus, Users, Save, CalendarClock, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { MERCHANT_PERMS } from "@/lib/permissions";
+import { useServerFn } from "@tanstack/react-start";
+import { adminUpdateSubscription } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/packages")({
   head: () => ({ meta: [{ title: "Subscription packages · PayNOC" }] }),
@@ -81,6 +83,11 @@ function AdminPackagesPage() {
   const [assigning, setAssigning] = useState(false);
   const [assignForm, setAssignForm] = useState({ merchant_email: "", package_id: "", auto_renew: true });
   const [busy, setBusy] = useState(false);
+  const [editSub, setEditSub] = useState<Sub | null>(null);
+  const [subForm, setSubForm] = useState({ package_id: "", end_date: "", auto_renew: true });
+  const [subQ, setSubQ] = useState("");
+  const [subStatus, setSubStatus] = useState<string>("all");
+  const updateSubFn = useServerFn(adminUpdateSubscription);
 
   const load = useCallback(async () => {
     const { data: pkgs } = await supabase
@@ -190,6 +197,47 @@ function AdminPackagesPage() {
     load();
   };
 
+  const openEditSub = (s: Sub) => {
+    setEditSub(s);
+    setSubForm({
+      package_id: s.package_id,
+      end_date: s.current_period_end ? s.current_period_end.slice(0, 10) : "",
+      auto_renew: s.auto_renew,
+    });
+  };
+
+  const saveSub = async () => {
+    if (!editSub) return;
+    setBusy(true);
+    try {
+      await updateSubFn({
+        data: {
+          subscription_id: editSub.id,
+          package_id: subForm.package_id !== editSub.package_id ? subForm.package_id : undefined,
+          current_period_end: subForm.end_date ? new Date(subForm.end_date + "T23:59:59Z").toISOString() : null,
+          auto_renew: subForm.auto_renew,
+        },
+      });
+      toast.success("Subscription updated");
+      setEditSub(null);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+    setBusy(false);
+  };
+
+  const filteredSubs = subs.filter((s) => {
+    if (subStatus !== "all" && s.status !== subStatus) return false;
+    if (!subQ) return true;
+    const q = subQ.toLowerCase();
+    return (
+      (s.merchant_email ?? "").toLowerCase().includes(q) ||
+      (s.merchant_name ?? "").toLowerCase().includes(q) ||
+      (s.package_name ?? "").toLowerCase().includes(q)
+    );
+  });
+
   return (
     <AdminShell title="Subscription packages" subtitle="Plans, pricing, and merchant subscriptions">
       <div className="mb-6 flex flex-wrap gap-2">
@@ -259,39 +307,117 @@ function AdminPackagesPage() {
       </div>
 
       <div className="mt-10">
-        <h2 className="mb-3 font-display text-xl font-bold">Active subscriptions</h2>
-        <Card className="overflow-hidden">
-          <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <div>Merchant</div><div>Package</div><div>Status</div><div>Cycle</div><div>Ends</div><div></div>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <h2 className="font-display text-xl font-bold">Merchant subscriptions</h2>
+          <span className="text-xs text-muted-foreground">{filteredSubs.length} of {subs.length}</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Input
+              value={subQ}
+              onChange={(e) => setSubQ(e.target.value)}
+              placeholder="Search merchant or package…"
+              className="w-56"
+            />
+            <Select value={subStatus} onValueChange={setSubStatus}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="trialing">Trialing</SelectItem>
+                <SelectItem value="past_due">Past due</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {subs.map((s) => (
-            <div key={s.id} className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_0.8fr_auto] gap-3 border-b border-border px-4 py-2 text-sm">
-              <div>
-                <div className="font-medium">{s.merchant_name || s.merchant_email}</div>
-                <div className="text-xs text-muted-foreground">{s.merchant_email}</div>
-              </div>
-              <div>{s.package_name}</div>
-              <div>
-                <Badge variant={s.status === "active" || s.status === "trialing" ? "default" : "secondary"}>
-                  {s.status}
-                </Badge>
-              </div>
-              <div className="capitalize text-muted-foreground">{s.billing_cycle}</div>
-              <div className="text-muted-foreground">
-                {s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : "—"}
-              </div>
-              <div>
-                {(s.status === "active" || s.status === "trialing") && (
-                  <Button size="sm" variant="ghost" onClick={() => cancelSub(s.id)}>Cancel</Button>
-                )}
-              </div>
+        </div>
+        <Card className="overflow-x-auto">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr_auto] gap-3 border-b border-border bg-muted/30 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div>Merchant</div><div>Package</div><div>Status</div><div>Cycle</div><div>Ends</div><div className="text-right">Actions</div>
             </div>
-          ))}
-          {subs.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground">No subscriptions yet.</div>
-          )}
+            {filteredSubs.map((s) => (
+              <div key={s.id} className="grid grid-cols-[1.5fr_1fr_0.8fr_0.8fr_1fr_auto] items-center gap-3 border-b border-border px-4 py-2 text-sm">
+                <div>
+                  <Link to="/admin/merchants/$id" params={{ id: s.merchant_id }} className="font-medium hover:text-brand">
+                    {s.merchant_name || s.merchant_email}
+                  </Link>
+                  <div className="text-xs text-muted-foreground">{s.merchant_email}</div>
+                </div>
+                <div>{s.package_name}</div>
+                <div>
+                  <Badge variant={s.status === "active" || s.status === "trialing" ? "default" : "secondary"}>
+                    {s.status}
+                  </Badge>
+                </div>
+                <div className="capitalize text-muted-foreground">{s.billing_cycle}</div>
+                <div className="text-muted-foreground">
+                  {s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : "—"}
+                  {s.auto_renew && <span className="ml-1 text-[10px] text-brand">↻</span>}
+                </div>
+                <div className="flex justify-end gap-1">
+                  <Button size="sm" variant="outline" onClick={() => openEditSub(s)}>
+                    <Pencil className="mr-1 h-3 w-3" /> Edit
+                  </Button>
+                  {(s.status === "active" || s.status === "trialing") && (
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => cancelSub(s.id)}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {filteredSubs.length === 0 && (
+              <div className="p-6 text-center text-sm text-muted-foreground">No subscriptions match.</div>
+            )}
+          </div>
         </Card>
       </div>
+
+      {/* Edit subscription dialog */}
+      <Dialog open={!!editSub} onOpenChange={(v) => !v && setEditSub(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit subscription</DialogTitle>
+          </DialogHeader>
+          {editSub && (
+            <div className="grid gap-4">
+              <div className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm">
+                <div className="font-medium">{editSub.merchant_name || editSub.merchant_email}</div>
+                <div className="text-xs text-muted-foreground">{editSub.merchant_email}</div>
+              </div>
+              <div>
+                <Label>Package</Label>
+                <Select value={subForm.package_id} onValueChange={(v) => setSubForm({ ...subForm, package_id: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {packages.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} — {p.currency} {p.price} / {p.billing_cycle}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="flex items-center gap-1.5"><CalendarClock className="h-3.5 w-3.5" /> End date</Label>
+                <Input type="date" value={subForm.end_date} onChange={(e) => setSubForm({ ...subForm, end_date: e.target.value })} />
+                <p className="mt-1 text-xs text-muted-foreground">Leave empty for lifetime.</p>
+              </div>
+              <label className="flex items-center gap-2">
+                <Switch checked={subForm.auto_renew} onCheckedChange={(v) => setSubForm({ ...subForm, auto_renew: v })} />
+                <span className="flex items-center gap-1.5 text-sm"><RefreshCw className="h-3.5 w-3.5" /> Auto-renew at period end</span>
+              </label>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditSub(null)}>Close</Button>
+            <Button onClick={saveSub} disabled={busy}>
+              <Save className="mr-2 h-4 w-4" /> Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Edit dialog */}
       <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
