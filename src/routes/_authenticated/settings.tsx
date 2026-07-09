@@ -10,6 +10,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+type CheckoutStyle = "premium" | "classic" | "neon" | "minimal";
 type Profile = {
   full_name: string | null;
   business_name: string | null;
@@ -20,11 +21,13 @@ type Profile = {
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  checkout_style: CheckoutStyle | null;
   slug: string | null;
   public_bio: string | null;
   accept_tips: boolean;
   tip_min_amount: number;
 };
+
 
 function SettingsPage() {
   const { user } = useAuth();
@@ -36,7 +39,7 @@ function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, slug, public_bio, accept_tips, tip_min_amount",
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, slug, public_bio, accept_tips, tip_min_amount",
       )
       .eq("id", user.id)
       .maybeSingle()
@@ -55,6 +58,8 @@ function SettingsPage() {
       logo_url: p.logo_url,
       support_email: p.support_email,
       checkout_footer: p.checkout_footer,
+      checkout_style: p.checkout_style,
+
       slug: p.slug,
       public_bio: p.public_bio,
       accept_tips: p.accept_tips,
@@ -114,6 +119,35 @@ function SettingsPage() {
             <Input value={p.checkout_footer ?? ""} onChange={(v) => setP({ ...p, checkout_footer: v })} />
           </Field>
         </div>
+
+        <div className="mt-6">
+          <div className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Checkout style</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {([
+              { key: "premium", label: "Premium", desc: "Glass, gradient halo", swatch: "bg-gradient-to-br from-brand/40 to-brand-2/20" },
+              { key: "classic", label: "Classic", desc: "Light card, minimal chrome", swatch: "bg-white border" },
+              { key: "neon",    label: "Neon",    desc: "Dark violet · cyan glow", swatch: "bg-gradient-to-br from-fuchsia-500 via-violet-600 to-cyan-400" },
+              { key: "minimal", label: "Minimal", desc: "Flat, borderless, editorial", swatch: "bg-muted" },
+            ] as const).map((s) => {
+              const active = (p.checkout_style ?? "premium") === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setP({ ...p, checkout_style: s.key })}
+                  className={`rounded-xl border p-3 text-left transition ${
+                    active ? "border-brand shadow-[0_0_0_1px_var(--color-brand)]" : "border-glass-border hover:border-brand/60"
+                  }`}
+                >
+                  <div className={`mb-2 h-12 w-full rounded-lg ${s.swatch}`} />
+                  <div className="text-sm font-semibold">{s.label}</div>
+                  <div className="text-[11px] text-muted-foreground">{s.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {p.logo_url && (
           <div className="mt-4 flex items-center gap-3 rounded-lg border border-glass-border bg-card/40 p-3">
             <img src={p.logo_url} alt="Logo preview" className="h-10 w-10 rounded object-contain" />
@@ -121,6 +155,7 @@ function SettingsPage() {
           </div>
         )}
       </div>
+
 
       <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
         <h2 className="font-display text-lg font-semibold">Public profile / tip jar</h2>

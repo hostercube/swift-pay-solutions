@@ -71,12 +71,15 @@ type Txn = {
   note: string | null;
 };
 
+export type CheckoutStyle = "premium" | "classic" | "neon" | "minimal";
+
 type Brand = {
   business_name: string | null;
   brand_color: string | null;
   logo_url: string | null;
   support_email: string | null;
   checkout_footer: string | null;
+  checkout_style?: CheckoutStyle | null;
   ga4_measurement_id?: string | null;
   gtm_container_id?: string | null;
   meta_pixel_id?: string | null;
@@ -86,6 +89,40 @@ type Brand = {
   custom_head_html?: string | null;
   custom_footer_html?: string | null;
 };
+
+const STYLES: Record<CheckoutStyle, {
+  page: string; card: string; hero: string; ctaBg: string; accentHalo: boolean;
+}> = {
+  premium: {
+    page: "bg-background",
+    card: "glass rounded-2xl border border-glass-border",
+    hero: "font-display text-4xl font-black tracking-tight sm:text-5xl",
+    ctaBg: "bg-gradient-brand shadow-[0_10px_30px_-10px_hsl(var(--brand)/0.6)]",
+    accentHalo: true,
+  },
+  classic: {
+    page: "bg-muted/30",
+    card: "rounded-xl border border-border bg-card shadow-sm",
+    hero: "font-display text-3xl font-bold tracking-tight sm:text-4xl",
+    ctaBg: "bg-foreground text-background hover:bg-foreground/90",
+    accentHalo: false,
+  },
+  neon: {
+    page: "bg-[#050516] text-[#e6e6ff]",
+    card: "rounded-2xl border border-[#7c3aed]/40 bg-[#0b0b24]/80 shadow-[0_0_40px_-10px_rgba(124,58,237,0.55)] backdrop-blur",
+    hero: "font-display text-4xl font-black tracking-tight sm:text-5xl bg-gradient-to-r from-fuchsia-400 via-violet-400 to-cyan-300 bg-clip-text text-transparent",
+    ctaBg: "bg-gradient-to-r from-fuchsia-500 via-violet-500 to-cyan-400 text-white shadow-[0_0_30px_-4px_rgba(168,85,247,0.7)]",
+    accentHalo: true,
+  },
+  minimal: {
+    page: "bg-background",
+    card: "rounded-none border-0 border-y border-border bg-transparent sm:rounded-xl sm:border",
+    hero: "font-sans text-3xl font-semibold tracking-tight sm:text-4xl",
+    ctaBg: "bg-foreground text-background",
+    accentHalo: false,
+  },
+};
+
 
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
@@ -407,15 +444,17 @@ function CheckoutPage() {
 
   const autoGateways = gateways.filter((g) => AUTO_GATEWAYS.has(g.provider));
   const trxId = `TXN-${inv.invoice_number}`;
+  const style = STYLES[(brand?.checkout_style as CheckoutStyle) ?? "premium"];
 
   return (
     <Shell brand={brand} inv={inv} trxId={trxId}>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
         {/* ── Left: Order summary ─────────────────────────── */}
         <aside className="lg:sticky lg:top-6 lg:self-start">
-          <div className="glass overflow-hidden rounded-2xl border border-glass-border">
+          <div className={`overflow-hidden ${style.card}`}>
             {inv.mode === "test" && (
               <div className="bg-amber-500/15 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-amber-600">
+
                 Test mode — no real money will be moved
               </div>
             )}
@@ -425,7 +464,7 @@ function CheckoutPage() {
                 <CopyBtn text={trxId} label="Trx ID" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-display text-4xl font-black tracking-tight sm:text-5xl">
+                <span className={style.hero}>
                   {currencySymbol(inv.currency)}{Number(inv.amount).toLocaleString()}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">{inv.currency}</span>
@@ -798,18 +837,22 @@ function Shell({
   children, brand, inv, trxId,
 }: { children: React.ReactNode; brand: Brand | null; inv?: Invoice | null; trxId?: string }) {
   const brandColor = brand?.brand_color || null;
-  const style = brandColor
+  const cssVars = brandColor
     ? ({ ["--brand" as never]: brandColor, ["--brand-2" as never]: brandColor } as React.CSSProperties)
     : undefined;
+  const skin = STYLES[(brand?.checkout_style as CheckoutStyle) ?? "premium"];
   const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
-    <div className="relative min-h-screen bg-background" style={style}>
+    <div className={`relative min-h-screen ${skin.page}`} style={cssVars}>
       <MerchantTracking config={brand as TrackingConfig | null} />
-      <div className="grid-radial absolute inset-0 opacity-30" />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
-        style={{ background: "radial-gradient(ellipse at top, hsl(var(--brand)/0.25), transparent 60%)" }}
-      />
+      {skin.accentHalo && <div className="grid-radial absolute inset-0 opacity-30" />}
+      {skin.accentHalo && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
+          style={{ background: "radial-gradient(ellipse at top, hsl(var(--brand)/0.25), transparent 60%)" }}
+        />
+      )}
+
       <div className="relative mx-auto max-w-6xl px-4 py-6 sm:py-10">
         {/* Merchant header */}
         <header className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:mb-8">
