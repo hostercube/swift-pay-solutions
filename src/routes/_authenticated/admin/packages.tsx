@@ -83,6 +83,11 @@ function AdminPackagesPage() {
   const [assigning, setAssigning] = useState(false);
   const [assignForm, setAssignForm] = useState({ merchant_email: "", package_id: "", auto_renew: true });
   const [busy, setBusy] = useState(false);
+  const [editSub, setEditSub] = useState<Sub | null>(null);
+  const [subForm, setSubForm] = useState({ package_id: "", end_date: "", auto_renew: true });
+  const [subQ, setSubQ] = useState("");
+  const [subStatus, setSubStatus] = useState<string>("all");
+  const updateSubFn = useServerFn(adminUpdateSubscription);
 
   const load = useCallback(async () => {
     const { data: pkgs } = await supabase
