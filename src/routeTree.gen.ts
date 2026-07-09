@@ -77,6 +77,7 @@ import { Route as ApiPublicV1SmsEventsRouteImport } from './routes/api/public/v1
 import { Route as ApiPublicV1RefundsRouteImport } from './routes/api/public/v1/refunds'
 import { Route as ApiPublicV1PostmanRouteImport } from './routes/api/public/v1/postman'
 import { Route as ApiPublicV1InvoicesRouteImport } from './routes/api/public/v1/invoices'
+import { Route as ApiPublicV1BalanceRouteImport } from './routes/api/public/v1/balance'
 import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/public/hooks/webhook-retry'
 import { Route as ApiPublicHooksRunSubscriptionsRouteImport } from './routes/api/public/hooks/run-subscriptions'
 import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/public/hooks/run-recurring'
@@ -456,6 +457,11 @@ const ApiPublicV1InvoicesRoute = ApiPublicV1InvoicesRouteImport.update({
   path: '/api/public/v1/invoices',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1BalanceRoute = ApiPublicV1BalanceRouteImport.update({
+  id: '/api/public/v1/balance',
+  path: '/api/public/v1/balance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWebhookRetryRoute =
   ApiPublicHooksWebhookRetryRouteImport.update({
     id: '/api/public/hooks/webhook-retry',
@@ -591,6 +597,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
+  '/api/public/v1/balance': typeof ApiPublicV1BalanceRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
@@ -666,6 +673,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
+  '/api/public/v1/balance': typeof ApiPublicV1BalanceRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
@@ -748,6 +756,7 @@ export interface FileRoutesById {
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
   '/api/public/hooks/webhook-retry': typeof ApiPublicHooksWebhookRetryRoute
+  '/api/public/v1/balance': typeof ApiPublicV1BalanceRoute
   '/api/public/v1/invoices': typeof ApiPublicV1InvoicesRouteWithChildren
   '/api/public/v1/postman': typeof ApiPublicV1PostmanRoute
   '/api/public/v1/refunds': typeof ApiPublicV1RefundsRoute
@@ -830,6 +839,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
+    | '/api/public/v1/balance'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/refunds'
@@ -905,6 +915,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
+    | '/api/public/v1/balance'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/refunds'
@@ -986,6 +997,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
     | '/api/public/hooks/webhook-retry'
+    | '/api/public/v1/balance'
     | '/api/public/v1/invoices'
     | '/api/public/v1/postman'
     | '/api/public/v1/refunds'
@@ -1016,6 +1028,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRunRecurringRoute: typeof ApiPublicHooksRunRecurringRoute
   ApiPublicHooksRunSubscriptionsRoute: typeof ApiPublicHooksRunSubscriptionsRoute
   ApiPublicHooksWebhookRetryRoute: typeof ApiPublicHooksWebhookRetryRoute
+  ApiPublicV1BalanceRoute: typeof ApiPublicV1BalanceRoute
   ApiPublicV1InvoicesRoute: typeof ApiPublicV1InvoicesRouteWithChildren
   ApiPublicV1PostmanRoute: typeof ApiPublicV1PostmanRoute
   ApiPublicV1RefundsRoute: typeof ApiPublicV1RefundsRoute
@@ -1501,6 +1514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1InvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/balance': {
+      id: '/api/public/v1/balance'
+      path: '/api/public/v1/balance'
+      fullPath: '/api/public/v1/balance'
+      preLoaderRoute: typeof ApiPublicV1BalanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/webhook-retry': {
       id: '/api/public/hooks/webhook-retry'
       path: '/api/public/hooks/webhook-retry'
@@ -1796,6 +1816,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRunRecurringRoute: ApiPublicHooksRunRecurringRoute,
   ApiPublicHooksRunSubscriptionsRoute: ApiPublicHooksRunSubscriptionsRoute,
   ApiPublicHooksWebhookRetryRoute: ApiPublicHooksWebhookRetryRoute,
+  ApiPublicV1BalanceRoute: ApiPublicV1BalanceRoute,
   ApiPublicV1InvoicesRoute: ApiPublicV1InvoicesRouteWithChildren,
   ApiPublicV1PostmanRoute: ApiPublicV1PostmanRoute,
   ApiPublicV1RefundsRoute: ApiPublicV1RefundsRoute,

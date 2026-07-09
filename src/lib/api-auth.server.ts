@@ -1,7 +1,12 @@
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 
 const RATE_LIMIT = 120;
 const WINDOW_SECONDS = 60;
+
+export function newRequestId() {
+  try { return randomUUID(); } catch { return `req_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`; }
+}
+
 
 
 function clientIp(request: Request) {
@@ -18,10 +23,12 @@ function clientIp(request: Request) {
  * and audit the call. Returns merchant context or an error response shape.
  */
 export async function authenticateApiKey(request: Request): Promise<
-  | { merchantId: string; environment: string; keyId: string; ip: string | null }
-  | { error: string; status: number }
+  | { merchantId: string; environment: string; keyId: string; ip: string | null; rateLimit: { limit: number; remaining: number; reset: number }; requestId: string }
+  | { error: string; status: number; headers?: Record<string, string> }
 > {
+  const requestId = newRequestId();
   const header =
+
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ||
     request.headers.get("x-api-key")?.trim();
 
@@ -61,8 +68,20 @@ export async function authenticateApiKey(request: Request): Promise<
     _window_seconds: WINDOW_SECONDS,
   });
   if (rlErr) return { error: "Rate limiter unavailable", status: 500 };
+  const remainingNum = Math.max(0, remaining as number);
+  const resetIn = WINDOW_SECONDS;
   if ((remaining as number) < 0) {
-    return { error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`, status: 429 };
+    return {
+      error: `Rate limit exceeded, retry in ${WINDOW_SECONDS}s`,
+      status: 429,
+      headers: {
+        "Retry-After": String(WINDOW_SECONDS),
+        "X-RateLimit-Limit": String(RATE_LIMIT),
+        "X-RateLimit-Remaining": "0",
+        "X-RateLimit-Reset": String(resetIn),
+        "X-Request-Id": requestId,
+      },
+    };
   }
 
 
@@ -82,7 +101,7 @@ export async function authenticateApiKey(request: Request): Promise<
       resource_id: data.id,
       ip_address: ip,
       user_agent: request.headers.get("user-agent"),
-      metadata: { path: new URL(request.url).pathname, method: request.method } as never,
+      metadata: { path: new URL(request.url).pathname, method: request.method, request_id: requestId } as never,
     })
     .then(() => undefined);
 
@@ -91,8 +110,11 @@ export async function authenticateApiKey(request: Request): Promise<
     environment: data.environment,
     keyId: data.id,
     ip,
+    rateLimit: { limit: RATE_LIMIT, remaining: remainingNum, reset: resetIn },
+    requestId,
   };
 }
+
 
 export const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

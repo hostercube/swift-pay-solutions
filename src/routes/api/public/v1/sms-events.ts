@@ -40,7 +40,7 @@ type SmsEvent = {
 
 async function handlePost(request: Request): Promise<Response> {
   const auth = await authenticateApiKey(request);
-  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status);
+  if ("error" in auth) return jsonResponse({ error: auth.error }, auth.status, auth.headers ?? {});
   const started = Date.now();
 
   let body: { events?: SmsEvent[] };

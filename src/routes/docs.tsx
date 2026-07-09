@@ -5,7 +5,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, BookOpen, Github, Package } from "lucide-react";
+import { Download, BookOpen, Github, Package, Copy, Check } from "lucide-react";
+
 
 export const Route = createFileRoute("/docs")({
   head: () => ({
@@ -27,7 +28,17 @@ export const Route = createFileRoute("/docs")({
   component: ApiReferencePage,
 });
 
-const BASE = "https://paynoc.bd/api/public/v1";
+const DEFAULT_BASE = "https://paynoc.bd/api/public/v1";
+const BASE = DEFAULT_BASE;
+
+function useBaseUrl() {
+  const [base, setBase] = useState(DEFAULT_BASE);
+  useEffect(() => {
+    if (typeof window !== "undefined") setBase(`${window.location.origin}/api/public/v1`);
+  }, []);
+  return base;
+}
+
 
 /* ---------------------- code snippets ---------------------- */
 
@@ -211,13 +222,28 @@ echo "ok";`;
 /* ---------------------- ui bits ---------------------- */
 
 function Code({ code, lang }: { code: string; lang?: string }) {
+  const [copied, setCopied] = useState(false);
+  const doCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* ignore */ }
+  };
   return (
-    <div className="overflow-hidden rounded-lg border border-glass-border bg-card/60">
-      {lang && (
-        <div className="border-b border-glass-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {lang}
-        </div>
-      )}
+    <div className="group relative overflow-hidden rounded-lg border border-glass-border bg-card/60">
+      <div className="flex items-center justify-between border-b border-glass-border px-3 py-1.5">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{lang ?? "code"}</span>
+        <button
+          type="button"
+          onClick={doCopy}
+          aria-label={copied ? "Copied" : "Copy code"}
+          className="inline-flex items-center gap-1 rounded border border-glass-border/60 bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground opacity-0 transition hover:text-foreground group-hover:opacity-100 focus:opacity-100"
+        >
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
       <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed">
         <code>{code}</code>
       </pre>
@@ -225,8 +251,38 @@ function Code({ code, lang }: { code: string; lang?: string }) {
   );
 }
 
+
+function CodeTabs({ tabs }: { tabs: { label: string; code: string }[] }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 border-b border-glass-border">
+        {tabs.map((t, i) => (
+          <button
+            key={t.label}
+            type="button"
+            onClick={() => setActive(i)}
+            className={`-mb-px border-b-2 px-3 py-1.5 text-xs font-medium transition ${
+              i === active
+                ? "border-brand text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Code lang={tabs[active].label} code={tabs[active].code} />
+      </div>
+    </div>
+  );
+}
+
+
 function Method({ verb, path }: { verb: "GET" | "POST" | "DELETE"; path: string }) {
   const color =
+
     verb === "GET"
       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
       : verb === "POST"
@@ -306,7 +362,9 @@ const nav = [
     { id: "retrieve-invoice", label: "Retrieve an invoice" },
     { id: "list-invoices", label: "List invoices" },
     { id: "checkout", label: "Hosted checkout" },
+    { id: "balance", label: "Balance summary" },
   ]},
+
   { group: "Webhooks", items: [
     { id: "webhooks", label: "Overview" },
     { id: "webhook-verify", label: "Verify signature" },
@@ -407,7 +465,9 @@ function PluginsGrid() {
 /* ---------------------- page ---------------------- */
 
 function ApiReferencePage() {
+  const liveBase = useBaseUrl();
   return (
+
     <div className="min-h-screen bg-background">
       <div className="grid-radial pointer-events-none absolute inset-0 opacity-30" />
       <div className="relative">
@@ -442,9 +502,12 @@ function ApiReferencePage() {
           <aside className="hidden lg:block">
             <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 text-sm">
               <div className="mb-5 rounded-xl border border-glass-border bg-surface/60 p-3">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Base URL</p>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Base URL (canonical)</p>
                 <p className="mt-1 truncate font-mono text-xs text-foreground">{BASE}</p>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">This deployment</p>
+                <p className="mt-1 truncate font-mono text-xs text-brand">{liveBase}</p>
               </div>
+
               {nav.map((g) => (
                 <div key={g.group} className="mb-6">
                   <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-brand/80">
@@ -471,17 +534,36 @@ function ApiReferencePage() {
           <main className="min-w-0">
             {/* Anchor */}
             <div id="overview" className="scroll-mt-24">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <Card className="border-glass-border bg-surface/60 p-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Base URL</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Canonical base URL</p>
                   <p className="mt-1 font-mono text-sm">{BASE}</p>
+                </Card>
+                <Card className="border-glass-border bg-surface/60 p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">This deployment</p>
+                  <p className="mt-1 font-mono text-sm text-brand break-all">{liveBase}</p>
                 </Card>
                 <Card className="border-glass-border bg-surface/60 p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Auth header</p>
                   <p className="mt-1 font-mono text-sm">Authorization: Bearer sk_live_…</p>
                 </Card>
               </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <a href="/security/api-keys" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">1. Get an API key</p>
+                  <p className="mt-1 text-muted-foreground">Dashboard → Security → API keys.</p>
+                </a>
+                <a href="#quickstart" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">2. Create an invoice</p>
+                  <p className="mt-1 text-muted-foreground">POST /invoices → redirect to checkout_url.</p>
+                </a>
+                <a href="#webhooks" className="rounded-lg border border-glass-border bg-card/40 p-3 text-sm hover:border-brand/40 hover:bg-muted transition">
+                  <p className="text-xs font-semibold text-brand">3. Verify a webhook</p>
+                  <p className="mt-1 text-muted-foreground">HMAC-SHA256 over timestamp.raw_body.</p>
+                </a>
+              </div>
             </div>
+
 
             {/* Quickstart */}
             <Section id="quickstart" eyebrow="Getting started" title="Quickstart">
@@ -617,12 +699,15 @@ function ApiReferencePage() {
                 <Field name="expires_in_hours" type="integer" desc="Invoice lifetime in hours. Default 24." />
                 <Field name="metadata" type="object" desc="Arbitrary JSON returned unchanged in every webhook." />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Code lang="cURL" code={CURL_CREATE} />
-                <Code lang="JavaScript" code={JS_CREATE} />
-                <Code lang="PHP" code={PHP_CREATE} />
-                <Code lang="Python" code={PY_CREATE} />
-              </div>
+              <CodeTabs
+                tabs={[
+                  { label: "cURL", code: CURL_CREATE },
+                  { label: "JavaScript", code: JS_CREATE },
+                  { label: "PHP", code: PHP_CREATE },
+                  { label: "Python", code: PY_CREATE },
+                ]}
+              />
+
               <Code lang="201 Created" code={RESP_INVOICE} />
             </Section>
 
@@ -660,6 +745,30 @@ function ApiReferencePage() {
                 <span className="font-mono">GET /invoices/{"{"}id{"}"}</span>.
               </p>
             </Section>
+
+            {/* Balance summary */}
+            <Section id="balance" title="Balance summary">
+              <Method verb="GET" path="/v1/balance" />
+              <p className="text-sm text-muted-foreground">
+                Returns an aggregated accounting summary per currency for the authenticated merchant:
+                total <span className="font-mono">collected</span> (completed invoices),
+                total <span className="font-mono">refunded</span>, and <span className="font-mono">net</span>.
+                Because merchants receive funds directly to their own gateway account, PayNOC never
+                custodies money — this endpoint is informational only, not a withdrawable wallet.
+              </p>
+              <Code lang="cURL" code={`curl ${BASE}/balance \\
+  -H "Authorization: Bearer sk_live_xxx"`} />
+              <Code lang="200 OK" code={`{
+  "data": {
+    "balances": [
+      { "currency": "BDT", "collected": 125000, "refunded": 500, "net": 124500, "completed_invoice_count": 87 }
+    ],
+    "note": "Funds settle directly to your connected gateway account. This is an informational summary only."
+  }
+}`} />
+            </Section>
+
+
 
             {/* Webhooks */}
             <Section id="webhooks" eyebrow="Webhooks" title="Webhooks">
