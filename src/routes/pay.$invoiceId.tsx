@@ -373,7 +373,9 @@ function CheckoutPage() {
 
   const verified = txns.find((t) => t.status === "verified");
   const pending = txns.find((t) => t.status === "pending");
-  const isPaid = !!verified || ["completed", "paid"].includes(inv.status);
+  const isReusable = !!inv.reusable;
+  const isPaid = !isReusable && (!!verified || ["completed", "paid"].includes(inv.status));
+  const needsAmount = !!inv.allow_custom_amount && Number(inv.amount) <= 0;
 
   if (isPaid) {
     return (
