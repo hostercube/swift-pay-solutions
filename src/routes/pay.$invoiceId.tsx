@@ -366,8 +366,9 @@ function CheckoutPage() {
 
   const verified = txns.find((t) => t.status === "verified");
   const pending = txns.find((t) => t.status === "pending");
+  const isPaid = !!verified || ["completed", "paid"].includes(inv.status);
 
-  if (verified) {
+  if (isPaid) {
     return (
       <Shell brand={brand}>
         <div className="glass rounded-2xl border border-glass-border p-8 text-center">
