@@ -195,9 +195,37 @@ function AdminPackagesPage() {
     if (error) return toast.error(error.message);
     toast.success("Cancelled");
     load();
+
+  const openEditSub = (s: Sub) => {
+    setEditSub(s);
+    setSubForm({
+      package_id: s.package_id,
+      end_date: s.current_period_end ? s.current_period_end.slice(0, 10) : "",
+      auto_renew: s.auto_renew,
+    });
   };
 
-  return (
+  const saveSub = async () => {
+    if (!editSub) return;
+    setBusy(true);
+    try {
+      await updateSubFn({
+        data: {
+          subscription_id: editSub.id,
+          package_id: subForm.package_id !== editSub.package_id ? subForm.package_id : undefined,
+          current_period_end: subForm.end_date ? new Date(subForm.end_date + "T23:59:59Z").toISOString() : null,
+          auto_renew: subForm.auto_renew,
+        },
+      });
+      toast.success("Subscription updated");
+      setEditSub(null);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
+    setBusy(false);
+  };
+
     <AdminShell title="Subscription packages" subtitle="Plans, pricing, and merchant subscriptions">
       <div className="mb-6 flex flex-wrap gap-2">
         <Button onClick={() => setEditing({ ...EMPTY })}>
