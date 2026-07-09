@@ -746,6 +746,30 @@ function ApiReferencePage() {
               </p>
             </Section>
 
+            {/* Balance summary */}
+            <Section id="balance" title="Balance summary">
+              <Method verb="GET" path="/v1/balance" />
+              <p className="text-sm text-muted-foreground">
+                Returns an aggregated accounting summary per currency for the authenticated merchant:
+                total <span className="font-mono">collected</span> (completed invoices),
+                total <span className="font-mono">refunded</span>, and <span className="font-mono">net</span>.
+                Because merchants receive funds directly to their own gateway account, PayNOC never
+                custodies money — this endpoint is informational only, not a withdrawable wallet.
+              </p>
+              <Code lang="cURL" code={`curl ${BASE}/balance \\
+  -H "Authorization: Bearer sk_live_xxx"`} />
+              <Code lang="200 OK" code={`{
+  "data": {
+    "balances": [
+      { "currency": "BDT", "collected": 125000, "refunded": 500, "net": 124500, "completed_invoice_count": 87 }
+    ],
+    "note": "Funds settle directly to your connected gateway account. This is an informational summary only."
+  }
+}`} />
+            </Section>
+
+
+
             {/* Webhooks */}
             <Section id="webhooks" eyebrow="Webhooks" title="Webhooks">
               <p className="text-sm text-muted-foreground">
