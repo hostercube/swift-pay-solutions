@@ -218,7 +218,7 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
       patch.processed_by = userId;
     }
 
-    const fromLoose = ((supabase.from as unknown as (t: string) => {
+    const fromLoose = (supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (col: string, v: string) => {
           select: (s: string) => {
