@@ -252,7 +252,34 @@ function Code({ code, lang }: { code: string; lang?: string }) {
 }
 
 
-function Method({ verb, path }: { verb: "GET" | "POST" | "DELETE"; path: string }) {
+function CodeTabs({ tabs }: { tabs: { label: string; code: string }[] }) {
+  const [active, setActive] = useState(0);
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1 border-b border-glass-border">
+        {tabs.map((t, i) => (
+          <button
+            key={t.label}
+            type="button"
+            onClick={() => setActive(i)}
+            className={`-mb-px border-b-2 px-3 py-1.5 text-xs font-medium transition ${
+              i === active
+                ? "border-brand text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3">
+        <Code lang={tabs[active].label} code={tabs[active].code} />
+      </div>
+    </div>
+  );
+}
+
+
   const color =
     verb === "GET"
       ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
