@@ -627,6 +627,42 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          is_primary: boolean
+          merchant_id: string
+          updated_at: string
+          use_for: string
+          verified_at: string | null
+          verify_token: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          is_primary?: boolean
+          merchant_id: string
+          updated_at?: string
+          use_for?: string
+          verified_at?: string | null
+          verify_token?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          is_primary?: boolean
+          merchant_id?: string
+          updated_at?: string
+          use_for?: string
+          verified_at?: string | null
+          verify_token?: string
+        }
+        Relationships: []
+      }
       merchant_fx_rates: {
         Row: {
           base_currency: string
@@ -2265,6 +2301,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_office: { Args: { _user_id: string }; Returns: boolean }
+      mark_domain_verified: { Args: { _domain_id: string }; Returns: undefined }
       merchant_can: {
         Args: { _merchant_id: string; _min_role: string; _user_id: string }
         Returns: boolean
@@ -2278,6 +2315,15 @@ export type Database = {
         Returns: boolean
       }
       renew_due_subscriptions: { Args: never; Returns: number }
+      resolve_merchant_domain: {
+        Args: { _host: string }
+        Returns: {
+          business_name: string
+          merchant_id: string
+          slug: string
+          use_for: string
+        }[]
+      }
       set_checkout_amount: {
         Args: { _amount: number; _invoice_id: string }
         Returns: {
