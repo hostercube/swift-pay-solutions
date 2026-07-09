@@ -5,6 +5,7 @@ import { Pencil, Trash2, Plus, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/integrations/")({
   head: () => ({ meta: [{ title: "Payment methods · PayNOC" }] }),
@@ -163,69 +164,73 @@ function MethodsPage() {
       </div>
 
 
-      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Label</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Mode</th>
-              <th className="px-4 py-3">Account</th>
-              <th className="px-4 py-3">Fees</th>
-              <th className="px-4 py-3">Limits</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
-                No payment methods yet. Add one to start accepting payments.
-              </td></tr>
-            )}
-            {rows.map((m) => (
-              <tr key={m.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-medium">{m.label}</td>
-                <td className="px-4 py-3 uppercase text-muted-foreground">{m.type}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                    m.mode === "api" ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
-                  }`}>{m.mode}</span>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {m.account_number ? <span className="font-mono text-xs">{m.account_number}</span> : "—"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {m.fee_percent}% + {m.fee_flat}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {m.min_amount ?? "—"} / {m.max_amount ?? "—"}
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => toggle(m)}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                      m.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {m.is_active ? "Active" : "Disabled"}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-2">
-                    <button onClick={() => setEditing(m)} className="text-muted-foreground hover:text-foreground">
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => remove(m.id)} className="text-destructive hover:opacity-80">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<Method>
+        rows={rows}
+        rowKey={(m) => m.id}
+        searchable={(m) => `${m.label} ${m.type} ${m.account_number ?? ""} ${m.account_name ?? ""} ${m.bank_name ?? ""}`}
+        emptyMessage="No payment methods yet. Add one to start accepting payments."
+        filters={[
+          {
+            key: "type",
+            label: "Type",
+            options: METHOD_TYPES.map((t) => ({ value: t.value, label: t.label })),
+            match: (m, v) => m.type === v,
+          },
+          {
+            key: "mode",
+            label: "Mode",
+            options: [
+              { value: "manual", label: "Manual" },
+              { value: "api", label: "API" },
+            ],
+            match: (m, v) => m.mode === v,
+          },
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "active", label: "Active" },
+              { value: "disabled", label: "Disabled" },
+            ],
+            match: (m, v) => (v === "active" ? m.is_active : !m.is_active),
+          },
+        ]}
+        columns={[
+          { key: "label", label: "Label", render: (m) => <span className="font-medium">{m.label}</span> },
+          { key: "type", label: "Type", render: (m) => <span className="uppercase text-muted-foreground">{m.type}</span> },
+          {
+            key: "mode",
+            label: "Mode",
+            render: (m) => (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${m.mode === "api" ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"}`}>
+                {m.mode}
+              </span>
+            ),
+          },
+          { key: "account", label: "Account", render: (m) => m.account_number ? <span className="font-mono text-xs">{m.account_number}</span> : <span className="text-muted-foreground">—</span> },
+          { key: "fees", label: "Fees", render: (m) => <span className="text-muted-foreground">{m.fee_percent}% + {m.fee_flat}</span> },
+          { key: "limits", label: "Limits", render: (m) => <span className="text-muted-foreground">{m.min_amount ?? "—"} / {m.max_amount ?? "—"}</span> },
+          {
+            key: "status",
+            label: "Status",
+            render: (m) => (
+              <button onClick={() => toggle(m)} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${m.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"}`}>
+                {m.is_active ? "Active" : "Disabled"}
+              </button>
+            ),
+          },
+        ] as DataTableColumn<Method>[]}
+        actions={(m) => (
+          <div className="inline-flex items-center gap-2">
+            <button onClick={() => setEditing(m)} className="text-muted-foreground hover:text-foreground">
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button onClick={() => remove(m.id)} className="text-destructive hover:opacity-80">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      />
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setEditing(null)}>

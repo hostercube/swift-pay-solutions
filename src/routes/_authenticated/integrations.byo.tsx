@@ -39,6 +39,8 @@ function ByoPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
+  const [q, setQ] = useState("");
+  const [conn, setConn] = useState<"" | "connected" | "not">("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -123,16 +125,41 @@ function ByoPage() {
   };
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const filtered = gatewaysByRegion(tab);
+  const query = q.trim().toLowerCase();
+  const filtered = gatewaysByRegion(tab).filter((g) => {
+    if (query && !`${g.label} ${g.id} ${g.currencies.join(" ")}`.toLowerCase().includes(query)) return false;
+    if (conn) {
+      const has = (byProvider.get(g.id) ?? []).length > 0;
+      if (conn === "connected" && !has) return false;
+      if (conn === "not" && has) return false;
+    }
+    return true;
+  });
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {(["BD", "GLOBAL", "CRYPTO"] as const).map((t) => (
           <Button key={t} size="sm" variant={tab === t ? "default" : "outline"} onClick={() => setTab(t)}>
             {t === "BD" ? "Bangladesh" : t === "GLOBAL" ? "International" : "Crypto"}
           </Button>
         ))}
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search gateway…"
+          className="h-9 max-w-xs"
+        />
+        <select
+          value={conn}
+          onChange={(e) => setConn(e.target.value as "" | "connected" | "not")}
+          className="h-9 rounded-md border border-glass-border bg-background px-2 text-sm"
+        >
+          <option value="">All</option>
+          <option value="connected">Connected</option>
+          <option value="not">Not connected</option>
+        </select>
+        <span className="ml-auto text-xs text-muted-foreground">{filtered.length} gateways</span>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
