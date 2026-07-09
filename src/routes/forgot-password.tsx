@@ -24,7 +24,12 @@ function ForgotPasswordPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
-    getTurnstileConfig().then(setCaptcha).catch(() => setCaptcha({ enabled: false, siteKey: "" }));
+    getTurnstileConfig()
+      .then(setCaptcha)
+      .catch((e) => {
+        console.error("[turnstile] getTurnstileConfig failed:", e);
+        setCaptcha({ enabled: false, siteKey: "" });
+      });
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
