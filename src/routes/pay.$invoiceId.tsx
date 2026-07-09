@@ -1024,6 +1024,24 @@ function PayQr({ path }: { path: string }) {
   );
 }
 
+/** Fallback QR: uses api.qrserver.com to render a QR of the account number
+ *  for mobile-banking channels that didn't upload their own image. */
+function defaultQrFor(m: Method): string | null {
+  if (m.qr_code_url) return null;
+  if (!m.account_number) return null;
+  if (!["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(m.type)) return null;
+  const data = encodeURIComponent(m.account_number);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${data}`;
+}
+
+function labelForType(t: string) {
+  const map: Record<string, string> = {
+    bkash: "bKash", nagad: "Nagad", rocket: "Rocket", upay: "Upay",
+    tap: "Tap", mcash: "MCash", sure_cash: "SureCash",
+  };
+  return map[t] ?? t;
+}
+
 function currencySymbol(code: string) {
   const map: Record<string, string> = { BDT: "৳", USD: "$", EUR: "€", GBP: "£", INR: "₹", AED: "د.إ" };
   return map[code] ?? `${code} `;
