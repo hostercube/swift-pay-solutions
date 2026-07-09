@@ -111,6 +111,12 @@ function MethodsPage() {
       max_amount: editing.max_amount != null && editing.max_amount !== ("" as unknown as number) ? Number(editing.max_amount) : null,
       is_active: !!editing.is_active,
       sort_order: Number(editing.sort_order) || 0,
+      qr_code_url: editing.qr_code_url || null,
+      qr_type: editing.qr_type || null,
+      bank_name: editing.bank_name || null,
+      branch_name: editing.branch_name || null,
+      routing_number: editing.routing_number || null,
+      swift_code: editing.swift_code || null,
     };
     const { error } = editing.id
       ? await supabase.from("payment_methods").update(payload).eq("id", editing.id)
