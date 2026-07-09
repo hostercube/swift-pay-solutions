@@ -131,6 +131,10 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // Best-effort platform welcome notification via SMS NOC.
+        smsNocNotifyUserRegistered({
+          data: { email, name: fullName || businessName || undefined },
+        }).catch(() => undefined);
         toast.success("Account created! You're signed in.");
         navigate({ to: "/dashboard" });
       } else {
