@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { PlatformTabs } from "@/components/platform-tabs";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -82,6 +83,7 @@ function IncidentsPage() {
 
   return (
     <AdminShell title="Incidents" subtitle="Publish and update outages on the public status page">
+      <PlatformTabs />
       <Card className="p-5">
         <h3 className="font-display text-lg font-semibold">Post new incident</h3>
         <div className="mt-3 grid gap-3">
