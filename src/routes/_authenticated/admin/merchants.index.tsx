@@ -161,6 +161,7 @@ function MerchantsPage() {
         filters={filters}
         dateField={(r) => r.created_at}
         pageSize={25}
+        exportFilename="merchants"
         actions={(r) => (
           <div className="inline-flex flex-wrap justify-end gap-2">
             <Link to="/admin/merchants/$id" params={{ id: r.id }}
