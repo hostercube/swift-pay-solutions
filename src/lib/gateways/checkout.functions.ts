@@ -7,6 +7,7 @@ const initiateSchema = z.object({
   invoiceId: z.string().uuid(),
   provider: z.string().min(2),
   source: z.enum(["byo", "platform"]).default("byo"),
+  configId: z.string().uuid().optional(),
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
 });
@@ -29,7 +30,12 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
       from: (t: string) => {
         select: (s: string) => {
           eq: (c: string, v: string) => {
-            eq?: (c: string, v: string) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }> };
+            eq?: (c: string, v: string) => {
+              eq?: (c: string, v: string) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }> };
+              maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+              limit?: (n: number) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }> };
+              order?: (c: string, o: { ascending: boolean }) => { limit: (n: number) => { maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }> } };
+            };
             maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
           };
         };
@@ -38,13 +44,26 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
       };
     };
 
-    const q1 = admin.from(data.source === "platform" ? "platform_gateways" : "byo_gateways")
-      .select("credentials, mode, is_active, merchant_id, provider").eq("provider", data.provider);
-    const gwRes = data.source === "platform"
-      ? await q1.maybeSingle()
-      : await q1.eq!("merchant_id", inv.merchant_id).maybeSingle();
-    const gw = gwRes.data as { credentials?: Record<string, string>; mode?: string; is_active?: boolean } | null;
+    let gw: { credentials?: Record<string, string>; mode?: string; is_active?: boolean } | null = null;
+    if (data.source === "platform") {
+      const res = await admin.from("platform_gateways")
+        .select("credentials, mode, is_active, provider")
+        .eq("provider", data.provider).maybeSingle();
+      gw = res.data as typeof gw;
+    } else if (data.configId) {
+      const res = await admin.from("byo_gateways")
+        .select("credentials, mode, is_active, merchant_id, provider")
+        .eq("id", data.configId).eq!("merchant_id", inv.merchant_id).maybeSingle();
+      gw = res.data as typeof gw;
+    } else {
+      const res = await admin.from("byo_gateways")
+        .select("credentials, mode, is_active, merchant_id, provider")
+        .eq("merchant_id", inv.merchant_id).eq!("provider", data.provider)
+        .order!("created_at", { ascending: true }).limit(1).maybeSingle();
+      gw = res.data as typeof gw;
+    }
     if (!gw || !gw.is_active) throw new Error(`${data.provider} is not connected for this merchant`);
+
 
     const origin = new URL(data.successUrl).origin;
     const webhookUrl = `${origin}/api/public/webhooks/${data.provider}`;
