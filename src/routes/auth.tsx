@@ -583,7 +583,7 @@ function PhoneField({
         >
           {COUNTRY_CODES.map((c) => (
             <option key={c.code} value={c.dial} className="bg-background text-foreground">
-              {c.flag} {c.code} {c.dial}
+              {c.flag} {c.dial}
             </option>
           ))}
         </select>
