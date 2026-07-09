@@ -59,7 +59,7 @@ function RefundsPage() {
           limit: (n: number) => Promise<{ data: Row[] | null }>;
         };
       };
-    }).bind(supabase)).bind(supabase);
+    }).bind(supabase);
     const { data } = await fromLoose("refunds")
       .select("*")
       .order("created_at", { ascending: false })

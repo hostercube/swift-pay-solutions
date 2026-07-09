@@ -168,7 +168,7 @@ export const createRefund = createServerFn({ method: "POST" })
           single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
         };
       };
-    }).bind(supabaseAdmin)).bind(supabaseAdmin);
+    }).bind(supabaseAdmin);
     const { data: refund, error } = await insertRefund("refunds")
 
       .insert({
@@ -226,7 +226,7 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
           };
         };
       };
-    }).bind(supabase)).bind(supabase);
+    }).bind(supabase);
     const { data: row, error } = await fromLoose("refunds")
 
       .update(patch)
