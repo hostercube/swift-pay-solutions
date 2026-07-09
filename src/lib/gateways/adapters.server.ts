@@ -370,6 +370,11 @@ function verifyStripe(v: VerifyArgs): VerifyResult {
   const signed = `${parts.t}.${v.rawBody}`;
   const expected = hmacSha256Hex(v.creds.webhook_secret, signed);
   if (!safeEqualHex(parts.v1 ?? "", expected)) return { verified: false, reason: "bad_signature" };
+  // Anti-replay: reject events older than 5 minutes.
+  const ts = Number(parts.t);
+  if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) {
+    return { verified: false, reason: "stale_signature" };
+  }
   const body = JSON.parse(v.rawBody) as {
     id: string; type: string;
     data: { object: { metadata?: Record<string, string>; id?: string; amount_total?: number; currency?: string; payment_status?: string } };
