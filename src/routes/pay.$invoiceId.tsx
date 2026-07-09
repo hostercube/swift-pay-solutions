@@ -63,6 +63,12 @@ type Method = {
   fee_flat: number;
   min_amount: number | null;
   max_amount: number | null;
+  qr_code_url: string | null;
+  qr_type: string | null;
+  bank_name: string | null;
+  branch_name: string | null;
+  routing_number: string | null;
+  swift_code: string | null;
 };
 
 type Txn = {
