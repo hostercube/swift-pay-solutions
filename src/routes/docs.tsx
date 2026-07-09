@@ -28,7 +28,17 @@ export const Route = createFileRoute("/docs")({
   component: ApiReferencePage,
 });
 
-const BASE = "https://paynoc.bd/api/public/v1";
+const DEFAULT_BASE = "https://paynoc.bd/api/public/v1";
+const BASE = DEFAULT_BASE;
+
+function useBaseUrl() {
+  const [base, setBase] = useState(DEFAULT_BASE);
+  useEffect(() => {
+    if (typeof window !== "undefined") setBase(`${window.location.origin}/api/public/v1`);
+  }, []);
+  return base;
+}
+
 
 /* ---------------------- code snippets ---------------------- */
 
