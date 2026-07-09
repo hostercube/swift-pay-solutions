@@ -42,7 +42,7 @@ function MerchantsPage() {
     const [{ data, error }, { data: adminRoles }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, email, full_name, business_name, status, created_at")
+        .select("id, email, full_name, business_name, status, kyc_status, created_at")
         .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id").eq("role", "super_admin"),
     ]);
