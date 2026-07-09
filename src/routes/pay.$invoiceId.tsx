@@ -9,6 +9,11 @@ import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/componen
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
 import { getGateway } from "@/lib/gateways/registry";
 
+const AUTO_GATEWAYS = new Set([
+  "bkash", "sslcommerz", "stripe", "razorpay", "coinbase_commerce",
+  "nowpayments", "paypal", "uddoktapay", "piprapay", "ownpay",
+]);
+
 export const Route = createFileRoute("/pay/$invoiceId")({
   head: () => ({ meta: [{ title: "Checkout · PayNOC" }] }),
   component: CheckoutPage,
