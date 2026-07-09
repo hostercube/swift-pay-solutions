@@ -60,6 +60,7 @@ import { Route as AuthenticatedIntegrationsByoRouteImport } from './routes/_auth
 import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_authenticated/integrations.api'
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
+import { Route as AuthenticatedAdminSmsnocRouteImport } from './routes/_authenticated/admin/smsnoc'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin/payouts'
@@ -357,6 +358,12 @@ const AuthenticatedAdminStaffRoute = AuthenticatedAdminStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminSmsnocRoute =
+  AuthenticatedAdminSmsnocRouteImport.update({
+    id: '/smsnoc',
+    path: '/smsnoc',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -546,6 +553,7 @@ export interface FileRoutesByFullPath {
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
@@ -618,6 +626,7 @@ export interface FileRoutesByTo {
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/integrations/api': typeof AuthenticatedIntegrationsApiRoute
@@ -697,6 +706,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
   '/_authenticated/integrations/api': typeof AuthenticatedIntegrationsApiRoute
@@ -776,6 +786,7 @@ export interface FileRouteTypes {
     | '/admin/payouts'
     | '/admin/platform'
     | '/admin/settings'
+    | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
     | '/integrations/api'
@@ -848,6 +859,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/payouts'
     | '/admin/settings'
+    | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
     | '/integrations/api'
@@ -926,6 +938,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/smsnoc'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/transactions'
     | '/_authenticated/integrations/api'
@@ -1344,6 +1357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminStaffRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/smsnoc': {
+      id: '/_authenticated/admin/smsnoc'
+      path: '/smsnoc'
+      fullPath: '/admin/smsnoc'
+      preLoaderRoute: typeof AuthenticatedAdminSmsnocRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -1570,6 +1590,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSmsnocRoute: typeof AuthenticatedAdminSmsnocRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -1589,6 +1610,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+    AuthenticatedAdminSmsnocRoute: AuthenticatedAdminSmsnocRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
