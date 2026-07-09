@@ -46,7 +46,7 @@ function ReviewsPage() {
     setLoading(true);
     let q = supabase
       .from("transactions")
-      .select("id, invoice_id, method_type, status, gross_amount, provider_txn_id, sender_number, sender_name, slip_url, bank_reference, created_at, verified_at, note, invoices(invoice_number, customer_email, currency)")
+      .select("id, invoice_id, method_type, status, gross_amount, provider_txn_id, sender_number, sender_name, slip_url, bank_reference, created_at, verified_at, verified_by, rejected_reason, rejected_by, rejected_at, note, invoices(invoice_number, customer_email, currency)")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -69,13 +69,22 @@ function ReviewsPage() {
   }, [rows]);
 
   async function updateStatus(r: Row, next: "verified" | "rejected") {
-    const patch = { status: next, verified_at: next === "verified" ? new Date().toISOString() : null };
-    const { error } = await supabase.from("transactions").update(patch).eq("id", r.id);
+    if (!user) return;
+    let reason: string | null = null;
+    if (next === "rejected") {
+      const input = window.prompt("Reason for rejecting this payment? (optional)")?.trim() ?? "";
+      reason = input.length ? input.slice(0, 500) : null;
+    }
+    const nowIso = new Date().toISOString();
+    const patch: Record<string, unknown> = next === "verified"
+      ? { status: next, verified_at: nowIso, verified_by: user.id }
+      : { status: next, rejected_at: nowIso, rejected_by: user.id, rejected_reason: reason };
+    const { error } = await supabase.from("transactions").update(patch as never).eq("id", r.id);
     if (error) return toast.error(error.message);
     if (next === "verified") {
       await supabase
         .from("invoices")
-        .update({ status: "completed", paid_at: new Date().toISOString() })
+        .update({ status: "completed", paid_at: nowIso })
         .eq("id", r.invoice_id);
     }
     toast.success(next === "verified" ? "Marked as paid" : "Rejected");
