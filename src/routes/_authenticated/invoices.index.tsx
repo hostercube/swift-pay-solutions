@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/invoices/")({
   head: () => ({ meta: [{ title: "Invoices · PayNOC" }] }),
@@ -27,22 +28,22 @@ function InvoicesPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modeFilter, setModeFilter] = useState<"all" | "live" | "test">("all");
 
-  useEffect(() => {
+  const load = () => {
     if (!user) return;
-    let q = supabase
+    setLoading(true);
+    supabase
       .from("invoices")
       .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at, mode")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(100);
-    if (modeFilter !== "all") q = q.eq("mode", modeFilter);
-    q.then(({ data }) => {
-      setRows((data ?? []) as Row[]);
-      setLoading(false);
-    });
-  }, [user, modeFilter]);
+      .limit(500)
+      .then(({ data }) => {
+        setRows((data ?? []) as Row[]);
+        setLoading(false);
+      });
+  };
+  useEffect(() => { load(); }, [user]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -122,16 +123,64 @@ function InvoicesPage() {
       const { error } = await supabase.from("invoices").insert(payload);
       if (error) { toast.error(error.message); return; }
       toast.success(`Imported ${payload.length} invoice(s)`);
-      setModeFilter((m) => m);
-      const { data } = await supabase.from("invoices")
-        .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at, mode")
-        .eq("merchant_id", user.id).order("created_at", { ascending: false }).limit(100);
-      setRows((data ?? []) as Row[]);
+      load();
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
+
+  const columns: DataTableColumn<Row>[] = [
+    {
+      key: "invoice_number",
+      label: "Invoice",
+      render: (r) => (
+        <div className="flex items-center gap-2">
+          <Link to="/invoices/$id" params={{ id: r.id }} className="font-mono text-xs hover:text-brand">
+            {r.invoice_number}
+          </Link>
+          {r.mode === "test" && (
+            <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "customer",
+      label: "Customer",
+      render: (r) => (
+        <div>
+          <div>{r.customer_name || "—"}</div>
+          <div className="text-xs text-muted-foreground">{r.customer_email || ""}</div>
+        </div>
+      ),
+    },
+    { key: "amount", label: "Amount", render: (r) => <span className="font-medium">{r.currency} {Number(r.amount).toLocaleString()}</span> },
+    { key: "status", label: "Status", render: (r) => <StatusBadge status={r.status} /> },
+    { key: "created_at", label: "Created", render: (r) => <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span> },
+    {
+      key: "actions",
+      label: "Checkout",
+      thClassName: "text-right",
+      className: "text-right",
+      render: (r) => (
+        <div className="inline-flex items-center gap-2">
+          <button onClick={() => copyLink(r.id)} className="text-muted-foreground hover:text-foreground" title="Copy checkout link">
+            <Copy className="h-4 w-4" />
+          </button>
+          <a href={`/pay/${r.id}`} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground" title="Open checkout">
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </div>
+      ),
+    },
+  ];
+
+  const filters: DataTableFilter<Row>[] = [
+    { key: "status", label: "All statuses", options: ["pending","processing","completed","failed","expired","cancelled","refunded"].map((s) => ({ value: s, label: s })), match: (r, v) => r.status === v },
+    { key: "mode", label: "Live + Test", options: [{ value: "live", label: "Live" }, { value: "test", label: "Test" }], match: (r, v) => r.mode === v },
+    { key: "currency", label: "All currencies", options: Array.from(new Set(rows.map((r) => r.currency))).sort().map((c) => ({ value: c, label: c })), match: (r, v) => r.currency === v },
+  ];
 
   return (
     <MerchantShell
@@ -139,112 +188,33 @@ function InvoicesPage() {
       subtitle="Create payment requests and share checkout links with your customers."
       actions={
         <div className="flex items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) importCsv(f); }}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60 disabled:opacity-50"
-          >
+          <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) importCsv(f); }} />
+          <button onClick={() => fileRef.current?.click()} disabled={busy}
+            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60 disabled:opacity-50">
             <Upload className="h-4 w-4" /> {busy ? "Importing…" : "Import CSV"}
           </button>
-          <button
-            onClick={exportCsv}
-            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60"
-          >
+          <button onClick={exportCsv}
+            className="inline-flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 px-3 py-2 text-sm font-semibold text-foreground hover:bg-card/60">
             <Download className="h-4 w-4" /> Export CSV
           </button>
-          <Link
-            to="/invoices/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground"
-          >
+          <Link to="/invoices/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-brand px-4 py-2 text-sm font-semibold text-brand-foreground">
             <Plus className="h-4 w-4" /> New invoice
           </Link>
         </div>
       }
     >
-      <div className="mb-4 inline-flex rounded-lg border border-glass-border bg-card/40 p-1 text-xs">
-        {(["all","live","test"] as const).map((m) => (
-          <button key={m} onClick={() => setModeFilter(m)}
-            className={`rounded-md px-3 py-1.5 font-semibold uppercase tracking-wider ${modeFilter===m ? "bg-brand text-brand-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-            {m}
-          </button>
-        ))}
-      </div>
-      <div className="glass overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-
-            <tr>
-              <th className="px-4 py-3">Invoice</th>
-              <th className="px-4 py-3">Customer</th>
-              <th className="px-4 py-3">Amount</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3 text-right">Checkout</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
-            )}
-            {!loading && rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
-                No invoices yet — click <span className="text-foreground">New invoice</span> to create one.
-              </td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link to="/invoices/$id" params={{ id: r.id }} className="font-mono text-xs hover:text-brand">
-                      {r.invoice_number}
-                    </Link>
-                    {r.mode === "test" && (
-                      <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500">Test</span>
-                    )}
-                  </div>
-                </td>
-
-                <td className="px-4 py-3">
-                  <div>{r.customer_name || "—"}</div>
-                  <div className="text-xs text-muted-foreground">{r.customer_email || ""}</div>
-                </td>
-                <td className="px-4 py-3 font-medium">
-                  {r.currency} {Number(r.amount).toLocaleString()}
-                </td>
-                <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="inline-flex items-center gap-2">
-                    <button
-                      onClick={() => copyLink(r.id)}
-                      className="text-muted-foreground hover:text-foreground"
-                      title="Copy checkout link"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                    <a
-                      href={`/pay/${r.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-muted-foreground hover:text-foreground"
-                      title="Open checkout"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={(r) => r.id}
+        loading={loading}
+        emptyMessage="No invoices yet — click New invoice to create one."
+        searchable={(r) => `${r.invoice_number} ${r.customer_name ?? ""} ${r.customer_email ?? ""}`}
+        filters={filters}
+        dateField={(r) => r.created_at}
+      />
     </MerchantShell>
   );
 }
