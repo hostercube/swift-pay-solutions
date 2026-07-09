@@ -42,6 +42,11 @@ type Invoice = {
   display_currency?: string | null;
   discount_amount?: number | null;
   discount_code?: string | null;
+  allow_custom_amount?: boolean | null;
+  min_amount?: number | null;
+  max_amount?: number | null;
+  reusable?: boolean | null;
+  auto_redirect?: boolean | null;
 };
 
 
