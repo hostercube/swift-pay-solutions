@@ -988,6 +988,23 @@ function CopyBtn({ text, label }: { text: string; label?: string }) {
   );
 }
 
+function PayQr({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    supabase.storage.from("payment-assets").createSignedUrl(path, 3600).then(({ data }) => {
+      if (alive) setUrl(data?.signedUrl ?? null);
+    });
+    return () => { alive = false; };
+  }, [path]);
+  if (!url) return <div className="h-48 w-48 animate-pulse rounded-xl bg-muted" />;
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="block">
+      <img src={url} alt="Scan to pay" className="h-48 w-48 rounded-xl border border-glass-border bg-white object-contain p-2" />
+    </a>
+  );
+}
+
 function currencySymbol(code: string) {
   const map: Record<string, string> = { BDT: "৳", USD: "$", EUR: "€", GBP: "£", INR: "₹", AED: "د.إ" };
   return map[code] ?? `${code} `;
