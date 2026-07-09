@@ -222,19 +222,35 @@ echo "ok";`;
 /* ---------------------- ui bits ---------------------- */
 
 function Code({ code, lang }: { code: string; lang?: string }) {
+  const [copied, setCopied] = useState(false);
+  const doCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch { /* ignore */ }
+  };
   return (
-    <div className="overflow-hidden rounded-lg border border-glass-border bg-card/60">
-      {lang && (
-        <div className="border-b border-glass-border px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {lang}
-        </div>
-      )}
+    <div className="group relative overflow-hidden rounded-lg border border-glass-border bg-card/60">
+      <div className="flex items-center justify-between border-b border-glass-border px-3 py-1.5">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{lang ?? "code"}</span>
+        <button
+          type="button"
+          onClick={doCopy}
+          aria-label={copied ? "Copied" : "Copy code"}
+          className="inline-flex items-center gap-1 rounded border border-glass-border/60 bg-background/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground opacity-0 transition hover:text-foreground group-hover:opacity-100 focus:opacity-100"
+        >
+          {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
       <pre className="overflow-x-auto p-4 font-mono text-xs leading-relaxed">
         <code>{code}</code>
       </pre>
     </div>
   );
 }
+
 
 function Method({ verb, path }: { verb: "GET" | "POST" | "DELETE"; path: string }) {
   const color =
