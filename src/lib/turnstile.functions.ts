@@ -7,36 +7,62 @@ type TurnstileSettings = {
   secret_key?: string;
 };
 
-export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-  const { data } = await supabaseAdmin
-    .from("platform_settings")
-    .select("settings")
-    .order("id")
-    .limit(1)
-    .maybeSingle();
-  const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
-  const t = s.turnstile ?? {};
-  return { enabled: !!t.enabled && !!t.site_key, siteKey: t.site_key ?? "" };
-});
-
-export const verifyTurnstile = createServerFn({ method: "POST" })
-  .inputValidator((d: { token: string }) => d)
-  .handler(async ({ data }) => {
+async function readDbTurnstile(): Promise<TurnstileSettings> {
+  try {
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-    const { data: row } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from("platform_settings")
       .select("settings")
       .order("id")
       .limit(1)
       .maybeSingle();
-    const s = (row?.settings ?? {}) as { turnstile?: TurnstileSettings };
-    const t = s.turnstile ?? {};
+    const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
+    return s.turnstile ?? {};
+  } catch (e) {
+    console.error("[turnstile] readDbTurnstile failed:", e);
+    return {};
+  }
+}
+
+function envTurnstile(): TurnstileSettings {
+  const site = process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || "";
+  const secret = process.env.TURNSTILE_SECRET_KEY || "";
+  return {
+    enabled: !!(site && secret),
+    site_key: site,
+    secret_key: secret,
+  };
+}
+
+/** DB config takes precedence, env-vars are the fallback. */
+async function resolveTurnstile(): Promise<TurnstileSettings> {
+  const db = await readDbTurnstile();
+  const env = envTurnstile();
+  return {
+    enabled: db.enabled ?? env.enabled,
+    site_key: db.site_key || env.site_key || "",
+    secret_key: db.secret_key || env.secret_key || "",
+  };
+}
+
+export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
+  const t = await resolveTurnstile();
+  const siteKey = (t.site_key ?? "").trim();
+  // Show captcha whenever a site key is configured AND enabled is true (or unset with env fallback).
+  const enabled = !!t.enabled && !!siteKey;
+  return { enabled, siteKey };
+});
+
+export const verifyTurnstile = createServerFn({ method: "POST" })
+  .inputValidator((d: { token: string }) => d)
+  .handler(async ({ data }) => {
+    const t = await resolveTurnstile();
     if (!t.enabled) return { ok: true };
-    if (!t.secret_key) return { ok: false, error: "Turnstile not configured" };
+    const secret = (t.secret_key ?? "").trim();
+    if (!secret) return { ok: false, error: "Turnstile secret not configured" };
     if (!data.token) return { ok: false, error: "Missing captcha token" };
     const body = new URLSearchParams();
-    body.set("secret", t.secret_key);
+    body.set("secret", secret);
     body.set("response", data.token);
     const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
       method: "POST",
@@ -65,20 +91,31 @@ export const saveTurnstileConfig = createServerFn({ method: "POST" })
       .order("id")
       .limit(1)
       .maybeSingle();
-    const id = row?.id ?? 1;
-    const current = (row?.settings ?? {}) as Record<string, unknown>;
-    const nextSettings = {
-      ...current,
-      turnstile: {
-        enabled: !!data.enabled,
-        site_key: (data.site_key ?? "").trim(),
-        secret_key: (data.secret_key ?? "").trim(),
-      },
+
+    const nextTurnstile = {
+      enabled: !!data.enabled,
+      site_key: (data.site_key ?? "").trim(),
+      secret_key: (data.secret_key ?? "").trim(),
     };
-    const { error } = await supabaseAdmin
-      .from("platform_settings")
-      .update({ settings: nextSettings })
-      .eq("id", id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
+
+    if (row?.id) {
+      const current = (row.settings ?? {}) as Record<string, unknown>;
+      const nextSettings = { ...current, turnstile: nextTurnstile };
+      const { data: updated, error } = await supabaseAdmin
+        .from("platform_settings")
+        .update({ settings: nextSettings })
+        .eq("id", row.id)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!updated || updated.length === 0) {
+        throw new Error("Turnstile save affected 0 rows");
+      }
+    } else {
+      // No row yet — insert one so the config actually persists.
+      const { error } = await supabaseAdmin
+        .from("platform_settings")
+        .insert({ settings: { turnstile: nextTurnstile } });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true, ...nextTurnstile };
   });
