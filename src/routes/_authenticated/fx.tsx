@@ -120,26 +120,28 @@ function FxPage() {
   async function addRow() {
     if (!user) return;
     if (adding.base_currency === adding.quote_currency) return toast.error("Choose different currencies");
-    const payload: Record<string, unknown> = {
-      merchant_id: user.id,
-      base_currency: adding.base_currency.toUpperCase(),
-      quote_currency: adding.quote_currency.toUpperCase(),
-      mode: adding.mode,
-      markup_percent: Number(adding.markup_percent) || 0,
-    };
+    const base = adding.base_currency.toUpperCase();
+    const quote = adding.quote_currency.toUpperCase();
+    let rate: number;
     if (adding.mode === "manual") {
-      const v = Number(adding.rate);
-      if (!v || v <= 0) return toast.error("Enter a valid rate");
-      payload.rate = v;
+      rate = Number(adding.rate);
+      if (!rate || rate <= 0) return toast.error("Enter a valid rate");
     } else {
-      // Seed with current platform rate as a placeholder
-      const g = globalRate(payload.base_currency as string, payload.quote_currency as string);
-      payload.rate = g ?? 1;
+      rate = globalRate(base, quote) ?? 1;
     }
     setBusy(true);
-    const { error } = await supabase.from("merchant_fx_rates").upsert(payload, {
-      onConflict: "merchant_id,base_currency,quote_currency",
-    });
+    const { error } = await supabase.from("merchant_fx_rates").upsert(
+      {
+        merchant_id: user.id,
+        base_currency: base,
+        quote_currency: quote,
+        mode: adding.mode,
+        markup_percent: Number(adding.markup_percent) || 0,
+        rate,
+      },
+      { onConflict: "merchant_id,base_currency,quote_currency" },
+    );
+
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Rate added");
