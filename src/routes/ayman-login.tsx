@@ -24,11 +24,27 @@ async function isAdmin(userId: string): Promise<boolean> {
   return !!data && data.length > 0;
 }
 
+async function ensureAdminAccess(userId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("claim_first_super_admin");
+  if (!error && data === true) return true;
+  return isAdmin(userId);
+}
+
+function authErrorMessage(err: unknown) {
+  const msg = err instanceof Error ? err.message : "Access denied";
+  if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+    return "Backend auth endpoint is unreachable. Check that the Supabase URL points to the API gateway and that SSL/CORS are valid.";
+  }
+  return msg;
+}
+
 function AdminLoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"signin" | "first-admin">("signin");
 
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
@@ -37,7 +53,7 @@ function AdminLoginPage() {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) return;
-      const admin = await isAdmin(data.session.user.id);
+      const admin = await ensureAdminAccess(data.session.user.id);
       if (!admin) {
         await supabase.auth.signOut();
         return;
@@ -75,11 +91,46 @@ function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      if (mode === "first-admin") {
+        if (password.length < 8) throw new Error("Password must be at least 8 characters.");
+        if (password !== confirmPassword) throw new Error("Passwords do not match.");
+
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/ayman-login`,
+            data: {
+              full_name: "PayNOC Admin",
+              business_name: "PayNOC",
+            },
+          },
+        });
+        if (error) throw error;
+        if (!data.session?.user && !data.user) {
+          toast.success("Admin account created. Confirm the email, then sign in.");
+          setMode("signin");
+          return;
+        }
+
+        const userId = data.session?.user.id ?? data.user?.id;
+        if (!userId) throw new Error("Admin account created, but sign-in was not completed.");
+        const admin = await ensureAdminAccess(userId);
+        if (!admin) {
+          await supabase.auth.signOut();
+          throw new Error("A super admin already exists. Sign in with that admin account.");
+        }
+
+        toast.success("First super admin is ready");
+        navigate({ to: "/admin" });
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (!data.user) throw new Error("Sign-in failed");
 
-      const admin = await isAdmin(data.user.id);
+      const admin = await ensureAdminAccess(data.user.id);
       if (!admin) {
         await supabase.auth.signOut();
         throw new Error("This account is not authorized for admin access.");
@@ -104,8 +155,7 @@ function AdminLoginPage() {
       toast.success("Welcome, admin");
       navigate({ to: "/admin" });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Access denied";
-      toast.error(msg);
+      toast.error(authErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -167,14 +217,20 @@ function AdminLoginPage() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Restricted area
               </div>
               <h1 className="font-display text-2xl font-bold text-foreground">
-                Admin console access
+                {mode === "signin" ? "Admin console access" : "Create first super admin"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Merchants — please use the{" "}
-                <Link to="/auth" className="underline hover:text-foreground">
-                  merchant sign-in
-                </Link>{" "}
-                page.
+                {mode === "signin" ? (
+                  <>
+                    Merchants — please use the{" "}
+                    <Link to="/auth" className="underline hover:text-foreground">
+                      merchant sign-in
+                    </Link>{" "}
+                    page.
+                  </>
+                ) : (
+                  "Only works while no admin account exists yet."
+                )}
               </p>
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -193,15 +249,35 @@ function AdminLoginPage() {
                   required
                   minLength={8}
                 />
+                {mode === "first-admin" && (
+                  <Field
+                    label="Confirm password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                    required
+                    minLength={8}
+                  />
+                )}
                 <button
                   type="submit"
                   disabled={loading}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Sign in to admin
+                  {mode === "signin" ? "Sign in to admin" : "Create super admin"}
                 </button>
               </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode((v) => (v === "signin" ? "first-admin" : "signin"));
+                  setConfirmPassword("");
+                }}
+                className="mt-4 w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+              >
+                {mode === "signin" ? "No admin yet? Create the first super admin" : "Back to admin sign in"}
+              </button>
             </>
           )}
         </div>
