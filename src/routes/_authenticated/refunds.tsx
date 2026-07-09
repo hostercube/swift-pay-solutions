@@ -53,18 +53,20 @@ function RefundsPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await (supabase.from as unknown as (t: string) => {
+    const fromLoose = (supabase.from as unknown as (t: string) => {
       select: (s: string) => {
         order: (c: string, o: { ascending: boolean }) => {
           limit: (n: number) => Promise<{ data: Row[] | null }>;
         };
       };
-    })("refunds")
+    }).bind(supabase);
+    const { data } = await fromLoose("refunds")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(500);
     setRows(data ?? []);
     setLoading(false);
+
 
     const { data: inv } = await supabase
       .from("invoices")
