@@ -284,3 +284,19 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   );
 }
+
+function KycBadge({ status }: { status: string }) {
+  const tone =
+    status === "verified"
+      ? "bg-brand/10 text-brand"
+      : status === "rejected"
+      ? "bg-destructive/10 text-destructive"
+      : status === "pending"
+      ? "bg-warning/10 text-warning"
+      : "bg-muted text-muted-foreground";
+  return (
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${tone}`}>
+      {status}
+    </span>
+  );
+}
