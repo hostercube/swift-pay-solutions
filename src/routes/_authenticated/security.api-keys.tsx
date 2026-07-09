@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Copy, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/security/api-keys")({
   head: () => ({ meta: [{ title: "API keys · PayNOC" }] }),
@@ -127,55 +128,80 @@ function ApiKeysPage() {
         )}
       </div>
 
-      <div className="glass mt-6 overflow-hidden rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Env</th>
-              <th className="px-4 py-3">Public key</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No API keys yet.</td></tr>
-            )}
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-3 font-medium">{r.name}</td>
-                <td className="px-4 py-3 uppercase text-muted-foreground">{r.environment}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <code className="font-mono text-xs">{r.public_key}</code>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(r.public_key); toast.success("Copied"); }}
-                      className="rounded p-1 text-muted-foreground hover:text-foreground"
-                    ><Copy className="h-3.5 w-3.5" /></button>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
+      <div className="mt-6">
+        <DataTable<Row>
+          columns={[
+            { key: "name", label: "Name", sortable: true, render: (r) => <span className="font-medium">{r.name}</span> },
+            { key: "environment", label: "Env", sortable: true, render: (r) => <span className="uppercase text-muted-foreground">{r.environment}</span> },
+            {
+              key: "public_key",
+              label: "Public key",
+              render: (r) => (
+                <div className="flex items-center gap-2">
+                  <code className="font-mono text-xs">{r.public_key}</code>
                   <button
-                    onClick={() => toggle(r.id, r.is_active)}
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                      r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {r.is_active ? "Active" : "Disabled"}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => remove(r.id)} className="text-destructive hover:opacity-80">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    onClick={() => { navigator.clipboard.writeText(r.public_key); toast.success("Copied"); }}
+                    className="rounded p-1 text-muted-foreground hover:text-foreground"
+                  ><Copy className="h-3.5 w-3.5" /></button>
+                </div>
+              ),
+            },
+            {
+              key: "is_active",
+              label: "Status",
+              sortable: true,
+              accessor: (r) => (r.is_active ? "active" : "disabled"),
+              render: (r) => (
+                <button
+                  onClick={() => toggle(r.id, r.is_active)}
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                    r.is_active ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {r.is_active ? "Active" : "Disabled"}
+                </button>
+              ),
+            },
+            {
+              key: "created_at",
+              label: "Created",
+              sortable: true,
+              accessor: (r) => new Date(r.created_at),
+              render: (r) => <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>,
+            },
+          ] as DataTableColumn<Row>[]}
+          rows={rows}
+          rowKey={(r) => r.id}
+          emptyMessage="No API keys yet."
+          searchable={(r) => `${r.name} ${r.environment} ${r.public_key}`}
+          filters={[
+            {
+              key: "environment",
+              label: "Environment",
+              options: [
+                { value: "test", label: "Test" },
+                { value: "live", label: "Live" },
+              ],
+              match: (r, v) => r.environment === v,
+            },
+            {
+              key: "status",
+              label: "Status",
+              options: [
+                { value: "active", label: "Active" },
+                { value: "disabled", label: "Disabled" },
+              ],
+              match: (r, v) => (v === "active" ? r.is_active : !r.is_active),
+            },
+          ] as DataTableFilter<Row>[]}
+          dateField={(r) => r.created_at}
+          actions={(r) => (
+            <button onClick={() => remove(r.id)} className="text-destructive hover:opacity-80">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+          exportFilename="api-keys"
+        />
       </div>
     </>
   );

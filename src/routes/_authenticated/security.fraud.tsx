@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Trash2, ShieldAlert, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/security/fraud")({
   head: () => ({ meta: [{ title: "Fraud Rules · PayNOC" }] }),
@@ -82,38 +83,46 @@ function FraudPage() {
         </div>
       </Card>
 
-      <Card className="mt-6 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Value</th>
-              <th className="px-4 py-3">Reason</th>
-              <th className="px-4 py-3">Added</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">Blocklist is empty</td></tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-t border-glass-border">
-                  <td className="px-4 py-3 capitalize">{r.block_type.replace("_", " ")}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{r.value}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{r.reason ?? "—"}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+      <div className="mt-6">
+        <DataTable<Row>
+          columns={[
+            { key: "block_type", label: "Type", sortable: true, render: (r) => <span className="capitalize">{r.block_type.replace("_", " ")}</span> },
+            { key: "value", label: "Value", render: (r) => <code className="font-mono text-xs">{r.value}</code> },
+            { key: "reason", label: "Reason", render: (r) => <span className="text-xs text-muted-foreground">{r.reason ?? "—"}</span> },
+            {
+              key: "created_at",
+              label: "Added",
+              sortable: true,
+              accessor: (r) => new Date(r.created_at),
+              render: (r) => <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>,
+            },
+          ] as DataTableColumn<Row>[]}
+          rows={rows}
+          rowKey={(r) => r.id}
+          emptyMessage="Blocklist is empty"
+          searchable={(r) => `${r.value} ${r.reason ?? ""} ${r.block_type}`}
+          filters={[
+            {
+              key: "block_type",
+              label: "Type",
+              options: [
+                { value: "email", label: "Email" },
+                { value: "phone", label: "Phone" },
+                { value: "ip", label: "IP address" },
+                { value: "sender_number", label: "Sender number" },
+              ],
+              match: (r, v) => r.block_type === v,
+            },
+          ] as DataTableFilter<Row>[]}
+          dateField={(r) => r.created_at}
+          actions={(r) => (
+            <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+          exportFilename="fraud-blocklist"
+        />
+      </div>
     </>
   );
 }
