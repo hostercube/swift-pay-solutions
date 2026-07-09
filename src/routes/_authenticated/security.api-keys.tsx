@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Copy, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/security/api-keys")({
   head: () => ({ meta: [{ title: "API keys · PayNOC" }] }),
