@@ -1,0 +1,21 @@
+name: Deploy to Coolify
+
+# Auto-triggers Coolify deploy on every push to main.
+# Setup: GitHub repo → Settings → Secrets and variables → Actions → New secret
+#   COOLIFY_WEBHOOK_URL  — Coolify → App resource → Webhooks → Deploy webhook URL
+#   COOLIFY_API_TOKEN    — Coolify → Keys & Tokens → API token (Bearer)
+# Both are required.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deploy
+        run: |
+          curl -fsSL -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
