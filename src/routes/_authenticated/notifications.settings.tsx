@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
+import { NotificationsTabs } from "@/components/notifications-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,7 @@ function NotifSettingsPage() {
         </Button>
       }
     >
+      <NotificationsTabs />
       <div className="space-y-6">
         <section className="rounded-2xl border border-glass-border bg-card/40 p-6 backdrop-blur">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">

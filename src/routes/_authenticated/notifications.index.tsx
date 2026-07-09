@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MerchantShell } from "@/components/merchant-shell";
+import { NotificationsTabs } from "@/components/notifications-tabs";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ function NotificationsPage() {
         </Button>
       }
     >
+      <NotificationsTabs />
       <div className="rounded-2xl border border-glass-border bg-card/40 backdrop-blur">
         {isLoading ? (
           <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>
