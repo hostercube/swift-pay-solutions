@@ -372,6 +372,13 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "webhook_secret", label: "Webhook Signing Secret", type: "password", placeholder: "whsec_..." },
     ],
     docsUrl: "https://stripe.com/docs/api",
+    setupSteps: [
+      "Create a Stripe account at stripe.com and complete the activation checklist.",
+      "In the Dashboard → Developers → API keys, copy the Secret Key (sk_test_… or sk_live_…) and Publishable Key.",
+      "Developers → Webhooks → Add endpoint: paste the webhook URL below and select the events you need (payment_intent.succeeded, charge.refunded, etc.).",
+      "Copy the Signing Secret (whsec_…) from the created endpoint into 'Webhook Signing Secret'.",
+      "Test in Test mode first (sk_test_ keys), then switch this configuration to Live.",
+    ],
   },
   {
     id: "paypal",
