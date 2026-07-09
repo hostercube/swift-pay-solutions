@@ -65,10 +65,11 @@ async function handlePost(request: Request): Promise<Response> {
     }
 
     // 1) Case-insensitive exact trxId match against pending txns for this merchant.
-    let txn: {
+    type Txn = {
       id: string; invoice_id: string; merchant_id: string; method_type: string;
       gross_amount: number; fee_amount: number; net_amount: number; status: string;
-    } | null = null;
+    };
+    let txn: Txn | null = null;
 
     if (trxId) {
       const { data } = await supabaseAdmin
@@ -78,7 +79,7 @@ async function handlePost(request: Request): Promise<Response> {
         .ilike("provider_txn_id", trxId)
         .eq("status", "pending")
         .maybeSingle();
-      txn = (data as typeof txn) ?? null;
+      txn = (data as unknown as Txn | null) ?? null;
     }
 
     // 2) Fallback: match by sender phone (last 10 digits) + amount within 1 unit,
@@ -98,13 +99,14 @@ async function handlePost(request: Request): Promise<Response> {
         .limit(5);
       if (senderTail.length >= 10) q = q.ilike("sender_number", `%${senderTail}`);
       const { data: candidates } = await q;
-      if (candidates && candidates.length === 1) txn = candidates[0] as unknown as typeof txn;
+      if (candidates && candidates.length === 1) txn = candidates[0] as unknown as Txn;
     }
 
     if (!txn) {
       results.push({ trx_id: trxId, matched: false, reason: "no matching pending txn" });
       continue;
     }
+    const matched: Txn = txn;
 
     // Amount sanity — allow 1 unit tolerance
     if (Number.isFinite(amount) && amount > 0) {
