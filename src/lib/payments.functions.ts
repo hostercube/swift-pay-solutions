@@ -257,7 +257,7 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
         .from("transactions")
         .select("provider_txn_id, method_type")
         .eq("invoice_id", invoiceId)
-        .eq("status", "completed")
+        .eq("status", "verified")
         .maybeSingle();
 
       const providerName = (origTxn?.method_type as string | undefined) ?? "manual";
