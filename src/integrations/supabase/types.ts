@@ -668,7 +668,9 @@ export type Database = {
           base_currency: string
           created_at: string
           id: string
+          markup_percent: number
           merchant_id: string
+          mode: string
           quote_currency: string
           rate: number
           updated_at: string
@@ -677,7 +679,9 @@ export type Database = {
           base_currency: string
           created_at?: string
           id?: string
+          markup_percent?: number
           merchant_id: string
+          mode?: string
           quote_currency: string
           rate: number
           updated_at?: string
@@ -686,7 +690,9 @@ export type Database = {
           base_currency?: string
           created_at?: string
           id?: string
+          markup_percent?: number
           merchant_id?: string
+          mode?: string
           quote_currency?: string
           rate?: number
           updated_at?: string
