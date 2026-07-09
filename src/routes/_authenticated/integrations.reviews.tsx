@@ -24,6 +24,10 @@ type Row = {
   bank_reference: string | null;
   created_at: string;
   verified_at: string | null;
+  verified_by: string | null;
+  rejected_reason?: string | null;
+  rejected_by?: string | null;
+  rejected_at?: string | null;
   note: string | null;
   invoices: { invoice_number: string | null; customer_email: string | null; currency: string | null } | null;
 };
