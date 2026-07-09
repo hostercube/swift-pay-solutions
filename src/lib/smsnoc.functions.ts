@@ -145,7 +145,7 @@ export const sendPlatformSmsNocTest = createServerFn({ method: "POST" })
       });
     else
       result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
-    return result;
+    return serializeResult(result);
   });
 
 // ---------- Merchant config ----------
