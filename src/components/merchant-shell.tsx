@@ -58,11 +58,10 @@ const navGroups: NavGroup[] = [
   {
     label: "Money",
     items: [
-      { to: "/payouts", label: "Payouts", icon: Wallet, perm: "payouts" },
-      { to: "/payout-schedule", label: "Auto payout", icon: CalendarClock, perm: "payouts" },
       { to: "/fx", label: "Currency rates", icon: BarChart3, perm: "settings" },
     ],
   },
+
   {
     label: "Integrations",
     items: [
