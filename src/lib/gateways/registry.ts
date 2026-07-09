@@ -157,6 +157,12 @@ export const GATEWAYS: GatewaySpec[] = [
       { key: "signature_key", label: "Signature Key", type: "password", required: true },
     ],
     docsUrl: "https://aamarpay.com/developer",
+    setupSteps: [
+      "Register at aamarpay.com and complete merchant KYC.",
+      "In the AamarPay dashboard → Settings → API, copy your Store ID and Signature Key.",
+      "Sandbox creds: store_id 'aamarpaytest' / signature_key 'dbb74894e82415a2f7ff0ec3a97e4183' — use these for testing.",
+      "Set the IPN URL to the webhook URL below (Dashboard → Settings → IPN).",
+    ],
   },
   {
     id: "upay",
