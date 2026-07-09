@@ -81,6 +81,7 @@ import { Route as ApiPublicHooksWebhookRetryRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksRunSubscriptionsRouteImport } from './routes/api/public/hooks/run-subscriptions'
 import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/public/hooks/run-recurring'
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
+import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
 import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
 import { Route as AuthenticatedAdminPlatformPluginsRouteImport } from './routes/_authenticated/admin/platform.plugins'
@@ -478,6 +479,11 @@ const ApiPublicHooksRunDigestRoute = ApiPublicHooksRunDigestRouteImport.update({
   path: '/api/public/hooks/run-digest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRefreshFxRoute = ApiPublicHooksRefreshFxRouteImport.update({
+  id: '/api/public/hooks/refresh-fx',
+  path: '/api/public/hooks/refresh-fx',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksExpireInvoicesRoute =
   ApiPublicHooksExpireInvoicesRouteImport.update({
     id: '/api/public/hooks/expire-invoices',
@@ -580,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
@@ -654,6 +661,7 @@ export interface FileRoutesByTo {
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
   '/api/public/hooks/run-recurring': typeof ApiPublicHooksRunRecurringRoute
   '/api/public/hooks/run-subscriptions': typeof ApiPublicHooksRunSubscriptionsRoute
@@ -816,6 +825,7 @@ export interface FileRouteTypes {
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/platform/plugins'
     | '/_authenticated/admin/platform/webhooks'
     | '/api/public/hooks/expire-invoices'
+    | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
     | '/api/public/hooks/run-recurring'
     | '/api/public/hooks/run-subscriptions'
@@ -999,6 +1011,7 @@ export interface RootRouteChildren {
   MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
+  ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
   ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
   ApiPublicHooksRunRecurringRoute: typeof ApiPublicHooksRunRecurringRoute
   ApiPublicHooksRunSubscriptionsRoute: typeof ApiPublicHooksRunSubscriptionsRoute
@@ -1516,6 +1529,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRunDigestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-fx': {
+      id: '/api/public/hooks/refresh-fx'
+      path: '/api/public/hooks/refresh-fx'
+      fullPath: '/api/public/hooks/refresh-fx'
+      preLoaderRoute: typeof ApiPublicHooksRefreshFxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/expire-invoices': {
       id: '/api/public/hooks/expire-invoices'
       path: '/api/public/hooks/expire-invoices'
@@ -1771,6 +1791,7 @@ const rootRouteChildren: RootRouteChildren = {
   MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
+  ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
   ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,
   ApiPublicHooksRunRecurringRoute: ApiPublicHooksRunRecurringRoute,
   ApiPublicHooksRunSubscriptionsRoute: ApiPublicHooksRunSubscriptionsRoute,
