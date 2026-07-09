@@ -10,8 +10,13 @@ export const Route = createFileRoute("/api/public/hooks/run-subscriptions")({
   server: {
     handlers: {
       POST: async () => {
-        const url = process.env.SUPABASE_URL!;
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const { requirePaynocBackendEnv } = await import(
+          "@/lib/paynoc-env.server"
+        );
+        const { url, serviceRoleKey: key } = requirePaynocBackendEnv([
+          "url",
+          "serviceRoleKey",
+        ]);
         const sb = createClient(url, key, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
