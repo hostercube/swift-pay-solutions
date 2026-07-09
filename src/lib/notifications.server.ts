@@ -90,6 +90,22 @@ async function sendSms(to: string, body: string) {
 
 export async function notify(input: NotifyInput) {
   const { merchantId, event, title, body = "", metadata = {} } = input;
+
+  // Route through SMS NOC when the merchant has enabled it. Best-effort.
+  try {
+    const { notifyMerchantViaSmsNoc } = await import("@/lib/smsnoc.server");
+    const profileForFallback = await loadProfile(merchantId);
+    await notifyMerchantViaSmsNoc({
+      merchantId,
+      event,
+      title,
+      body,
+      fallback: { phone: profileForFallback?.phone, email: profileForFallback?.email },
+    });
+  } catch {
+    /* swallow */
+  }
+
   try {
     const [settings, profile] = await Promise.all([
       loadSettings(merchantId),
