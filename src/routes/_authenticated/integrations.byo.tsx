@@ -207,7 +207,7 @@ function ByoPage() {
           </div>
         </div>
       )}
-    </MerchantShell>
+    </div>
   );
 }
 
