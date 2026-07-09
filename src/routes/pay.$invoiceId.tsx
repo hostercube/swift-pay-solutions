@@ -576,7 +576,7 @@ function methodCategory(type: string): CatKey {
   return "other";
 }
 
-type Gw = { provider: string; mode: string };
+type Gw = { id?: string; provider: string; mode: string; label?: string | null };
 
 function MethodPicker({
   autoGateways, methods, redirecting, onSelectMethod, onGateway,
@@ -585,7 +585,7 @@ function MethodPicker({
   methods: Method[];
   redirecting: string | null;
   onSelectMethod: (m: Method) => void;
-  onGateway: (p: string) => void;
+  onGateway: (p: string, configId?: string) => void;
 }) {
   const grouped = useMemo(() => {
     const g: Record<CatKey, Method[]> = { auto: [], mobile: [], bank: [], crypto: [], other: [] };
