@@ -56,6 +56,12 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://developer.bka.sh/docs",
     webhookHint: "bKash uses execute+query API; webhook optional.",
+    setupSteps: [
+      "Sign a bKash Payment Gateway (PGW) merchant agreement — apply at developer.bka.sh.",
+      "Once approved, bKash sends you sandbox + live credentials by email: App Key, App Secret, Username, Password.",
+      "Paste all four values here. Start in Sandbox mode until you test one payment end-to-end.",
+      "When ready, switch this configuration to Live and re-test with a small amount.",
+    ],
   },
   {
     id: "nagad",
