@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Shield, CheckCircle2, Clock, XCircle, Download, Zap } from "lucide-react";
+import {
+  Shield, CheckCircle2, Clock, XCircle, Download, Zap, Copy, Lock,
+  Smartphone, CreditCard, Landmark, Bitcoin, MoreHorizontal, ArrowLeft, Sparkles,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { downloadReceipt } from "@/lib/pdf-receipt";
 import { MerchantTracking, trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
 import { getGateway } from "@/lib/gateways/registry";
+
 
 const AUTO_GATEWAYS = new Set([
   "bkash", "sslcommerz", "stripe", "razorpay", "coinbase_commerce",
