@@ -101,16 +101,9 @@ function DomainsPage() {
   }
 
   return (
-    <MerchantShell>
+    <MerchantShell title="Custom Domains" subtitle="Serve hosted checkout, invoices, and portal under your own domain (white-label). Add a domain, verify it via TXT record, then point A record to PayNOC.">
       <div className="mx-auto max-w-4xl space-y-6 p-6">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Custom Domains</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Serve hosted checkout, invoices, and customer portal under your own domain
-            (white-label). Add a domain, verify it via a TXT record, then point an A/CNAME record
-            to PayNOC.
-          </p>
-        </div>
+
 
         <Card className="p-5">
           <Label className="mb-2 block text-sm font-medium">Add a domain</Label>

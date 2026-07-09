@@ -38,6 +38,7 @@ import { Route as AuthenticatedMarketingRouteImport } from './routes/_authentica
 import { Route as AuthenticatedKycRouteImport } from './routes/_authenticated/kyc'
 import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authenticated/integrations'
 import { Route as AuthenticatedFxRouteImport } from './routes/_authenticated/fx'
+import { Route as AuthenticatedDomainsRouteImport } from './routes/_authenticated/domains'
 import { Route as AuthenticatedDisputesRouteImport } from './routes/_authenticated/disputes'
 import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -234,6 +235,11 @@ const AuthenticatedIntegrationsRoute =
 const AuthenticatedFxRoute = AuthenticatedFxRouteImport.update({
   id: '/fx',
   path: '/fx',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDomainsRoute = AuthenticatedDomainsRouteImport.update({
+  id: '/domains',
+  path: '/domains',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDisputesRoute = AuthenticatedDisputesRouteImport.update({
@@ -531,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
+  '/domains': typeof AuthenticatedDomainsRoute
   '/fx': typeof AuthenticatedFxRoute
   '/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
   '/kyc': typeof AuthenticatedKycRoute
@@ -609,6 +616,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/disputes': typeof AuthenticatedDisputesRoute
+  '/domains': typeof AuthenticatedDomainsRoute
   '/fx': typeof AuthenticatedFxRoute
   '/kyc': typeof AuthenticatedKycRoute
   '/marketing': typeof AuthenticatedMarketingRoute
@@ -686,6 +694,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
   '/_authenticated/disputes': typeof AuthenticatedDisputesRoute
+  '/_authenticated/domains': typeof AuthenticatedDomainsRoute
   '/_authenticated/fx': typeof AuthenticatedFxRoute
   '/_authenticated/integrations': typeof AuthenticatedIntegrationsRouteWithChildren
   '/_authenticated/kyc': typeof AuthenticatedKycRoute
@@ -767,6 +776,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discounts'
     | '/disputes'
+    | '/domains'
     | '/fx'
     | '/integrations'
     | '/kyc'
@@ -845,6 +855,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discounts'
     | '/disputes'
+    | '/domains'
     | '/fx'
     | '/kyc'
     | '/marketing'
@@ -921,6 +932,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/discounts'
     | '/_authenticated/disputes'
+    | '/_authenticated/domains'
     | '/_authenticated/fx'
     | '/_authenticated/integrations'
     | '/_authenticated/kyc'
@@ -1214,6 +1226,13 @@ declare module '@tanstack/react-router' {
       path: '/fx'
       fullPath: '/fx'
       preLoaderRoute: typeof AuthenticatedFxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/domains': {
+      id: '/_authenticated/domains'
+      path: '/domains'
+      fullPath: '/domains'
+      preLoaderRoute: typeof AuthenticatedDomainsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/disputes': {
@@ -1694,6 +1713,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
   AuthenticatedDisputesRoute: typeof AuthenticatedDisputesRoute
+  AuthenticatedDomainsRoute: typeof AuthenticatedDomainsRoute
   AuthenticatedFxRoute: typeof AuthenticatedFxRoute
   AuthenticatedIntegrationsRoute: typeof AuthenticatedIntegrationsRouteWithChildren
   AuthenticatedKycRoute: typeof AuthenticatedKycRoute
@@ -1721,6 +1741,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
   AuthenticatedDisputesRoute: AuthenticatedDisputesRoute,
+  AuthenticatedDomainsRoute: AuthenticatedDomainsRoute,
   AuthenticatedFxRoute: AuthenticatedFxRoute,
   AuthenticatedIntegrationsRoute: AuthenticatedIntegrationsRouteWithChildren,
   AuthenticatedKycRoute: AuthenticatedKycRoute,
