@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- android:allowBackup="false" already blocks Auto Backup. This file
+     satisfies the Android 12+ dataExtractionRules requirement and
+     explicitly forbids cloud/D2D transfer of the encrypted key material
+     and queued SMS. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="paynoc_secure.xml" />
+        <exclude domain="database" path="paynoc-events" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="paynoc_secure.xml" />
+        <exclude domain="database" path="paynoc-events" />
+    </device-transfer>
+</data-extraction-rules>
