@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,6 @@ type Row = {
 function WhPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState("");
 
   const load = async () => {
     const { data } = await supabase
@@ -63,7 +63,6 @@ function WhPage() {
     failed: rows.filter((r) => r.status === "failed").length,
     pending: rows.filter((r) => r.status === "pending").length,
   };
-  const filtered = rows.filter((r) => (status ? r.status === status : true));
 
   return (
     <AdminShell title="Webhook health" subtitle="Every outbound webhook delivery, retries, and failures.">
@@ -74,51 +73,56 @@ function WhPage() {
         <Stat label="Pending" value={totals.pending} tone="warning" />
       </div>
 
-      <div className="mb-3 flex items-center gap-3">
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm">
-          <option value="">All</option>
-          <option>success</option><option>failed</option><option>pending</option>
-        </select>
-        <Button size="sm" variant="outline" onClick={load}><RefreshCcw className="mr-1.5 h-4 w-4" />Refresh</Button>
-        <span className="text-xs text-muted-foreground">{filtered.length} shown</span>
-      </div>
-
-      <div className="glass overflow-x-auto rounded-2xl border border-glass-border">
-        <table className="w-full text-sm">
-          <thead className="bg-card/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3">When</th>
-              <th className="px-4 py-3">Merchant</th>
-              <th className="px-4 py-3">Event</th>
-              <th className="px-4 py-3">URL</th>
-              <th className="px-4 py-3">HTTP</th>
-              <th className="px-4 py-3">Attempts</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => (
-              <tr key={r.id} className="border-t border-glass-border">
-                <td className="px-4 py-2 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                <td className="px-4 py-2">{names[r.merchant_id] ?? r.merchant_id.slice(0,8)}</td>
-                <td className="px-4 py-2 font-mono text-xs">{r.event}</td>
-                <td className="px-4 py-2 max-w-xs truncate font-mono text-xs text-muted-foreground" title={r.url}>{r.url}</td>
-                <td className="px-4 py-2">{r.http_status ?? "—"}</td>
-                <td className="px-4 py-2">{r.attempts}</td>
-                <td className="px-4 py-2"><Badge variant="outline" className="capitalize">{r.status}</Badge></td>
-                <td className="px-4 py-2 text-right">
-                  {r.status === "failed" && (
-                    <Button size="sm" variant="outline" onClick={() => requeue(r.id)}>
-                      Retry
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<Row>
+        rows={rows}
+        rowKey={(r) => r.id}
+        searchable={(r) => `${r.event} ${r.url} ${names[r.merchant_id] ?? r.merchant_id}`}
+        dateField={(r) => r.created_at}
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "success", label: "Success" },
+              { value: "failed", label: "Failed" },
+              { value: "pending", label: "Pending" },
+            ],
+            match: (r, v) => r.status === v,
+          },
+          {
+            key: "http",
+            label: "HTTP",
+            options: [
+              { value: "2xx", label: "2xx" },
+              { value: "4xx", label: "4xx" },
+              { value: "5xx", label: "5xx" },
+              { value: "none", label: "No response" },
+            ],
+            match: (r, v) => {
+              if (v === "none") return r.http_status == null;
+              const n = r.http_status ?? 0;
+              return v === "2xx" ? n >= 200 && n < 300 : v === "4xx" ? n >= 400 && n < 500 : n >= 500;
+            },
+          },
+        ]}
+        toolbar={
+          <Button size="sm" variant="outline" onClick={load}>
+            <RefreshCcw className="mr-1.5 h-4 w-4" />Refresh
+          </Button>
+        }
+        columns={[
+          { key: "when", label: "When", render: (r) => <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span> },
+          { key: "merchant", label: "Merchant", render: (r) => names[r.merchant_id] ?? r.merchant_id.slice(0, 8) },
+          { key: "event", label: "Event", render: (r) => <span className="font-mono text-xs">{r.event}</span> },
+          { key: "url", label: "URL", render: (r) => <span className="block max-w-xs truncate font-mono text-xs text-muted-foreground" title={r.url}>{r.url}</span> },
+          { key: "http", label: "HTTP", render: (r) => r.http_status ?? "—" },
+          { key: "attempts", label: "Attempts", render: (r) => r.attempts },
+          { key: "status", label: "Status", render: (r) => <Badge variant="outline" className="capitalize">{r.status}</Badge> },
+        ] as DataTableColumn<Row>[]}
+        actions={(r) => r.status === "failed" ? (
+          <Button size="sm" variant="outline" onClick={() => requeue(r.id)}>Retry</Button>
+        ) : null}
+      />
     </AdminShell>
   );
 }
