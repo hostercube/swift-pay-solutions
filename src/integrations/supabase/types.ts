@@ -2233,6 +2233,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      claim_first_super_admin: { Args: never; Returns: boolean }
       compute_period_end: {
         Args: {
           _cycle: Database["public"]["Enums"]["billing_cycle"]
