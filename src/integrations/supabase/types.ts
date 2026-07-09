@@ -2110,6 +2110,13 @@ export type Database = {
           tiktok_pixel_id: string
         }[]
       }
+      get_checkout_gateways: {
+        Args: { _merchant_id: string }
+        Returns: {
+          mode: string
+          provider: string
+        }[]
+      }
       get_checkout_invoice: {
         Args: { _id: string }
         Returns: {
