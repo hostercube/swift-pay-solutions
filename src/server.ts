@@ -88,7 +88,7 @@ function rewriteForSubdomain(request: Request): Request {
       newPath = p === "/" ? "/pay" : "/pay" + p;
     }
   } else if (sub === "docs") {
-    if (!p.startsWith("/docs") && !p.startsWith("/api-reference")) {
+    if (!p.startsWith("/docs") && !p.startsWith("/docs")) {
       newPath = p === "/" ? "/docs" : "/docs" + p;
     }
   } else if (sub === "api") {

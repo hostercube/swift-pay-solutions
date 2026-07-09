@@ -73,7 +73,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/api-logs", label: "API logs", icon: BookOpen, perm: "api_keys" },
       { to: "/webhooks", label: "Webhooks", icon: Webhook, perm: "webhooks" },
-      { to: "/api-reference", label: "API reference", icon: BookOpen },
+      { to: "/docs", label: "API reference", icon: BookOpen },
     ],
   },
   {
