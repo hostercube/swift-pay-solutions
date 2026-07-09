@@ -195,6 +195,7 @@ function AdminPackagesPage() {
     if (error) return toast.error(error.message);
     toast.success("Cancelled");
     load();
+  };
 
   const openEditSub = (s: Sub) => {
     setEditSub(s);
@@ -226,6 +227,18 @@ function AdminPackagesPage() {
     setBusy(false);
   };
 
+  const filteredSubs = subs.filter((s) => {
+    if (subStatus !== "all" && s.status !== subStatus) return false;
+    if (!subQ) return true;
+    const q = subQ.toLowerCase();
+    return (
+      (s.merchant_email ?? "").toLowerCase().includes(q) ||
+      (s.merchant_name ?? "").toLowerCase().includes(q) ||
+      (s.package_name ?? "").toLowerCase().includes(q)
+    );
+  });
+
+  return (
     <AdminShell title="Subscription packages" subtitle="Plans, pricing, and merchant subscriptions">
       <div className="mb-6 flex flex-wrap gap-2">
         <Button onClick={() => setEditing({ ...EMPTY })}>
