@@ -464,7 +464,7 @@ function CheckoutPage() {
                 <CopyBtn text={trxId} label="Trx ID" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="font-display text-4xl font-black tracking-tight sm:text-5xl">
+                <span className={style.hero}>
                   {currencySymbol(inv.currency)}{Number(inv.amount).toLocaleString()}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground">{inv.currency}</span>
