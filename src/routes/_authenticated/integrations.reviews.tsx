@@ -192,9 +192,18 @@ function ReviewsPage() {
                       </button>
                     </div>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground">
-                      {r.verified_at ? new Date(r.verified_at).toLocaleString() : "—"}
-                    </span>
+                    <div className="text-right text-[11px] text-muted-foreground">
+                      <div>
+                        {r.status === "verified" && r.verified_at ? new Date(r.verified_at).toLocaleString() : null}
+                        {r.status === "rejected" && r.rejected_at ? new Date(r.rejected_at).toLocaleString() : null}
+                        {!r.verified_at && !r.rejected_at ? "—" : null}
+                      </div>
+                      {r.status === "rejected" && r.rejected_reason && (
+                        <div className="mt-1 max-w-[220px] whitespace-pre-line rounded bg-destructive/10 px-2 py-1 text-left text-[10px] text-destructive">
+                          {r.rejected_reason}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </td>
               </tr>
