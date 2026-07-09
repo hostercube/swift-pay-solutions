@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { adminReviewKyc } from "@/lib/admin.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { FilteredList } from "@/components/filtered-list";
+
 
 export const Route = createFileRoute("/_authenticated/admin/kyc")({
   head: () => ({ meta: [{ title: "KYC review · Admin" }] }),
