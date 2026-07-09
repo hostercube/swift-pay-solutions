@@ -837,18 +837,22 @@ function Shell({
   children, brand, inv, trxId,
 }: { children: React.ReactNode; brand: Brand | null; inv?: Invoice | null; trxId?: string }) {
   const brandColor = brand?.brand_color || null;
-  const style = brandColor
+  const cssVars = brandColor
     ? ({ ["--brand" as never]: brandColor, ["--brand-2" as never]: brandColor } as React.CSSProperties)
     : undefined;
+  const skin = STYLES[(brand?.checkout_style as CheckoutStyle) ?? "premium"];
   const name = brand?.business_name?.trim() || "PayNOC secure checkout";
   return (
-    <div className="relative min-h-screen bg-background" style={style}>
+    <div className={`relative min-h-screen ${skin.page}`} style={cssVars}>
       <MerchantTracking config={brand as TrackingConfig | null} />
-      <div className="grid-radial absolute inset-0 opacity-30" />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
-        style={{ background: "radial-gradient(ellipse at top, hsl(var(--brand)/0.25), transparent 60%)" }}
-      />
+      {skin.accentHalo && <div className="grid-radial absolute inset-0 opacity-30" />}
+      {skin.accentHalo && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40"
+          style={{ background: "radial-gradient(ellipse at top, hsl(var(--brand)/0.25), transparent 60%)" }}
+        />
+      )}
+
       <div className="relative mx-auto max-w-6xl px-4 py-6 sm:py-10">
         {/* Merchant header */}
         <header className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:mb-8">
