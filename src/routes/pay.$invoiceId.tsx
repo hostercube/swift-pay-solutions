@@ -132,7 +132,7 @@ function CheckoutPage() {
   const [inv, setInv] = useState<Invoice | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [methods, setMethods] = useState<Method[]>([]);
-  const [gateways, setGateways] = useState<{ provider: string; mode: string }[]>([]);
+  const [gateways, setGateways] = useState<{ id?: string; provider: string; mode: string; label?: string | null }[]>([]);
   const [selected, setSelected] = useState<Method | null>(null);
   const [redirecting, setRedirecting] = useState<string | null>(null);
   const [txns, setTxns] = useState<Txn[]>([]);
