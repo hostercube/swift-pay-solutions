@@ -3,7 +3,7 @@ type EnvMap = Record<string, string | undefined>;
 const readProcessEnv = (): EnvMap =>
   ((globalThis as { process?: { env?: EnvMap } }).process?.env ?? {}) as EnvMap;
 
-const firstDefined = (env: EnvMap, names: string[]) => {
+const firstDefined = (env: EnvMap, names: readonly string[]) => {
   for (const name of names) {
     const value = env[name];
     if (value && value.trim()) return value;
