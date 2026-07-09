@@ -651,12 +651,13 @@ function MethodPicker({
         <div className="grid gap-3 sm:grid-cols-2">
           {autoGateways.map((g) => {
             const spec = getGateway(g.provider);
-            const busy = redirecting === g.provider;
+            const key = g.id ?? g.provider;
+            const busy = redirecting === key;
             return (
               <button
-                key={g.provider}
+                key={key}
                 disabled={busy || !!redirecting}
-                onClick={() => onGateway(g.provider)}
+                onClick={() => onGateway(g.provider, g.id)}
                 className="group relative overflow-hidden rounded-xl border border-glass-border bg-card/50 p-4 text-left transition hover:border-brand hover:shadow-[0_10px_30px_-15px_hsl(var(--brand)/0.4)] disabled:opacity-60"
               >
                 <div className="flex items-center justify-between gap-2">
@@ -665,8 +666,12 @@ function MethodPicker({
                       <Zap className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <div className="truncate font-semibold">{spec?.label ?? g.provider}</div>
-                      <div className="text-[11px] text-muted-foreground">{busy ? "Redirecting…" : "Instant · auto-verified"}</div>
+                      <div className="truncate font-semibold">
+                        {g.label || spec?.label || g.provider}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {busy ? "Redirecting…" : g.label ? (spec?.label ?? g.provider) : "Instant · auto-verified"}
+                      </div>
                     </div>
                   </div>
                   {g.mode === "sandbox" && (
