@@ -1,11 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, Mail, Settings2 } from "lucide-react";
 
-const TABS = [
+const TABS: Array<{ to: string; label: string; icon: typeof Bell; exact?: boolean }> = [
   { to: "/notifications", label: "Inbox", icon: Bell, exact: true },
   { to: "/notifications/settings", label: "Settings", icon: Settings2 },
   { to: "/notifications/digest", label: "Email digest", icon: Mail },
-] as const;
+];
 
 export function NotificationsTabs() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
