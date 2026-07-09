@@ -65,8 +65,7 @@ function ReviewsPage() {
   }, [rows]);
 
   async function updateStatus(r: Row, next: "verified" | "rejected") {
-    const patch: Record<string, unknown> = { status: next };
-    if (next === "verified") patch.verified_at = new Date().toISOString();
+    const patch = { status: next, verified_at: next === "verified" ? new Date().toISOString() : null };
     const { error } = await supabase.from("transactions").update(patch).eq("id", r.id);
     if (error) return toast.error(error.message);
     if (next === "verified") {
