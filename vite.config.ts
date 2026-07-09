@@ -7,6 +7,12 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import process from "node:process";
 
+const isLovablePreview = Boolean(
+  process.env.LOVABLE_SANDBOX ||
+    process.env.LOVABLE_PREVIEW_HOST ||
+    process.env.LOVABLE_PROJECT_ID,
+);
+
 const pickEnv = (...names: string[]) => {
   for (const name of names) {
     const value = process.env[name];
@@ -46,19 +52,36 @@ const PAYNOC_SUPABASE_PROJECT_ID =
     "SUPABASE_PROJECT_ID",
   ) ?? "paynoc";
 
+const SUPABASE_URL_FOR_CLIENT = isLovablePreview
+  ? pickEnv("VITE_SUPABASE_URL", "SUPABASE_URL")
+  : PAYNOC_SUPABASE_URL;
+
+const SUPABASE_ANON_KEY_FOR_CLIENT = isLovablePreview
+  ? pickEnv(
+      "VITE_SUPABASE_PUBLISHABLE_KEY",
+      "VITE_SUPABASE_ANON_KEY",
+      "SUPABASE_PUBLISHABLE_KEY",
+      "SUPABASE_ANON_KEY",
+    )
+  : PAYNOC_SUPABASE_ANON_KEY;
+
+const SUPABASE_PROJECT_ID_FOR_CLIENT = isLovablePreview
+  ? (pickEnv("VITE_SUPABASE_PROJECT_ID", "SUPABASE_PROJECT_ID") ?? "paynoc")
+  : PAYNOC_SUPABASE_PROJECT_ID;
+
 // Only override Vite's own VITE_* env injection when we resolved a real value
 // from a non-VITE source (i.e. an operator explicitly set PAYNOC_* / SERVICE_*).
 // Falling back to a hardcoded host caused prod to hit an unreachable Supabase
 // and fail login with "Failed to fetch".
 const supabaseDefines: Record<string, string> = {};
-if (PAYNOC_SUPABASE_URL) {
-  supabaseDefines["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(PAYNOC_SUPABASE_URL);
+if (SUPABASE_URL_FOR_CLIENT) {
+  supabaseDefines["import.meta.env.VITE_SUPABASE_URL"] = JSON.stringify(SUPABASE_URL_FOR_CLIENT);
 }
-if (PAYNOC_SUPABASE_ANON_KEY) {
-  supabaseDefines["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(PAYNOC_SUPABASE_ANON_KEY);
-  supabaseDefines["import.meta.env.VITE_SUPABASE_ANON_KEY"] = JSON.stringify(PAYNOC_SUPABASE_ANON_KEY);
+if (SUPABASE_ANON_KEY_FOR_CLIENT) {
+  supabaseDefines["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.stringify(SUPABASE_ANON_KEY_FOR_CLIENT);
+  supabaseDefines["import.meta.env.VITE_SUPABASE_ANON_KEY"] = JSON.stringify(SUPABASE_ANON_KEY_FOR_CLIENT);
 }
-supabaseDefines["import.meta.env.VITE_SUPABASE_PROJECT_ID"] = JSON.stringify(PAYNOC_SUPABASE_PROJECT_ID);
+supabaseDefines["import.meta.env.VITE_SUPABASE_PROJECT_ID"] = JSON.stringify(SUPABASE_PROJECT_ID_FOR_CLIENT);
 
 export default defineConfig({
   tanstackStart: {
