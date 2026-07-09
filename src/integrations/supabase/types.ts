@@ -654,6 +654,72 @@ export type Database = {
           },
         ]
       }
+      merchant_smsnoc_configs: {
+        Row: {
+          api_key: string | null
+          channel_email: boolean
+          channel_sms: boolean
+          channel_voice: boolean
+          channel_whatsapp: boolean
+          created_at: string
+          email_config_id: string | null
+          enabled: boolean
+          merchant_id: string
+          notify_email: string | null
+          notify_on_invoice_created: boolean
+          notify_on_payment_received: boolean
+          notify_on_refund: boolean
+          notify_phone: string | null
+          notify_whatsapp: string | null
+          sender_id: string | null
+          templates: Json
+          updated_at: string
+          whatsapp_device_id: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          channel_email?: boolean
+          channel_sms?: boolean
+          channel_voice?: boolean
+          channel_whatsapp?: boolean
+          created_at?: string
+          email_config_id?: string | null
+          enabled?: boolean
+          merchant_id: string
+          notify_email?: string | null
+          notify_on_invoice_created?: boolean
+          notify_on_payment_received?: boolean
+          notify_on_refund?: boolean
+          notify_phone?: string | null
+          notify_whatsapp?: string | null
+          sender_id?: string | null
+          templates?: Json
+          updated_at?: string
+          whatsapp_device_id?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          channel_email?: boolean
+          channel_sms?: boolean
+          channel_voice?: boolean
+          channel_whatsapp?: boolean
+          created_at?: string
+          email_config_id?: string | null
+          enabled?: boolean
+          merchant_id?: string
+          notify_email?: string | null
+          notify_on_invoice_created?: boolean
+          notify_on_payment_received?: boolean
+          notify_on_refund?: boolean
+          notify_phone?: string | null
+          notify_whatsapp?: string | null
+          sender_id?: string | null
+          templates?: Json
+          updated_at?: string
+          whatsapp_device_id?: string | null
+        }
+        Relationships: []
+      }
       merchant_subscriptions: {
         Row: {
           auto_renew: boolean
