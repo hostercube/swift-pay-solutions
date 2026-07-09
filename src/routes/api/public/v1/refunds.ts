@@ -14,7 +14,7 @@ async function handleGet(request: Request): Promise<Response> {
   const invoiceId = url.searchParams.get("invoice_id");
 
   const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-  const q = (supabaseAdmin.from as unknown as (t: string) => {
+  const q = ((supabaseAdmin.from as unknown as (t: string) => {
     select: (s: string) => {
       eq: (c: string, v: string) => {
         eq?: (c: string, v: string) => unknown;
@@ -23,7 +23,7 @@ async function handleGet(request: Request): Promise<Response> {
         };
       };
     };
-  })("refunds")
+  }).bind(supabaseAdmin))("refunds")
     .select("id, invoice_id, amount, currency, reason, status, admin_note, processed_at, created_at")
     .eq("merchant_id", auth.merchantId);
 
@@ -104,11 +104,11 @@ async function handlePost(request: Request): Promise<Response> {
   }
 
   // Prevent over-refunding: sum previously requested/approved/processed refunds
-  const existingRefunds = await (supabaseAdmin.from as unknown as (t: string) => {
+  const existingRefunds = await ((supabaseAdmin.from as unknown as (t: string) => {
     select: (s: string) => {
       eq: (c: string, v: string) => Promise<{ data: Array<{ amount: number; status: string }> | null }>;
     };
-  })("refunds")
+  }).bind(supabaseAdmin))("refunds")
     .select("amount, status")
     .eq("invoice_id", invoiceId);
   const alreadyRefunded = (existingRefunds.data ?? [])
@@ -121,13 +121,13 @@ async function handlePost(request: Request): Promise<Response> {
     );
   }
 
-  const { data: refund, error } = await (supabaseAdmin.from as unknown as (t: string) => {
+  const { data: refund, error } = await ((supabaseAdmin.from as unknown as (t: string) => {
     insert: (row: Record<string, unknown>) => {
       select: (s: string) => {
         single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
       };
     };
-  })("refunds")
+  }).bind(supabaseAdmin))("refunds")
     .insert({
       merchant_id: auth.merchantId,
       invoice_id: inv.id,

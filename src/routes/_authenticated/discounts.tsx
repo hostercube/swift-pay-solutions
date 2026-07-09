@@ -40,13 +40,13 @@ function DiscountsPage() {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await (supabase.from as unknown as (t: string) => {
+    const { data } = await ((supabase.from as unknown as (t: string) => {
       select: (c: string) => {
         eq: (col: string, v: unknown) => {
           order: (c: string, o: { ascending: boolean }) => Promise<{ data: Row[] | null }>;
         };
       };
-    })("discount_codes")
+    }).bind(supabase))("discount_codes")
       .select("*")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
@@ -60,9 +60,9 @@ function DiscountsPage() {
     if (!user) return;
     if (!form.code.trim() || !form.value) return toast.error("Code and value required");
     setBusy(true);
-    const { error } = await (supabase.from as unknown as (t: string) => {
+    const { error } = await ((supabase.from as unknown as (t: string) => {
       insert: (r: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
-    })("discount_codes").insert({
+    }).bind(supabase))("discount_codes").insert({
       merchant_id: user.id,
       code: form.code.trim().toUpperCase(),
       discount_type: form.discount_type,
@@ -78,18 +78,18 @@ function DiscountsPage() {
   };
 
   const toggle = async (r: Row) => {
-    await (supabase.from as unknown as (t: string) => {
+    await ((supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (c: string, v: unknown) => Promise<{ error: unknown }>;
       };
-    })("discount_codes").update({ active: !r.active }).eq("id", r.id);
+    }).bind(supabase))("discount_codes").update({ active: !r.active }).eq("id", r.id);
     load();
   };
 
   const remove = async (id: string) => {
-    await (supabase.from as unknown as (t: string) => {
+    await ((supabase.from as unknown as (t: string) => {
       delete: () => { eq: (c: string, v: unknown) => Promise<{ error: unknown }> };
-    })("discount_codes").delete().eq("id", id);
+    }).bind(supabase))("discount_codes").delete().eq("id", id);
     load();
   };
 

@@ -46,7 +46,7 @@ function DisputesPage() {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await (supabase.from as unknown as (t: string) => {
+    const { data } = await ((supabase.from as unknown as (t: string) => {
       select: (c: string) => {
         eq: (c: string, v: unknown) => {
           order: (
@@ -55,7 +55,7 @@ function DisputesPage() {
           ) => Promise<{ data: Row[] | null }>;
         };
       };
-    })("disputes")
+    }).bind(supabase))("disputes")
       .select("*")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
@@ -70,9 +70,9 @@ function DisputesPage() {
     if (!invoiceId.trim() || !reason.trim())
       return toast.error("Invoice ID and reason required");
     setBusy(true);
-    const { error } = await (supabase.from as unknown as (t: string) => {
+    const { error } = await ((supabase.from as unknown as (t: string) => {
       insert: (r: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
-    })("disputes").insert({
+    }).bind(supabase))("disputes").insert({
       merchant_id: user.id,
       invoice_id: invoiceId.trim(),
       reason: reason.trim(),
@@ -92,11 +92,11 @@ function DisputesPage() {
     const path = `${user.id}/${disputeId}-${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("disputes").upload(path, file);
     if (error) return toast.error(error.message);
-    await (supabase.from as unknown as (t: string) => {
+    await ((supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (c: string, v: unknown) => Promise<{ error: unknown }>;
       };
-    })("disputes").update({ evidence_url: path }).eq("id", disputeId);
+    }).bind(supabase))("disputes").update({ evidence_url: path }).eq("id", disputeId);
     toast.success("Evidence uploaded");
     load();
   };
@@ -107,11 +107,11 @@ function DisputesPage() {
   };
 
   const withdraw = async (id: string) => {
-    await (supabase.from as unknown as (t: string) => {
+    await ((supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (c: string, v: unknown) => Promise<{ error: unknown }>;
       };
-    })("disputes").update({ status: "withdrawn" }).eq("id", id);
+    }).bind(supabase))("disputes").update({ status: "withdrawn" }).eq("id", id);
     load();
   };
 
