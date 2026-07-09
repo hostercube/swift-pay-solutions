@@ -55,7 +55,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
 const EMPTY: Partial<Method> = {
   type: "bkash",
   label: "",
-  mode: "manual", // manual only — API/auto verification lives in "Auto gateways" tab
+  mode: "manual",
   account_number: "",
   account_name: "",
   instructions: "",
@@ -65,6 +65,12 @@ const EMPTY: Partial<Method> = {
   max_amount: null,
   is_active: true,
   sort_order: 0,
+  qr_code_url: null,
+  qr_type: null,
+  bank_name: null,
+  branch_name: null,
+  routing_number: null,
+  swift_code: null,
 };
 
 
