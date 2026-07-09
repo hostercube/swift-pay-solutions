@@ -162,13 +162,13 @@ export const createRefund = createServerFn({ method: "POST" })
       throw new Error("Invalid refund amount");
 
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-    const insertRefund = (supabaseAdmin.from as unknown as (t: string) => {
+    const insertRefund = ((supabaseAdmin.from as unknown as (t: string) => {
       insert: (row: Record<string, unknown>) => {
         select: (s: string) => {
           single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }>;
         };
       };
-    }).bind(supabaseAdmin);
+    }).bind(supabaseAdmin)).bind(supabaseAdmin);
     const { data: refund, error } = await insertRefund("refunds")
 
       .insert({
@@ -218,7 +218,7 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
       patch.processed_by = userId;
     }
 
-    const fromLoose = (supabase.from as unknown as (t: string) => {
+    const fromLoose = ((supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (col: string, v: string) => {
           select: (s: string) => {
@@ -226,7 +226,7 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
           };
         };
       };
-    }).bind(supabase);
+    }).bind(supabase)).bind(supabase);
     const { data: row, error } = await fromLoose("refunds")
 
       .update(patch)

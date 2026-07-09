@@ -24,13 +24,13 @@ function DigestPage() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await (supabase.from as unknown as (t: string) => {
+      const { data } = await ((supabase.from as unknown as (t: string) => {
         select: (c: string) => {
           eq: (c: string, v: unknown) => {
             maybeSingle: () => Promise<{ data: Record<string, unknown> | null }>;
           };
         };
-      })("digest_settings")
+      }).bind(supabase))("digest_settings")
         .select("*")
         .eq("merchant_id", user.id)
         .maybeSingle();
@@ -45,12 +45,12 @@ function DigestPage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await (supabase.from as unknown as (t: string) => {
+    const { error } = await ((supabase.from as unknown as (t: string) => {
       upsert: (
         r: Record<string, unknown>,
         o: { onConflict: string },
       ) => Promise<{ error: { message: string } | null }>;
-    })("digest_settings").upsert(
+    }).bind(supabase))("digest_settings").upsert(
       { merchant_id: user.id, enabled, frequency },
       { onConflict: "merchant_id" },
     );

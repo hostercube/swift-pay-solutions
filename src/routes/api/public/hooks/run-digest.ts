@@ -16,11 +16,11 @@ async function handle() {
   const { notify } = await import("@/lib/notifications.server");
 
   const now = Date.now();
-  const { data: rows } = await (supabaseAdmin.from as unknown as (t: string) => {
+  const { data: rows } = await ((supabaseAdmin.from as unknown as (t: string) => {
     select: (c: string) => {
       eq: (col: string, v: unknown) => Promise<{ data: Array<Record<string, unknown>> | null }>;
     };
-  })("digest_settings").select("merchant_id, frequency, last_sent_at").eq("enabled", true);
+  }).bind(supabaseAdmin))("digest_settings").select("merchant_id, frequency, last_sent_at").eq("enabled", true);
 
   let sent = 0;
   for (const r of rows ?? []) {
@@ -57,11 +57,11 @@ async function handle() {
       metadata: { period: freq },
     });
 
-    await (supabaseAdmin.from as unknown as (t: string) => {
+    await ((supabaseAdmin.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (c: string, v: unknown) => Promise<{ error: unknown }>;
       };
-    })("digest_settings")
+    }).bind(supabaseAdmin))("digest_settings")
       .update({ last_sent_at: new Date().toISOString() })
       .eq("merchant_id", merchantId);
     sent++;

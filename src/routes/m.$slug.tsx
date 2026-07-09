@@ -70,7 +70,7 @@ function PublicMerchantPage() {
     if (!email.trim()) return toast.error("Email required");
     setBusy(true);
     const invNumber = `TIP-${Date.now().toString(36).toUpperCase()}`;
-    const { data, error } = await (supabase.from as unknown as (t: string) => {
+    const { data, error } = await ((supabase.from as unknown as (t: string) => {
       insert: (r: Record<string, unknown>) => {
         select: (c: string) => {
           single: () => Promise<{
@@ -79,7 +79,7 @@ function PublicMerchantPage() {
           }>;
         };
       };
-    })("invoices")
+    }).bind(supabase))("invoices")
       .insert({
         merchant_id: m.id,
         invoice_number: invNumber,
