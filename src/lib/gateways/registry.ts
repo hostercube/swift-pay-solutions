@@ -426,6 +426,22 @@ export const GATEWAYS: GatewaySpec[] = [
     ],
     docsUrl: "https://developers.binance.com/docs/binance-pay/introduction",
   },
+  {
+    id: "cryptomus",
+    label: "Cryptomus",
+    region: "CRYPTO",
+    currencies: ["USD", "EUR", "USDT", "USDC", "BTC", "ETH", "BNB", "TRX", "TON"],
+    flow: "hosted_redirect",
+    supportsApi: true,
+    supportsRefund: false,
+    supportsWebhook: true,
+    fields: [
+      { key: "merchant_id", label: "Merchant UUID", type: "text", required: true, help: "From Cryptomus dashboard → Merchant" },
+      { key: "payment_api_key", label: "Payment API Key", type: "password", required: true },
+    ],
+    docsUrl: "https://doc.cryptomus.com/business",
+    webhookHint: "Set the webhook URL below in Cryptomus → Payment webhook.",
+  },
 ];
 
 export function getGateway(id: string): GatewaySpec | undefined {
