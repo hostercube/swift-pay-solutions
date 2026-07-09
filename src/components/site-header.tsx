@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Shield, Menu, X, LayoutDashboard } from "lucide-react";
+import { Menu, X, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -18,16 +19,16 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full">
       <div className="glass border-b border-glass-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand shadow-glow">
-              <Shield className="h-5 w-5 text-brand-foreground" strokeWidth={2.5} />
+          <Link to="/" className="group flex items-center gap-2.5">
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-brand shadow-glow ring-1 ring-brand/40">
+              <span className="font-display text-sm font-black text-brand-foreground">P</span>
             </span>
             <span className="flex flex-col leading-none">
               <span className="font-display text-lg font-bold tracking-tight text-foreground">
-                PayNOC
+                Pay<span className="text-gradient-brand">NOC</span>
               </span>
-              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Payment Infra
+              <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                Noir · Gold
               </span>
             </span>
           </Link>
@@ -47,6 +48,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-2 md:flex">
+            <ThemeToggle />
             {isAuthenticated ? (
               <Link
                 to="/dashboard"
@@ -73,13 +75,16 @@ export function SiteHeader() {
             )}
           </div>
 
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground md:hidden"
-            aria-label="Toggle menu"
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-foreground"
+              aria-label="Toggle menu"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {open && (
