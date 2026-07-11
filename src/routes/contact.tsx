@@ -128,12 +128,16 @@ function ContactPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Fill in the form and we'll get back within one business day.
             </p>
-            <form className="mt-6 space-y-4">
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="text-xs font-medium text-foreground">Name</label>
                   <input
                     type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={100}
                     className="mt-1.5 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
                     placeholder="Your name"
                   />
@@ -142,6 +146,10 @@ function ContactPage() {
                   <label className="text-xs font-medium text-foreground">Email</label>
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    maxLength={255}
                     className="mt-1.5 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
                     placeholder="you@company.com"
                   />
@@ -151,6 +159,9 @@ function ContactPage() {
                 <label className="text-xs font-medium text-foreground">Company</label>
                 <input
                   type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  maxLength={150}
                   className="mt-1.5 w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
                   placeholder="Your company"
                 />
@@ -159,18 +170,24 @@ function ContactPage() {
                 <label className="text-xs font-medium text-foreground">Message</label>
                 <textarea
                   rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                  maxLength={2000}
                   className="mt-1.5 w-full resize-none rounded-lg border border-input bg-surface px-3 py-2 text-sm text-foreground shadow-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
                   placeholder="Tell us what you're building..."
                 />
               </div>
               <button
-                type="button"
-                className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01]"
+                type="submit"
+                disabled={submitting}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow transition-transform hover:scale-[1.01] disabled:opacity-60"
               >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Send message
               </button>
               <p className="text-center text-[11px] text-muted-foreground">
-                Contact form will be wired to the notification system in a later task.
+                Opens your email client addressed to hello@paynoc.io.
               </p>
             </form>
           </div>
