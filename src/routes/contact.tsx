@@ -25,7 +25,41 @@ export const Route = createFileRoute("/contact")({
   component: ContactPage,
 });
 
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().email("Invalid email").max(255),
+  company: z.string().trim().max(150).optional(),
+  message: z.string().trim().min(5, "Message is too short").max(2000),
+});
+
 function ContactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = contactSchema.safeParse({ name, email, company, message });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const subject = encodeURIComponent(`PayNOC contact — ${parsed.data.name}`);
+      const body = encodeURIComponent(
+        `Name: ${parsed.data.name}\nEmail: ${parsed.data.email}\nCompany: ${parsed.data.company ?? "-"}\n\n${parsed.data.message}`,
+      );
+      window.location.href = `mailto:hello@paynoc.io?subject=${subject}&body=${body}`;
+      toast.success("Opening your email client…");
+      setName(""); setEmail(""); setCompany(""); setMessage("");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
