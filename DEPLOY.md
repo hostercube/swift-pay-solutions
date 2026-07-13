@@ -70,7 +70,7 @@ Save → **Redeploy** পুরো stack।
 Coolify template auto-generate করে দেয় (POSTGRES_PASSWORD, JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY, LOGFLARE_* ইত্যাদি) — সেগুলোতে হাত দিবে না। শুধু নিচেরগুলো verify/override করো:
 
 ```env
-# --- Studio Kong basic-auth (MUST — না হলে db.paynoc.bd public) ---
+# --- Studio/dashboard basic-auth (MUST — dashboard public রাখা যাবে না) ---
 DASHBOARD_USERNAME=ayman
 DASHBOARD_PASSWORD=<STRONG_PASSWORD_32_CHARS>
 
