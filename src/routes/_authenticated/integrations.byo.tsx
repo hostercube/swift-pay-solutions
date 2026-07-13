@@ -41,6 +41,7 @@ type Draft = {
 
 function ByoPage() {
   const { user } = useAuth();
+  const { isEnabled } = useEnabledProviders();
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
   const [q, setQ] = useState("");
