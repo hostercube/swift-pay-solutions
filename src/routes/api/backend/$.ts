@@ -14,13 +14,13 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 
 const BACKEND_URL_ENV_PRIORITY = [
-  "VITE_SUPABASE_URL",
-  "SUPABASE_URL",
+  "SERVICE_URL_SUPABASEKONG_8000",
+  "SERVICE_URL_SUPABASEKONG",
   "PAYNOC_PRODUCTION_SUPABASE_URL",
   "PAYNOC_PROD_SUPABASE_URL",
   "PAYNOC_SUPABASE_URL",
-  "SERVICE_URL_SUPABASEKONG_8000",
-  "SERVICE_URL_SUPABASEKONG",
+  "SUPABASE_URL",
+  "VITE_SUPABASE_URL",
 ] as const;
 
 function envValue(name: string) {
@@ -67,6 +67,20 @@ function responseHeaders(response: Response) {
   return headers;
 }
 
+function looksLikeWrongService(request: Request, response: Response) {
+  if (response.status !== 404 && response.status !== 502) return false;
+  const pathname = new URL(request.url).pathname;
+  if (
+    !pathname.startsWith("/api/backend/auth/v1/") &&
+    !pathname.startsWith("/api/backend/rest/v1/") &&
+    !pathname.startsWith("/api/backend/storage/v1/")
+  ) {
+    return false;
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  return contentType.includes("text/html");
+}
+
 async function proxyBackend(request: Request) {
   const method = request.method.toUpperCase();
   const headers = forwardedHeaders(request);
@@ -82,6 +96,11 @@ async function proxyBackend(request: Request) {
           body,
           redirect: "manual",
         });
+
+        if (looksLikeWrongService(request, upstream)) {
+          lastError = new Error(`Backend URL ${origin} is not the API gateway`);
+          continue;
+        }
 
         return new Response(upstream.body, {
           status: upstream.status,
