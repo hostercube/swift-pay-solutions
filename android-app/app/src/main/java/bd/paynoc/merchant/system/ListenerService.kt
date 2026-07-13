@@ -53,6 +53,17 @@ class ListenerService : Service() {
         return START_STICKY
     }
 
+    /**
+     * API 34 caps a `dataSync`-typed foreground service at ~6 cumulative
+     * hours per rolling 24 h — after which the OS invokes `onTimeout()` and
+     * force-stops us. Stop cleanly; the periodic `UploadWorker` (15 min) +
+     * `ConnectivityWatcher` cover the gap, and `SmsReceiver` still fires on
+     * every incoming SMS even without the FGS.
+     */
+    override fun onTimeout(startId: Int) {
+        runCatching { stopSelf(startId) }
+    }
+
     companion object {
         const val CHANNEL_ID = "paynoc_listener"
         const val NOTIF_ID = 4711
