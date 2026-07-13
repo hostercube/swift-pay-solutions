@@ -135,6 +135,7 @@ function ByoPage() {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const query = q.trim().toLowerCase();
   const filtered = gatewaysByRegion(tab).filter((g) => {
+    if (!isEnabled(g.id)) return false;
     if (query && !`${g.label} ${g.id} ${g.currencies.join(" ")}`.toLowerCase().includes(query)) return false;
     if (conn) {
       const has = (byProvider.get(g.id) ?? []).length > 0;
