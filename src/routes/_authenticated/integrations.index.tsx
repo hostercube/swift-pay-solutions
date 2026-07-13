@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { defaultLogoFor } from "@/lib/gateways/registry";
 import { resolveLogoUrl } from "@/lib/logo-url";
+import { useEnabledProviders } from "@/hooks/use-provider-toggles";
 
 export const Route = createFileRoute("/_authenticated/integrations/")({
   head: () => ({ meta: [{ title: "Payment methods · PayNOC" }] }),
