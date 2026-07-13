@@ -109,6 +109,19 @@ private fun HomeScreen() {
         if (!hasSmsPermission.value) permissionLauncher.launch(perms.toTypedArray())
     }
 
+    // Re-check on every ON_RESUME so the state updates when the user grants
+    // SMS access from system Settings (not through the in-app dialog).
+    val lifecycleOwnerForPerms = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwnerForPerms) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                hasSmsPermission.value = hasSmsPermission(ctx)
+            }
+        }
+        lifecycleOwnerForPerms.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwnerForPerms.lifecycle.removeObserver(observer) }
+    }
+
     // Poll the local queue only while the app is in the foreground, and
     // only every 5s — saves battery/CPU/RAM on low-end phones. When the
     // user leaves the screen the coroutine is cancelled automatically by
