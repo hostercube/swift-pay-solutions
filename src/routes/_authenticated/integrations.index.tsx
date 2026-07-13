@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/integrations/")({
 
 type MethodType =
   | "bkash" | "nagad" | "rocket" | "upay" | "tap" | "mcash"
-  | "sure_cash" | "bank_transfer" | "card" | "crypto" | "other";
+  | "sure_cash" | "bangla_qr" | "bank_transfer" | "card" | "crypto" | "other";
 type Mode = "manual" | "api";
 
 type Method = {
@@ -47,6 +47,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
   { value: "tap", label: "Tap" },
   { value: "mcash", label: "MCash" },
   { value: "sure_cash", label: "SureCash" },
+  { value: "bangla_qr", label: "Bangla QR (BB unified)" },
   { value: "bank_transfer", label: "Bank Transfer" },
   { value: "card", label: "Card" },
   { value: "crypto", label: "Crypto" },
