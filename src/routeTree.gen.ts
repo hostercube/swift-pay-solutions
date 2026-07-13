@@ -47,7 +47,6 @@ import { Route as AuthenticatedNotificationsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
 import { Route as AuthenticatedIntegrationsIndexRouteImport } from './routes/_authenticated/integrations.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
-import { Route as ApiBackendSplatRouteImport } from './routes/api/backend/$'
 import { Route as AuthenticatedSecurityIpWhitelistRouteImport } from './routes/_authenticated/security.ip-whitelist'
 import { Route as AuthenticatedSecurityFraudRouteImport } from './routes/_authenticated/security.fraud'
 import { Route as AuthenticatedSecurityDevicesRouteImport } from './routes/_authenticated/security.devices'
@@ -289,11 +288,6 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
-} as any)
-const ApiBackendSplatRoute = ApiBackendSplatRouteImport.update({
-  id: '/api/backend/$',
-  path: '/api/backend/$',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSecurityIpWhitelistRoute =
   AuthenticatedSecurityIpWhitelistRouteImport.update({
@@ -610,7 +604,6 @@ export interface FileRoutesByFullPath {
   '/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
-  '/api/backend/$': typeof ApiBackendSplatRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/integrations/': typeof AuthenticatedIntegrationsIndexRoute
   '/invoices/': typeof AuthenticatedInvoicesIndexRoute
@@ -690,7 +683,6 @@ export interface FileRoutesByTo {
   '/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
-  '/api/backend/$': typeof ApiBackendSplatRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/integrations': typeof AuthenticatedIntegrationsIndexRoute
   '/invoices': typeof AuthenticatedInvoicesIndexRoute
@@ -777,7 +769,6 @@ export interface FileRoutesById {
   '/_authenticated/security/devices': typeof AuthenticatedSecurityDevicesRoute
   '/_authenticated/security/fraud': typeof AuthenticatedSecurityFraudRoute
   '/_authenticated/security/ip-whitelist': typeof AuthenticatedSecurityIpWhitelistRoute
-  '/api/backend/$': typeof ApiBackendSplatRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/integrations/': typeof AuthenticatedIntegrationsIndexRoute
   '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
@@ -864,7 +855,6 @@ export interface FileRouteTypes {
     | '/security/devices'
     | '/security/fraud'
     | '/security/ip-whitelist'
-    | '/api/backend/$'
     | '/admin/'
     | '/integrations/'
     | '/invoices/'
@@ -944,7 +934,6 @@ export interface FileRouteTypes {
     | '/security/devices'
     | '/security/fraud'
     | '/security/ip-whitelist'
-    | '/api/backend/$'
     | '/admin'
     | '/integrations'
     | '/invoices'
@@ -1030,7 +1019,6 @@ export interface FileRouteTypes {
     | '/_authenticated/security/devices'
     | '/_authenticated/security/fraud'
     | '/_authenticated/security/ip-whitelist'
-    | '/api/backend/$'
     | '/_authenticated/admin/'
     | '/_authenticated/integrations/'
     | '/_authenticated/invoices/'
@@ -1073,7 +1061,6 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
-  ApiBackendSplatRoute: typeof ApiBackendSplatRoute
   ApiPublicHooksDrainPendingRoute: typeof ApiPublicHooksDrainPendingRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
@@ -1356,13 +1343,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/api/backend/$': {
-      id: '/api/backend/$'
-      path: '/api/backend/$'
-      fullPath: '/api/backend/$'
-      preLoaderRoute: typeof ApiBackendSplatRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/security/ip-whitelist': {
       id: '/_authenticated/security/ip-whitelist'
@@ -1896,7 +1876,6 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
-  ApiBackendSplatRoute: ApiBackendSplatRoute,
   ApiPublicHooksDrainPendingRoute: ApiPublicHooksDrainPendingRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
