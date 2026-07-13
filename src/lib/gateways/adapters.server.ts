@@ -1068,8 +1068,9 @@ function verifyAamarpay(v: VerifyArgs): VerifyResult {
   // AamarPay IPN is form-encoded. Signature = md5(store_id + signature_key).
   const p = Object.fromEntries(new URLSearchParams(v.rawBody));
   const expected = createHash("md5").update(`${v.creds.store_id}${v.creds.signature_key}`).digest("hex");
+  // Signature MUST be present and match — cleartext IPN is otherwise trivially forgeable.
   const ok = (p.pay_status === "Successful") && p.store_id === v.creds.store_id
-             && (!p.signature_key || p.signature_key === expected);
+             && !!p.signature_key && p.signature_key === expected;
   return {
     verified: ok, eventType: p.pay_status,
     providerEventId: p.pg_txnid ?? p.mer_txnid,
