@@ -13,11 +13,17 @@ android {
 
     defaultConfig {
         applicationId = "bd.paynoc.merchant"
-        minSdk = 24
+        // Android 5.0 Lollipop through Android 14. Compose, WorkManager 2.9,
+        // Room 2.6 and OkHttp 4 all support 21+. Features that require newer
+        // APIs (EncryptedSharedPreferences ≥23, notification channels ≥26,
+        // POST_NOTIFICATIONS ≥33, dataSync FGS type ≥34) are guarded at
+        // runtime with graceful fallbacks.
+        minSdk = 21
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
         vectorDrawables { useSupportLibrary = true }
+        multiDexEnabled = true
     }
 
     buildFeatures { compose = true }
@@ -40,6 +46,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Desugar java.time + other APIs missing on API 21-25 so we don't
+        // crash on older Lollipop/Marshmallow devices.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     packaging {
@@ -73,4 +82,6 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.multidex:multidex:2.0.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
