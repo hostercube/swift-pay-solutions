@@ -82,6 +82,34 @@ function CheckoutPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // ─── Gateway return handler ──────────────────────────────────────
+  // Runs once on mount when the URL carries ?paid=1 / ?cancelled=1.
+  // Finalizes providers that need a post-return API call (bKash execute)
+  // or reverts optimistic "processing" state on cancel.
+  const finalizedRef = useRef(false);
+  useEffect(() => {
+    if (finalizedRef.current || typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const paid = q.get("paid") === "1";
+    const cancelled = q.get("cancelled") === "1";
+    if (!paid && !cancelled) return;
+    finalizedRef.current = true;
+    const params: Record<string, string> = {};
+    q.forEach((v, k) => { if (k !== "paid" && k !== "cancelled") params[k] = v; });
+    (async () => {
+      try {
+        const r = await finalizeReturn({ data: { invoiceId, cancelled, params } });
+        if (cancelled) toast.info("Payment cancelled");
+        else if (r?.status === "completed") toast.success("Payment confirmed");
+        else if (r && !r.ok) toast.error(String(r.reason ?? "Could not confirm payment"));
+      } catch (e) {
+        console.error("[checkout] finalize failed", e);
+      } finally {
+        load();
+      }
+    })();
+  }, [invoiceId, finalizeReturn, load]);
+
   // ─── FX conversion for display currency ──────────────────────────
   useEffect(() => {
     const cur = displayCurrency ?? inv?.display_currency ?? null;
