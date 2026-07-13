@@ -28,6 +28,16 @@ type Profile = {
   public_bio: string | null;
   accept_tips: boolean;
   tip_min_amount: number;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postcode: string | null;
+  tax_id: string | null;
+  website: string | null;
+  timezone: string | null;
+  language: string | null;
+  date_of_birth: string | null;
 };
 
 
@@ -41,7 +51,7 @@ function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, custom_head_html, custom_footer_html, slug, public_bio, accept_tips, tip_min_amount",
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, custom_head_html, custom_footer_html, slug, public_bio, accept_tips, tip_min_amount, address, city, state, country, postcode, tax_id, website, timezone, language, date_of_birth",
       )
       .eq("id", user.id)
       .maybeSingle()
@@ -63,11 +73,20 @@ function SettingsPage() {
       checkout_style: p.checkout_style,
       custom_head_html: p.custom_head_html,
       custom_footer_html: p.custom_footer_html,
-
       slug: p.slug,
       public_bio: p.public_bio,
       accept_tips: p.accept_tips,
       tip_min_amount: p.tip_min_amount,
+      address: p.address,
+      city: p.city,
+      state: p.state,
+      country: p.country,
+      postcode: p.postcode,
+      tax_id: p.tax_id,
+      website: p.website,
+      timezone: p.timezone,
+      language: p.language,
+      date_of_birth: p.date_of_birth,
     } as never).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -94,6 +113,48 @@ function SettingsPage() {
         <Field label="Avatar URL">
           <Input value={p.avatar_url ?? ""} onChange={(v) => setP({ ...p, avatar_url: v })} />
         </Field>
+        <Field label="Website">
+          <Input value={p.website ?? ""} onChange={(v) => setP({ ...p, website: v })} />
+        </Field>
+        <Field label="Tax / VAT ID">
+          <Input value={p.tax_id ?? ""} onChange={(v) => setP({ ...p, tax_id: v })} />
+        </Field>
+        <Field label="Date of birth">
+          <input
+            type="date"
+            value={p.date_of_birth ?? ""}
+            onChange={(e) => setP({ ...p, date_of_birth: e.target.value || null })}
+            className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
+          />
+        </Field>
+        <Field label="Timezone">
+          <Input value={p.timezone ?? "Asia/Dhaka"} onChange={(v) => setP({ ...p, timezone: v })} />
+        </Field>
+        <Field label="Language">
+          <Input value={p.language ?? "en"} onChange={(v) => setP({ ...p, language: v })} />
+        </Field>
+      </div>
+
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Business address</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Used on invoices, receipts, and KYC reviews.</p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <Field label="Street address">
+            <Input value={p.address ?? ""} onChange={(v) => setP({ ...p, address: v })} />
+          </Field>
+          <Field label="City">
+            <Input value={p.city ?? ""} onChange={(v) => setP({ ...p, city: v })} />
+          </Field>
+          <Field label="State / Division">
+            <Input value={p.state ?? ""} onChange={(v) => setP({ ...p, state: v })} />
+          </Field>
+          <Field label="Postcode">
+            <Input value={p.postcode ?? ""} onChange={(v) => setP({ ...p, postcode: v })} />
+          </Field>
+          <Field label="Country">
+            <Input value={p.country ?? ""} onChange={(v) => setP({ ...p, country: v })} />
+          </Field>
+        </div>
       </div>
 
       <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
