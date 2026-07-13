@@ -1064,6 +1064,7 @@ function labelForType(t: string) {
   const map: Record<string, string> = {
     bkash: "bKash", nagad: "Nagad", rocket: "Rocket", upay: "Upay",
     tap: "Tap", mcash: "MCash", sure_cash: "SureCash",
+    bangla_qr: "Bangla QR",
   };
   return map[t] ?? t;
 }
@@ -1074,7 +1075,7 @@ function currencySymbol(code: string) {
 }
 
 function iconFor(type: string) {
-  if (["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash"].includes(type))
+  if (["bkash", "nagad", "rocket", "upay", "tap", "mcash", "sure_cash", "bangla_qr"].includes(type))
     return <Smartphone className="h-4 w-4" />;
   if (type === "card") return <CreditCard className="h-4 w-4" />;
   if (type === "bank_transfer") return <Landmark className="h-4 w-4" />;

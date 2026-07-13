@@ -2485,6 +2485,7 @@ export type Database = {
         | "card"
         | "crypto"
         | "other"
+        | "bangla_qr"
       refund_status: "requested" | "approved" | "processed" | "rejected"
       subscription_status: "trialing" | "active" | "expired" | "cancelled"
       transaction_status: "pending" | "verified" | "rejected"
@@ -2640,6 +2641,7 @@ export const Constants = {
         "card",
         "crypto",
         "other",
+        "bangla_qr",
       ],
       refund_status: ["requested", "approved", "processed", "rejected"],
       subscription_status: ["trialing", "active", "expired", "cancelled"],

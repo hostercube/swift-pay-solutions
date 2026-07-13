@@ -1,0 +1,1 @@
+ALTER TYPE public.payment_method_type ADD VALUE IF NOT EXISTS 'bangla_qr';
