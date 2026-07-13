@@ -350,6 +350,91 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
     return { sent: rows.length };
   });
 
+/** List admin office staff. */
+export const adminListStaff = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { data, error } = await supabaseAdmin
+      .from("admin_staff")
+      .select("id, email, full_name, permissions, status, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+/** Invite admin office staff. */
+export const adminInviteStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      email: z.string().email(),
+      full_name: z.string().nullable().optional(),
+      permissions: z.array(z.string()).default([]),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin.from("admin_staff").insert({
+      email: data.email.trim().toLowerCase(),
+      full_name: data.full_name?.trim() || null,
+      permissions: data.permissions,
+      invited_by: context.userId,
+    });
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.invited", null, { email: data.email });
+    return { ok: true };
+  });
+
+/** Update admin staff permissions. */
+export const adminUpdateStaffPerms = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ id: z.string().uuid(), permissions: z.array(z.string()) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
+      .from("admin_staff")
+      .update({ permissions: data.permissions })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.permissions_updated", null, { staff_id: data.id });
+    return { ok: true };
+  });
+
+/** Remove admin office staff. */
+export const adminRemoveStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin.from("admin_staff").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.removed", null, { staff_id: data.id });
+    return { ok: true };
+  });
+
+/** Change KYC verification mode. */
+export const adminSetVerificationMode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ mode: z.enum(["manual", "auto"]) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
+      .from("platform_settings")
+      .update({ verification_mode: data.mode })
+      .eq("id", 1);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "kyc.verification_mode_updated", null, { mode: data.mode });
+    return { ok: true };
+  });
+
 /** Change a merchant subscription: swap package, edit end date, toggle auto-renew, or force a status. */
 export const adminUpdateSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
