@@ -64,6 +64,28 @@ async function handlePost(request: Request): Promise<Response> {
       continue;
     }
 
+    // 0) Idempotency: if this merchant already verified this trx_id, treat as
+    //    already-processed and skip. Prevents duplicate webhooks/notifications
+    //    when the APK re-uploads the same SMS after a retry/reboot.
+    if (trxId) {
+      const { data: dup } = await supabaseAdmin
+        .from("transactions")
+        .select("id, invoice_id, status")
+        .eq("merchant_id", auth.merchantId)
+        .ilike("provider_txn_id", trxId)
+        .in("status", ["verified", "rejected"])
+        .maybeSingle();
+      if (dup) {
+        results.push({
+          trx_id: trxId,
+          matched: dup.status === "verified",
+          invoice_id: dup.invoice_id,
+          reason: dup.status === "verified" ? "already verified (idempotent)" : "trx_id previously rejected",
+        });
+        continue;
+      }
+    }
+
     // 1) Case-insensitive exact trxId match against pending txns for this merchant.
     type Txn = {
       id: string; invoice_id: string; merchant_id: string; method_type: string;
@@ -110,29 +132,39 @@ async function handlePost(request: Request): Promise<Response> {
 
     // Amount sanity — allow 1 unit tolerance
     if (Number.isFinite(amount) && amount > 0) {
-      const diff = Math.abs(amount - Number(txn.gross_amount));
+      const diff = Math.abs(amount - Number(matched.gross_amount));
       if (diff > 1) {
-        results.push({ trx_id: trxId, matched: false, invoice_id: txn.invoice_id, reason: `amount mismatch (${amount} vs ${txn.gross_amount})` });
+        results.push({ trx_id: trxId, matched: false, invoice_id: matched.invoice_id, reason: `amount mismatch (${amount} vs ${matched.gross_amount})` });
         continue;
       }
     }
 
-    // Auto-verify
+    // Atomic conditional update: only flip pending → verified. Concurrent SMS
+    // events / retries race here; the loser gets 0 rows and skips the
+    // webhook + notification side-effects (idempotent).
     const nowIso = new Date().toISOString();
-    await supabaseAdmin.from("transactions").update({
+    const { data: updatedRows } = await supabaseAdmin.from("transactions").update({
       status: "verified",
       verified_at: nowIso,
+      provider_txn_id: trxId || undefined,
       raw_response: { source: "apk_sms", provider, raw: ev.raw_body, device_id: ev.device_id ?? null } as never,
       note: `SMS auto-verified via APK (${provider})`,
-    }).eq("id", txn.id);
+    }).eq("id", matched.id).eq("status", "pending").select("id");
 
+    if (!updatedRows || updatedRows.length === 0) {
+      // Another concurrent worker already verified this txn — safe skip.
+      results.push({ trx_id: trxId, matched: true, invoice_id: matched.invoice_id, reason: "already verified (race)" });
+      continue;
+    }
+
+    // Same guard on the invoice — never overwrite a completed/refunded invoice.
     const { data: invoice } = await supabaseAdmin.from("invoices").update({
       status: "completed",
       paid_at: nowIso,
-      fee_amount: txn.fee_amount,
-      net_amount: txn.net_amount,
-      method_type: txn.method_type as never,
-    }).eq("id", txn.invoice_id).select("*").single();
+      fee_amount: matched.fee_amount,
+      net_amount: matched.net_amount,
+      method_type: matched.method_type as never,
+    }).eq("id", matched.invoice_id).eq("status", "pending").select("*").maybeSingle();
 
     if (invoice) {
       dispatchWebhooks({
@@ -146,13 +178,14 @@ async function handlePost(request: Request): Promise<Response> {
         merchantId: auth.merchantId,
         event: "invoice.completed",
         title: `SMS auto-verified: ${(invoice as { invoice_number?: string }).invoice_number ?? ""}`,
-        body: `${provider} · TrxID ${trxId} · ${amount || txn.gross_amount}`,
+        body: `${provider} · TrxID ${trxId} · ${amount || matched.gross_amount}`,
         metadata: { invoiceId: invoice.id, source: "apk_sms" },
       }).catch(() => undefined);
     }
 
-    results.push({ trx_id: trxId, matched: true, invoice_id: txn.invoice_id });
+    results.push({ trx_id: trxId, matched: true, invoice_id: matched.invoice_id });
   }
+
 
   const res = jsonResponse({ ok: true, results });
   logApiRequest({
