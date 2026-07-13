@@ -393,10 +393,13 @@ private fun EmptyState() {
 @Composable
 private fun EventRow(e: QueuedEvent) {
     val (chipColor, chipLabel) = when (e.status) {
-        "sent" -> Success to "SENT"
+        "matched" -> Success to "AUTO-VERIFIED"
+        "unmatched" -> TextMuted to "UPLOADED"
         "failed" -> Danger to "FAILED"
+        "sent" -> Success to "SENT" // legacy rows from older schema
         else -> Brand to "PENDING"
     }
+    val noteColor = if (e.status == "failed") Danger else TextMuted
     Surface(
         color = BgSurface,
         shape = RoundedCornerShape(14.dp),
@@ -417,11 +420,18 @@ private fun EventRow(e: QueuedEvent) {
             }
             Text("TrxID ${e.trxId}", color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             e.sender?.let { Text("From $it", color = TextMuted, fontSize = 11.sp) }
-            e.note?.let { Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.ErrorOutline, null, tint = Danger, modifier = Modifier.size(11.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(it, color = Danger, fontSize = 11.sp)
-            } }
+            e.invoiceId?.let {
+                Text("Invoice ${it.take(8)}", color = Success, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+            e.note?.let {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (e.status == "failed") {
+                        Icon(Icons.Filled.ErrorOutline, null, tint = Danger, modifier = Modifier.size(11.dp))
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    Text(it, color = noteColor, fontSize = 11.sp)
+                }
+            }
         }
     }
 }
