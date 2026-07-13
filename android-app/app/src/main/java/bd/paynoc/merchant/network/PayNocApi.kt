@@ -96,7 +96,7 @@ class PayNocApi private constructor(
             .url("$baseUrl/api/public/v1/sms-events")
             .header("Authorization", "Bearer $apiKey")
             .header("Content-Type", "application/json")
-            .header("User-Agent", "PayNOC-Merchant-APK/1.2")
+            .header("User-Agent", "PayNOC-Merchant-APK/1.3")
             .header("X-PayNOC-Timestamp", ts)
             .header("X-PayNOC-Nonce", nonce)
             .header("X-PayNOC-Signature", "sha256=$signature")
@@ -124,7 +124,7 @@ class PayNocApi private constructor(
         val request = Request.Builder()
             .url("$baseUrl/api/public/v1/balance")
             .header("Authorization", "Bearer $apiKey")
-            .header("User-Agent", "PayNOC-Merchant-APK/1.2")
+            .header("User-Agent", "PayNOC-Merchant-APK/1.3")
             .get()
             .build()
         return http.newCall(request).execute().use { it.code() }
