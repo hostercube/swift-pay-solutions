@@ -26,8 +26,16 @@ const GROUPS: { key: Row["category"]; label: string; hint: string }[] = [
   { key: "bd", label: "Bangladesh / Auto gateways", hint: "bKash, Nagad, SSLCommerz, UddoktaPay…" },
   { key: "international", label: "International gateways", hint: "Stripe, PayPal, Razorpay, Paddle…" },
   { key: "crypto", label: "Crypto gateways", hint: "Coinbase Commerce, NOWPayments, Cryptomus…" },
-  { key: "manual", label: "Manual payment methods", hint: "Bank transfer, QR, card, other…" },
+  { key: "manual", label: "Manual payment methods", hint: "Bank transfer, QR, wallets verified via Android/SMS or manual proof…" },
 ];
+
+// Providers that can ALSO be accepted as manual methods (verified via the
+// Android SMS listener or merchant proof). Shown in the Manual group in
+// addition to their native category so admins can manage them together.
+const MANUAL_ELIGIBLE = new Set([
+  "bkash","nagad","rocket","upay","tap","mcash","cellfin","surecash",
+]);
+
 
 function ProviderTogglesPage() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -74,7 +82,9 @@ function ProviderTogglesPage() {
 
       <div className="space-y-6">
         {GROUPS.map((g) => {
-          const items = visible.filter((r) => r.category === g.key);
+          const items = g.key === "manual"
+            ? visible.filter((r) => r.category === "manual" || MANUAL_ELIGIBLE.has(r.provider))
+            : visible.filter((r) => r.category === g.key);
           if (items.length === 0) return null;
           return (
             <Card key={g.key} className="p-5">
