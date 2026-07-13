@@ -3,7 +3,7 @@
 Domains:
 - `paynoc.bd` → PayNOC app
 - `pay.paynoc.bd`, `docs.paynoc.bd`, `api.paynoc.bd` → PayNOC app (একই container, আলাদা domain)
-- `db.paynoc.bd` → Supabase Studio (Kong gateway)
+- `db.paynoc.com` → backend API gateway (`/auth/v1/*`, `/rest/v1/*`, `/storage/v1/*`)
 
 ---
 
@@ -52,15 +52,16 @@ Option A না চাইলে বা backup হিসেবে use করত�
 
 ---
 
-## Part 1 — Supabase Resource (Coolify template)
+## Part 1 — Backend Resource (Coolify template)
 
-### 1.1 Domain mapping (এইটা ঠিক না হলে dashboard public)
+### 1.1 Domain mapping (এইটা ঠিক না হলে auth/login fail করবে)
 
-Coolify → Supabase resource → **Domains** tab:
+Coolify → backend resource → **Domains** tab:
 
-- `https://db.paynoc.bd` **শুধুমাত্র** `supabase-kong` service, port `8000`-এ map করবে।
-- `supabase-studio` (port `3000`), `supabase-meta`, `supabase-auth`, `supabase-rest`, `supabase-storage`, `analytics`, `supabase-db`, `minio`, `imgproxy`, `vector` — কোনোটার সাথে public domain map করবে না।
-- যদি আগে studio:3000 এ domain দেওয়া থাকে, **remove** করো। Studio-তে নিজের কোনো auth নাই — Kong basic-auth দিয়ে protect হয়।
+- `https://db.paynoc.com` **শুধুমাত্র** API gateway/Kong service, port `8000`-এ map করবে।
+- `db.paynoc.com/auth/v1/settings` browser/curl থেকে JSON return করতে হবে। HTML/404 এলে domain ভুল service-এ mapped।
+- `supabase-studio` / dashboard service-এ `db.paynoc.com` map করবে না। Studio লাগলে আলাদা private/admin domain use করো।
+- App যে API gateway use করে, সেটার `/auth/v1` এবং `/rest/v1` basic-auth দিয়ে block করবে না; security RLS + anon/service keys দিয়ে হবে।
 
 Save → **Redeploy** পুরো stack।
 
@@ -69,7 +70,7 @@ Save → **Redeploy** পুরো stack।
 Coolify template auto-generate করে দেয় (POSTGRES_PASSWORD, JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY, LOGFLARE_* ইত্যাদি) — সেগুলোতে হাত দিবে না। শুধু নিচেরগুলো verify/override করো:
 
 ```env
-# --- Studio Kong basic-auth (MUST — না হলে db.paynoc.bd public) ---
+# --- Studio/dashboard basic-auth (MUST — dashboard public রাখা যাবে না) ---
 DASHBOARD_USERNAME=ayman
 DASHBOARD_PASSWORD=<STRONG_PASSWORD_32_CHARS>
 
@@ -79,8 +80,8 @@ SERVICE_PASSWORD_ADMIN=<SAME_STRONG_PASSWORD>
 
 # --- URLs ---
 SITE_URL=https://paynoc.bd
-API_EXTERNAL_URL=https://db.paynoc.bd
-SUPABASE_PUBLIC_URL=https://db.paynoc.bd
+API_EXTERNAL_URL=https://db.paynoc.com
+SUPABASE_PUBLIC_URL=https://db.paynoc.com
 GOTRUE_SITE_URL=https://paynoc.bd
 ADDITIONAL_REDIRECT_URLS=https://paynoc.bd,https://pay.paynoc.bd,https://docs.paynoc.bd,https://api.paynoc.bd,https://paynoc.bd/auth/callback
 
@@ -98,21 +99,21 @@ ENABLE_PHONE_AUTOCONFIRM=false
 JWT_EXPIRY=3600
 ```
 
-Save → **Redeploy** → incognito window থেকে `https://db.paynoc.bd` visit করলে browser basic-auth prompt আসবে।
+Save → **Redeploy** → `https://db.paynoc.com/auth/v1/settings` open করলে JSON response আসতে হবে।
 
-### 1.3 এখনো password ছাড়া ঢুকে যাচ্ছে? Checklist
+### 1.3 Login এখনো backend unreachable দেখাচ্ছে? Checklist
 
-1. Domains tab-এ `db.paynoc.bd` **শুধু** `supabase-kong:8000` — অন্য কোনো service-এ নাই।
-2. `DASHBOARD_USERNAME` + `DASHBOARD_PASSWORD` **উভয়ই** set আছে (empty না)।
-3. Save করার পর পুরো Supabase stack **Restart** (শুধু Kong না — full redeploy)।
-4. Browser cache clear / incognito window use করো (basic-auth session cached থাকে)।
-5. `curl -I https://db.paynoc.bd` চালালে `HTTP/1.1 401 Unauthorized` + `WWW-Authenticate: Basic` header আসতে হবে। 200 আসলে Kong basic-auth active না।
+1. DNS-এ `db.paynoc.com` Coolify server IP-তে point করছে।
+2. Coolify Domains tab-এ `db.paynoc.com` **শুধু** API gateway/Kong `:8000` — PayNOC app বা Studio service-এ না।
+3. `curl https://db.paynoc.com/auth/v1/settings` JSON return করে; HTML/404 হলে mapping ভুল।
+4. App resource env/build args-এ `VITE_SUPABASE_URL` এবং `SUPABASE_URL` দুটোই `https://db.paynoc.com`।
+5. `VITE_SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_PUBLISHABLE_KEY` backend anon key; service-role key browser `VITE_*` variable-এ দেবে না।
 
 ---
 
 ## Part 2 — Database Schema
 
-Supabase Studio (`https://db.paynoc.bd`) → login → **SQL Editor**।
+Backend SQL editor / psql → schema run করবে।
 
 ### 2.1 Extensions
 ```sql
@@ -143,7 +144,7 @@ Coolify → **New Resource → Public Repository** → Build Pack: **Dockerfile*
 
 ### 3.2 Environment Variables (Developer View)
 
-Supabase resource থেকে actual value copy করে বসাও। `VITE_*` গুলোর জন্য "Available at build time" **ON** করবে।
+Backend resource থেকে actual value copy করে বসাও। `VITE_*` গুলোর জন্য "Available at build time" **ON** করবে।
 
 ```env
 # --- Runtime ---
@@ -151,13 +152,13 @@ NODE_ENV=production
 PORT=3000
 
 # --- Frontend (build + runtime, VITE_ prefix = browser-visible) ---
-VITE_SUPABASE_URL=https://db.paynoc.bd
+VITE_SUPABASE_URL=https://db.paynoc.com
 VITE_SUPABASE_PUBLISHABLE_KEY=<SERVICE_SUPABASEANON_KEY>
 VITE_SUPABASE_ANON_KEY=<SERVICE_SUPABASEANON_KEY>
 VITE_SUPABASE_PROJECT_ID=paynoc
 
 # --- Server-only (runtime, browser এ যায় না) ---
-SUPABASE_URL=https://db.paynoc.bd
+SUPABASE_URL=https://db.paynoc.com
 SUPABASE_PUBLISHABLE_KEY=<SERVICE_SUPABASEANON_KEY>
 SUPABASE_ANON_KEY=<SERVICE_SUPABASEANON_KEY>
 SUPABASE_SERVICE_ROLE_KEY=<SERVICE_SUPABASESERVICE_KEY>
@@ -193,7 +194,7 @@ ON CONFLICT DO NOTHING;
 
 ## Part 5 — Verification
 
-- [ ] `curl -I https://db.paynoc.bd` → `401 Unauthorized` (basic-auth prompt)
+- [ ] `curl https://db.paynoc.com/auth/v1/settings` → JSON response
 - [ ] `https://paynoc.bd` → landing page load
 - [ ] `/auth` signup/login কাজ করে
 - [ ] `/dashboard` load হয়
@@ -216,7 +217,7 @@ Chat/repo-এ যেসব key leak হয়েছে সব Coolify Supabase �
 
 | Error | Fix |
 |---|---|
-| `db.paynoc.bd` password ছাড়া খোলে | Domain শুধু `supabase-kong:8000` এ; `DASHBOARD_USERNAME`+`DASHBOARD_PASSWORD` set; full stack redeploy; incognito test |
+| Login-এ backend unreachable | `db.paynoc.com` API gateway/Kong `:8000` এ mapped; `/auth/v1/settings` JSON; app env/build args একই URL |
 | `must be owner of table objects` | `db/storage.sql` ব্যবহার করো |
 | `Cannot delete environment variable` | Delete না, empty রেখে save |
 | Build fail: Node syntax `parseEnv` | Dockerfile ইতিমধ্যে `oven/bun:1.2-alpine` — rebuild |
