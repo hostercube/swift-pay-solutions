@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Trash2, Plug, ExternalLink, Check, Settings2, X, Plus } from "lucide-react";
 import { GATEWAYS, getGateway, gatewaysByRegion, defaultLogoFor } from "@/lib/gateways/registry";
 import { resolveLogoUrl } from "@/lib/logo-url";
+import { useEnabledProviders } from "@/hooks/use-provider-toggles";
 
 export const Route = createFileRoute("/_authenticated/integrations/byo")({
   head: () => ({ meta: [{ title: "Payment Gateways · PayNOC" }] }),
@@ -40,6 +41,7 @@ type Draft = {
 
 function ByoPage() {
   const { user } = useAuth();
+  const { isEnabled } = useEnabledProviders();
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
   const [q, setQ] = useState("");
@@ -133,6 +135,7 @@ function ByoPage() {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const query = q.trim().toLowerCase();
   const filtered = gatewaysByRegion(tab).filter((g) => {
+    if (!isEnabled(g.id)) return false;
     if (query && !`${g.label} ${g.id} ${g.currencies.join(" ")}`.toLowerCase().includes(query)) return false;
     if (conn) {
       const has = (byProvider.get(g.id) ?? []).length > 0;

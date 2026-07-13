@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { defaultLogoFor } from "@/lib/gateways/registry";
 import { resolveLogoUrl } from "@/lib/logo-url";
+import { useEnabledProviders } from "@/hooks/use-provider-toggles";
 
 export const Route = createFileRoute("/_authenticated/integrations/")({
   head: () => ({ meta: [{ title: "Payment methods · PayNOC" }] }),
@@ -82,6 +83,8 @@ const EMPTY: Partial<Method> = {
 
 function MethodsPage() {
   const { user } = useAuth();
+  const { isEnabled } = useEnabledProviders();
+  const availableTypes = METHOD_TYPES.filter((t) => isEnabled(t.value));
   const [rows, setRows] = useState<Method[]>([]);
   const [editing, setEditing] = useState<Partial<Method> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -265,7 +268,7 @@ function MethodsPage() {
                   onChange={(e) => setEditing({ ...editing, type: e.target.value as MethodType })}
                   className={inputCls}
                 >
-                  {METHOD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {availableTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </Field>
 
