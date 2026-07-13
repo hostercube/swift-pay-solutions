@@ -2,12 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin-shell";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useServerFn } from "@tanstack/react-start";
-import { adminCreateMerchant, adminImpersonate } from "@/lib/admin.functions";
+import {
+  adminCreateMerchant,
+  adminImpersonate,
+  adminListMerchants,
+  adminSetMerchantStatus,
+  adminSetSuperAdmin,
+} from "@/lib/admin.functions";
 import { UserPlus, LogIn, ExternalLink, Eye } from "lucide-react";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
@@ -30,46 +35,44 @@ type Row = {
 function MerchantsPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const listFn = useServerFn(adminListMerchants);
+  const statusFn = useServerFn(adminSetMerchantStatus);
+  const roleFn = useServerFn(adminSetSuperAdmin);
+  const createFn = useServerFn(adminCreateMerchant);
+  const impersonateFn = useServerFn(adminImpersonate);
 
   async function load() {
     setLoading(true);
-    const [{ data, error }, { data: adminRoles }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, email, full_name, business_name, status, kyc_status, created_at")
-        .order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id").eq("role", "super_admin"),
-    ]);
-    if (error) toast.error(error.message);
-    const admins = new Set((adminRoles ?? []).map((r) => r.user_id));
-    setRows(((data ?? []) as Row[]).map((r) => ({ ...r, is_super_admin: admins.has(r.id) })));
+    try {
+      setRows((await listFn()) as Row[]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load merchants");
+    }
     setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
 
   async function setStatus(id: string, status: string) {
-    const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success(`Merchant ${status}`);
-    load();
+    try {
+      await statusFn({ data: { merchant_id: id, status: status as "active" | "suspended" | "pending" } });
+      toast.success(`Merchant ${status}`);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
   }
 
   async function toggleSuperAdmin(userId: string, currentlyAdmin: boolean) {
-    if (currentlyAdmin) {
-      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "super_admin");
-      if (error) return toast.error(error.message);
-      toast.success("Super admin revoked");
-    } else {
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
-      if (error) return toast.error(error.message);
-      toast.success("Super admin granted");
+    try {
+      await roleFn({ data: { user_id: userId, enabled: !currentlyAdmin } });
+      toast.success(currentlyAdmin ? "Super admin revoked" : "Super admin granted");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
     }
-    load();
   }
 
-  const createFn = useServerFn(adminCreateMerchant);
-  const impersonateFn = useServerFn(adminImpersonate);
   const [showCreate, setShowCreate] = useState(false);
   const [c, setC] = useState({ email: "", password: "", business_name: "", full_name: "", verified: true });
 

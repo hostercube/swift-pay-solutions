@@ -90,7 +90,8 @@ export const adminReviewKyc = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({
         kyc_status: data.decision,
@@ -128,7 +129,8 @@ export const adminUpdateMerchant = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update(data.patch)
       .eq("id", data.merchant_id);
@@ -151,7 +153,8 @@ export const adminSetMerchantStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({ status: data.status })
       .eq("id", data.merchant_id);
@@ -159,7 +162,7 @@ export const adminSetMerchantStatus = createServerFn({ method: "POST" })
 
     // If suspending, also deactivate their API keys so nothing keeps flowing.
     if (data.status === "suspended") {
-      await context.supabase.from("api_keys").update({ is_active: false }).eq("merchant_id", data.merchant_id);
+      await supabaseAdmin.from("api_keys").update({ is_active: false }).eq("merchant_id", data.merchant_id);
     }
     await logAudit(context, `merchant.${data.status}`, data.merchant_id, { reason: data.reason });
     return { ok: true };
@@ -199,13 +202,64 @@ export const adminDeleteMerchant = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** List merchants for the admin grid using privileged server access after role check. */
+export const adminListMerchants = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const [{ data: profiles, error }, { data: adminRoles, error: roleErr }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name, business_name, status, kyc_status, created_at")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.from("user_roles").select("user_id").eq("role", "super_admin"),
+    ]);
+    if (error) throw new Error(error.message);
+    if (roleErr) throw new Error(roleErr.message);
+
+    const admins = new Set((adminRoles ?? []).map((r) => r.user_id));
+    return (profiles ?? []).map((r) => ({ ...r, is_super_admin: admins.has(r.id) }));
+  });
+
+/** Grant/revoke super-admin from the admin merchant list. */
+export const adminSetSuperAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ user_id: z.string().uuid(), enabled: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    if (data.user_id === context.userId && !data.enabled) {
+      throw new Error("You cannot revoke your own super-admin access");
+    }
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    if (data.enabled) {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: data.user_id, role: "super_admin" }, { onConflict: "user_id,role" });
+      if (error) throw new Error(error.message);
+      await logAudit(context, "merchant.super_admin_granted", data.user_id);
+    } else {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.user_id)
+        .eq("role", "super_admin");
+      if (error) throw new Error(error.message);
+      await logAudit(context, "merchant.super_admin_revoked", data.user_id);
+    }
+    return { ok: true };
+  });
+
 /** Aggregated merchant profile for the admin deep-dive page. */
 export const adminGetMerchantOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ merchant_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const s = context.supabase;
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const s = supabaseAdmin;
     const mid = data.merchant_id;
 
     const [
