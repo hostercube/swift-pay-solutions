@@ -27,6 +27,11 @@ class PayNocApi private constructor(
     private val http: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
+        // Hard cap on total wall-time — protects the caller from a flaky
+        // network where retryOnConnectionFailure could otherwise multiply
+        // individual timeouts and block the worker thread far past 30 s.
+        .callTimeout(30, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
         .build()
 
