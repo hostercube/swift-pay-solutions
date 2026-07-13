@@ -302,6 +302,17 @@ function MethodsPage() {
                 />
               </Field>
 
+              <Field label="Logo (defaults to provider brand)" full>
+                <LogoField
+                  value={editing.logo_url ?? null}
+                  fallbackId={editing.type ?? undefined}
+                  onChange={(v) => setEditing((cur) => cur ? { ...cur, logo_url: v } : cur)}
+                  userId={user?.id}
+                />
+              </Field>
+
+
+
               {/* Bank transfer specific fields */}
               {editing.type === "bank_transfer" && (
                 <>
