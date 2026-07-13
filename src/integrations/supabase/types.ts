@@ -401,6 +401,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_provider_toggles: {
+        Row: {
+          category: string
+          enabled: boolean
+          label: string
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category: string
+          enabled?: boolean
+          label: string
+          provider: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          enabled?: boolean
+          label?: string
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           created_at: string
@@ -2566,6 +2593,7 @@ export type Database = {
         Args: { _merchant_id: string; _perm: string; _user_id: string }
         Returns: boolean
       }
+      provider_enabled: { Args: { _provider: string }; Returns: boolean }
       renew_due_subscriptions: { Args: never; Returns: number }
       resolve_merchant_domain: {
         Args: { _host: string }
