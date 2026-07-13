@@ -156,7 +156,7 @@ private fun HomeScreen() {
             item {
                 StatsRow(
                     pending = stats.pending,
-                    sentToday = stats.sentToday,
+                    matchedToday = stats.matchedToday,
                     failed = stats.failed,
                 )
             }
