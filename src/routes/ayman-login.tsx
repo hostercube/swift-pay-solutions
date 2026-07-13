@@ -33,7 +33,7 @@ async function ensureAdminAccess(userId: string): Promise<boolean> {
 function authErrorMessage(err: unknown) {
   const msg = err instanceof Error ? err.message : "Access denied";
   if (/failed to fetch|networkerror|load failed/i.test(msg)) {
-    return "Backend auth endpoint is unreachable. Check that the Supabase URL points to the API gateway and that SSL/CORS are valid.";
+    return "Backend auth endpoint is unreachable. Check that the backend URL points to the API gateway and that SSL/CORS are valid.";
   }
   return msg;
 }
