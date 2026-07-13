@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -108,11 +109,17 @@ private fun HomeScreen() {
         if (!hasSmsPermission.value) permissionLauncher.launch(perms.toTypedArray())
     }
 
-    // Poll the local queue every 3s for a live feel.
-    LaunchedEffect(Unit) {
-        while (true) {
-            events = withContext(Dispatchers.IO) { EventStore.get(ctx).recent() }
-            delay(3000)
+    // Poll the local queue only while the app is in the foreground, and
+    // only every 5s — saves battery/CPU/RAM on low-end phones. When the
+    // user leaves the screen the coroutine is cancelled automatically by
+    // the lifecycle-aware LaunchedEffect scope.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            while (true) {
+                events = withContext(Dispatchers.IO) { EventStore.get(ctx).recent() }
+                delay(5000)
+            }
         }
     }
 

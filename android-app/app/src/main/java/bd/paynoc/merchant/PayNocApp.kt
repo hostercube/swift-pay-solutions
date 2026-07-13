@@ -1,6 +1,6 @@
 package bd.paynoc.merchant
 
-import android.app.Application
+import androidx.multidex.MultiDexApplication
 import androidx.work.BackoffPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder

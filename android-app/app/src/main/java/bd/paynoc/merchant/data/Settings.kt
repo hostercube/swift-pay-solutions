@@ -1,6 +1,8 @@
 package bd.paynoc.merchant.data
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import java.util.UUID
@@ -28,13 +30,27 @@ data class Settings(
         // sk_live_xxx or sk_test_xxx — 20+ hex chars, matches server validator.
         private val API_KEY_RE = Regex("""^sk_(live|test)_[a-f0-9]{20,}$""", RegexOption.IGNORE_CASE)
 
-        private fun prefs(context: Context) = EncryptedSharedPreferences.create(
-            context,
-            PREFS,
-            MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-        )
+        private fun prefs(context: Context): SharedPreferences {
+            // EncryptedSharedPreferences (Tink) requires API 23+. On Android
+            // 5.0-5.1 fall back to regular prefs — allowBackup=false + app
+            // sandbox still protects the key on non-rooted devices.
+            return if (Build.VERSION.SDK_INT >= 23) {
+                runCatching {
+                    EncryptedSharedPreferences.create(
+                        context,
+                        PREFS,
+                        MasterKey.Builder(context)
+                            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+                        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+                    )
+                }.getOrElse {
+                    context.getSharedPreferences(PREFS + "_plain", Context.MODE_PRIVATE)
+                }
+            } else {
+                context.getSharedPreferences(PREFS + "_plain", Context.MODE_PRIVATE)
+            }
+        }
 
         fun load(context: Context): Settings {
             val p = prefs(context)
