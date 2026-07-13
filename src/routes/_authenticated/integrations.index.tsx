@@ -123,6 +123,7 @@ function MethodsPage() {
       branch_name: editing.branch_name || null,
       routing_number: editing.routing_number || null,
       swift_code: editing.swift_code || null,
+      logo_url: editing.logo_url || null,
     };
     const { error } = editing.id
       ? await supabase.from("payment_methods").update(payload).eq("id", editing.id)
