@@ -82,7 +82,9 @@ function ProviderTogglesPage() {
 
       <div className="space-y-6">
         {GROUPS.map((g) => {
-          const items = visible.filter((r) => r.category === g.key);
+          const items = g.key === "manual"
+            ? visible.filter((r) => r.category === "manual" || MANUAL_ELIGIBLE.has(r.provider))
+            : visible.filter((r) => r.category === g.key);
           if (items.length === 0) return null;
           return (
             <Card key={g.key} className="p-5">
