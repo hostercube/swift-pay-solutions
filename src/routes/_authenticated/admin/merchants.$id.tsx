@@ -11,6 +11,7 @@ import {
   adminImpersonate,
   adminDeleteMerchant,
 } from "@/lib/admin.functions";
+import { ProviderAccessSection } from "@/components/admin/provider-access-section";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -228,6 +229,11 @@ function MerchantDetailPage() {
               </ul>
             )}
           </Section>
+
+          <Section title="Provider access (per-merchant)">
+            <ProviderAccessSection merchantId={id} />
+          </Section>
+
 
           <Section title={`Recent invoices (${data.recent_invoices.length})`}>
             {data.recent_invoices.length === 0 ? (
