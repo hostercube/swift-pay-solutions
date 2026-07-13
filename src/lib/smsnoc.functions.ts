@@ -259,6 +259,3 @@ export const smsNocNotifyPasswordReset = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
-
-// Silences unused import lint
-void renderTemplate;
