@@ -396,5 +396,68 @@ function DraftEditor({
   );
 }
 
+function ByoLogoField({
+  value, fallbackId, onChange,
+}: {
+  value: string | null;
+  fallbackId: string;
+  onChange: (v: string | null) => void;
+}) {
+  const { user } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const preview = resolveLogoUrl(value, fallbackId);
+  const isDefault = !value && !!defaultLogoFor(fallbackId);
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-3">
+      {preview && (
+        <img
+          src={preview}
+          alt="Logo preview"
+          className="h-14 w-14 rounded-lg border border-glass-border bg-white/90 object-contain p-1"
+        />
+      )}
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={busy || !user}
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f || !user) return;
+            setBusy(true);
+            const path = `logos/${user.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
+            const { error } = await supabase.storage
+              .from("payment-assets")
+              .upload(path, f, { upsert: false, contentType: f.type });
+            setBusy(false);
+            if (error) return toast.error(error.message);
+            onChange(path);
+            toast.success("Logo uploaded");
+          }}
+        />
+        {busy ? "Uploading…" : value ? "Replace logo" : "Upload custom logo"}
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-xs text-destructive hover:underline"
+        >
+          Reset to default
+        </button>
+      )}
+      <p className="basis-full text-[11px] text-muted-foreground">
+        {isDefault
+          ? "Using the default provider logo. Upload one to override for this configuration."
+          : value
+            ? "Custom logo — shown to customers at checkout."
+            : "No default logo available; upload one to show at checkout."}
+      </p>
+    </div>
+  );
+}
+
 // Ensure the registry stays imported even if we later trim unused exports.
 void GATEWAYS;
+
