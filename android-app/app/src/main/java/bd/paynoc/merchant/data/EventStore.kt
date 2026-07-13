@@ -116,10 +116,16 @@ class EventStore private constructor(private val db: AppDatabase) {
             ).also { instance = it }
         }
 
-        private val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
+        // SimpleDateFormat is NOT thread-safe. SMS bursts arrive on the IO
+        // dispatcher and can call isoOf() concurrently — a shared instance
+        // would corrupt its internal Calendar and emit garbage timestamps.
+        // ThreadLocal gives each thread its own formatter.
+        private val iso = ThreadLocal.withInitial {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+                timeZone = TimeZone.getTimeZone("UTC")
+            }
         }
 
-        fun isoOf(millis: Long): String = iso.format(Date(millis))
+        fun isoOf(millis: Long): String = iso.get()!!.format(Date(millis))
     }
 }

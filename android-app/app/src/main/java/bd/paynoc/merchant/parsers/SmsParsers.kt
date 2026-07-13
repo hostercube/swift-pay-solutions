@@ -85,10 +85,17 @@ private val PARSERS = listOf(
     // ── Generic Bangla QR (any bank) ────────────────────────────────────
     // Covers City Bank Citytouch, EBL Skypay, MTB Smart, BRAC Astha, Bank
     // Asia, IFIC Aamar, IBBL mCash, Standard Chartered Straight2Bank etc.
-    // Example: "Bangla QR: BDT 500.00 credited to A/C ****1234. TrxID/Ref: 8A7BXY"
+    // Sender allow-list required — SMS sender IDs are trivially spoofable
+    // via bulk-SMS gateways, so an empty list would let any attacker inject
+    // fake "payment" events into the merchant's queue.
     Parser(
         provider = "bangla_qr",
-        senderIds = emptyList(),
+        senderIds = listOf(
+            "CITY", "CITYBANK", "EBL", "MTB", "BRAC", "BANKASIA", "IFIC",
+            "IBBL", "SCB", "PRIME", "UCB", "DBL", "DBBL", "SBAC", "MBL",
+            "PBL", "SEBL", "AB", "AL-ARAFAH", "PUBALI", "JAMUNA", "NCC",
+            "NRBC", "MIDLAND", "MEGHNA", "BRAC BANK", "UTTARA",
+        ),
         regex = Regex(
             """(?:Bangla\s*QR|BanglaQR|QR\s*Pay(?:ment)?)[^\n]*?(?:BDT|Tk)\s*(?<amount>[\d,]+\.?\d*)[^\n]*?(?:TrxID|Txn(?:ID)?|Ref)[:\s]+(?<trxId>[A-Z0-9]+)""",
             RegexOption.IGNORE_CASE,
@@ -96,11 +103,19 @@ private val PARSERS = listOf(
     ),
 
     // ── Generic bank credit (must stay last) ────────────────────────────
+    // Negative lookahead rejects reversal/refund SMS like "credited back"
+    // so a refund isn't misread as an incoming payment. Sender allow-list
+    // required for the same anti-spoofing reason as above.
     Parser(
         provider = "bank",
-        senderIds = emptyList(),
+        senderIds = listOf(
+            "CITY", "CITYBANK", "EBL", "MTB", "BRAC", "BANKASIA", "IFIC",
+            "IBBL", "SCB", "PRIME", "UCB", "DBL", "DBBL", "SBAC", "MBL",
+            "PBL", "SEBL", "AB", "AL-ARAFAH", "PUBALI", "JAMUNA", "NCC",
+            "NRBC", "MIDLAND", "MEGHNA", "BRAC BANK", "UTTARA",
+        ),
         regex = Regex(
-            """BDT\s+(?<amount>[\d,]+\.?\d*)\s+credited.*?Ref[:\s]+(?<trxId>[A-Z0-9]+)""",
+            """BDT\s+(?<amount>[\d,]+\.?\d*)\s+credited(?!\s+back)(?![^\n]*\b(?:reversed|refund|reversal)\b).*?Ref[:\s]+(?<trxId>[A-Z0-9]+)""",
             RegexOption.IGNORE_CASE,
         ),
     ),
