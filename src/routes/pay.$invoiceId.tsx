@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
+import { finalizeGatewayReturn } from "@/lib/gateways/finalize.functions";
 import { submitManualPayment } from "@/lib/checkout-submit.functions";
 import { Shell } from "@/components/checkout/Shell";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
