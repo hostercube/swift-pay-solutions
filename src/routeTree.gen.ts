@@ -84,6 +84,7 @@ import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
+import { Route as ApiPublicHooksDrainPendingRouteImport } from './routes/api/public/hooks/drain-pending'
 import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
 import { Route as AuthenticatedAdminPlatformPluginsRouteImport } from './routes/_authenticated/admin/platform.plugins'
 import { Route as AuthenticatedAdminPlatformIncidentsRouteImport } from './routes/_authenticated/admin/platform.incidents'
@@ -496,6 +497,12 @@ const ApiPublicHooksExpireInvoicesRoute =
     path: '/api/public/hooks/expire-invoices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDrainPendingRoute =
+  ApiPublicHooksDrainPendingRouteImport.update({
+    id: '/api/public/hooks/drain-pending',
+    path: '/api/public/hooks/drain-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminPlatformWebhooksRoute =
   AuthenticatedAdminPlatformWebhooksRouteImport.update({
     id: '/webhooks',
@@ -591,6 +598,7 @@ export interface FileRoutesByFullPath {
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -667,6 +675,7 @@ export interface FileRoutesByTo {
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -750,6 +759,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/_authenticated/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -833,6 +843,7 @@ export interface FileRouteTypes {
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -909,6 +920,7 @@ export interface FileRouteTypes {
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -991,6 +1003,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/platform/incidents'
     | '/_authenticated/admin/platform/plugins'
     | '/_authenticated/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -1022,6 +1035,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
+  ApiPublicHooksDrainPendingRoute: typeof ApiPublicHooksDrainPendingRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
   ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
@@ -1563,6 +1577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksExpireInvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/drain-pending': {
+      id: '/api/public/hooks/drain-pending'
+      path: '/api/public/hooks/drain-pending'
+      fullPath: '/api/public/hooks/drain-pending'
+      preLoaderRoute: typeof ApiPublicHooksDrainPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/platform/webhooks': {
       id: '/_authenticated/admin/platform/webhooks'
       path: '/webhooks'
@@ -1810,6 +1831,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
+  ApiPublicHooksDrainPendingRoute: ApiPublicHooksDrainPendingRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
   ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,
