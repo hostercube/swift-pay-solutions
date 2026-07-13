@@ -332,10 +332,10 @@ private fun Badge(text: String, color: Color, leading: (@Composable () -> Unit)?
 }
 
 @Composable
-private fun StatsRow(pending: Int, sentToday: Int, failed: Int) {
+private fun StatsRow(pending: Int, matchedToday: Int, failed: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StatCard("Pending", pending, Brand, Modifier.weight(1f))
-        StatCard("Sent today", sentToday, Success, Modifier.weight(1f))
+        StatCard("Verified today", matchedToday, Success, Modifier.weight(1f))
         StatCard("Failed", failed, Danger, Modifier.weight(1f))
     }
 }
