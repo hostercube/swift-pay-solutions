@@ -1,8 +1,8 @@
 # PayNOC — Coolify Production Deploy (Bangla A→Z)
 
 Domains:
-- `paynoc.com` → PayNOC app
-- `pay.paynoc.com`, `docs.paynoc.com`, `api.paynoc.com` → PayNOC app (একই container, আলাদা domain)
+- `paynoc.bd` → PayNOC app
+- `pay.paynoc.bd`, `docs.paynoc.bd`, `api.paynoc.bd` → PayNOC app (একই container, আলাদা domain)
 - `db.paynoc.com` → backend API gateway (`/auth/v1/*`, `/rest/v1/*`, `/storage/v1/*`)
 
 ---
@@ -44,7 +44,7 @@ Option A না চাইলে বা backup হিসেবে use করত�
 
 | Type | Name | Value |
 |---|---|---|
-| A | paynoc.com | `<COOLIFY_IP>` |
+| A | paynoc.bd | `<COOLIFY_IP>` |
 | A | pay | `<COOLIFY_IP>` |
 | A | docs | `<COOLIFY_IP>` |
 | A | api | `<COOLIFY_IP>` |
@@ -79,11 +79,11 @@ SERVICE_USER_ADMIN=ayman
 SERVICE_PASSWORD_ADMIN=<SAME_STRONG_PASSWORD>
 
 # --- URLs ---
-SITE_URL=https://paynoc.com
+SITE_URL=https://paynoc.bd
 API_EXTERNAL_URL=https://db.paynoc.com
 SUPABASE_PUBLIC_URL=https://db.paynoc.com
-GOTRUE_SITE_URL=https://paynoc.com
-ADDITIONAL_REDIRECT_URLS=https://paynoc.com,https://pay.paynoc.com,https://docs.paynoc.com,https://api.paynoc.com,https://paynoc.com/auth/callback
+GOTRUE_SITE_URL=https://paynoc.bd
+ADDITIONAL_REDIRECT_URLS=https://paynoc.bd,https://pay.paynoc.bd,https://docs.paynoc.bd,https://api.paynoc.bd,https://paynoc.bd/auth/callback
 
 # --- Studio branding ---
 STUDIO_DEFAULT_ORGANIZATION=PayNOC
@@ -175,7 +175,7 @@ LOVABLE_API_KEY=
 OPENAI_API_KEY=
 ```
 
-Deploy → build success হলে `https://paynoc.com` load হবে।
+Deploy → build success হলে `https://paynoc.bd` load হবে।
 
 ---
 

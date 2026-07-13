@@ -52,7 +52,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 // -------------------------------------------------------------------
 const APEX_DOMAIN =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
-    ?.APEX_DOMAIN ?? "paynoc.com";
+    ?.APEX_DOMAIN ?? "paynoc.bd";
 
 const ASSET_PREFIXES = ["/_build", "/assets", "/@", "/__"];
 const ASSET_EXACT = new Set(["/favicon.ico", "/embed.js", "/robots.txt", "/sitemap.xml"]);
