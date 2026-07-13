@@ -102,6 +102,7 @@ export function MethodPicker({
             const spec = getGateway(g.provider);
             const key = g.id ?? g.provider;
             const busy = redirecting === key;
+            const logo = resolveLogoUrl(g.logo_url, g.provider);
             return (
               <button
                 key={key}
@@ -111,8 +112,12 @@ export function MethodPicker({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand ring-1 ring-inset ring-brand/20">
-                      <Zap className="h-4 w-4" />
+                    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90 ring-1 ring-inset ring-brand/20">
+                      {logo ? (
+                        <img src={logo} alt="" className="h-6 w-6 object-contain" loading="lazy" />
+                      ) : (
+                        <Zap className="h-4 w-4 text-brand" />
+                      )}
                     </span>
                     <div className="min-w-0">
                       <div className="truncate font-semibold">
