@@ -14,13 +14,13 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 
 const BACKEND_URL_ENV_PRIORITY = [
-  "SERVICE_URL_SUPABASEKONG_8000",
-  "SERVICE_URL_SUPABASEKONG",
+  "VITE_SUPABASE_URL",
+  "SUPABASE_URL",
   "PAYNOC_PRODUCTION_SUPABASE_URL",
   "PAYNOC_PROD_SUPABASE_URL",
   "PAYNOC_SUPABASE_URL",
-  "SUPABASE_URL",
-  "VITE_SUPABASE_URL",
+  "SERVICE_URL_SUPABASEKONG_8000",
+  "SERVICE_URL_SUPABASEKONG",
 ] as const;
 
 function envValue(name: string) {
@@ -29,17 +29,21 @@ function envValue(name: string) {
   ];
 }
 
-function resolveBackendOrigin() {
+function resolveBackendOrigins() {
+  const origins: string[] = [];
   for (const name of BACKEND_URL_ENV_PRIORITY) {
     const value = envValue(name)?.trim();
-    if (value) return value.replace(/\/+$/, "");
+    if (!value) continue;
+    const normalized = value.replace(/\/+$/, "");
+    if (!origins.includes(normalized)) origins.push(normalized);
   }
-  throw new Error("Backend API URL is not configured");
+  if (!origins.length) throw new Error("Backend API URL is not configured");
+  return origins;
 }
 
-function targetUrl(request: Request) {
+function targetUrl(request: Request, origin: string) {
   const incoming = new URL(request.url);
-  const backend = new URL(resolveBackendOrigin());
+  const backend = new URL(origin);
   const suffix = incoming.pathname.replace(/^\/api\/backend\/?/, "");
   backend.pathname = `${backend.pathname.replace(/\/+$/, "")}/${suffix}`.replace(/\/+/g, "/");
   backend.search = incoming.search;
@@ -64,20 +68,32 @@ function responseHeaders(response: Response) {
 }
 
 async function proxyBackend(request: Request) {
-  try {
-    const method = request.method.toUpperCase();
-    const upstream = await fetch(targetUrl(request), {
-      method,
-      headers: forwardedHeaders(request),
-      body: method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer(),
-      redirect: "manual",
-    });
+  const method = request.method.toUpperCase();
+  const headers = forwardedHeaders(request);
+  const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
+  let lastError: unknown;
 
-    return new Response(upstream.body, {
-      status: upstream.status,
-      statusText: upstream.statusText,
-      headers: responseHeaders(upstream),
-    });
+  try {
+    for (const origin of resolveBackendOrigins()) {
+      try {
+        const upstream = await fetch(targetUrl(request, origin), {
+          method,
+          headers,
+          body,
+          redirect: "manual",
+        });
+
+        return new Response(upstream.body, {
+          status: upstream.status,
+          statusText: upstream.statusText,
+          headers: responseHeaders(upstream),
+        });
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError ?? new Error("Backend API URL is unreachable");
   } catch (error) {
     console.error("[backend-gateway] request failed", error);
     return new Response(
