@@ -28,16 +28,11 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 
 function createSupabaseClient() {
-  // In the browser we always talk to the backend through a same-origin proxy
-  // (/api/backend/*). This removes any dependency on the raw backend host
-  // (db.paynoc.com) being reachable, having valid SSL, or being CORS-configured
-  // for the current origin. If the site loads, the API loads.
-  // On the server we still use the real backend URL directly.
-  const SUPABASE_URL =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/api/backend`
-      : import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  // Direct connection to Supabase (same Coolify stack, same domain setup).
+  // No proxy needed — frontend/backend/Supabase are co-located.
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
