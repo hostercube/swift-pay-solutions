@@ -83,6 +83,8 @@ const EMPTY: Partial<Method> = {
 
 function MethodsPage() {
   const { user } = useAuth();
+  const { isEnabled } = useEnabledProviders();
+  const availableTypes = METHOD_TYPES.filter((t) => isEnabled(t.value));
   const [rows, setRows] = useState<Method[]>([]);
   const [editing, setEditing] = useState<Partial<Method> | null>(null);
   const [loading, setLoading] = useState(false);
