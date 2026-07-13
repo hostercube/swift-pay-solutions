@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Turnstile } from "@/components/turnstile";
 import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
-import { smsNocNotifyPasswordReset } from "@/lib/smsnoc.functions";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
@@ -54,16 +54,10 @@ function ForgotPasswordPage() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
-      smsNocNotifyPasswordReset({
-        data: {
-          email,
-          resetLink: `${window.location.origin}/reset-password`,
-        },
-      }).catch(() => undefined);
       setSent(true);
       toast.success("Reset link sent — check your inbox");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(getAuthErrorMessage(err, "Could not send the reset link. Please try again."));
     } finally {
       setLoading(false);
     }

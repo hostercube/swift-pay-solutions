@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/ayman-login")({
   head: () => ({
@@ -31,7 +32,7 @@ async function ensureAdminAccess(userId: string): Promise<boolean> {
 }
 
 function authErrorMessage(err: unknown) {
-  const msg = err instanceof Error ? err.message : "Access denied";
+  const msg = getAuthErrorMessage(err, "Admin access denied.");
   if (/failed to fetch|networkerror|load failed|typeerror.*fetch/i.test(msg)) {
     const url =
       (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||

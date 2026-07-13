@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Turnstile } from "@/components/turnstile";
 import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
 import { smsNocNotifyUserRegistered } from "@/lib/smsnoc.functions";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -206,7 +207,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: window.location.origin,
             data: {
               full_name: contactName,
               business_name: companyName,
@@ -236,8 +237,13 @@ function AuthPage() {
         smsNocNotifyUserRegistered({
           data: { email, name: contactName || companyName || undefined },
         }).catch(() => undefined);
-        toast.success("Account created! You're signed in.");
-        navigate({ to: "/dashboard" });
+        if (signUpData.session) {
+          toast.success("Account created! You're signed in.");
+          navigate({ to: "/dashboard" });
+        } else {
+          toast.success("Account created. Please check your email to confirm it, then sign in.");
+          setMode("signin");
+        }
       } else {
         const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -260,8 +266,7 @@ function AuthPage() {
         navigate({ to: sd.user ? await landingForMerchant(sd.user.id) : "/dashboard" });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Authentication failed";
-      toast.error(msg);
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
