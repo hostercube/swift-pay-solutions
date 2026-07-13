@@ -195,6 +195,7 @@ export type Database = {
           id: string
           is_active: boolean
           label: string | null
+          logo_url: string | null
           merchant_id: string
           mode: string
           provider: string
@@ -206,6 +207,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string | null
+          logo_url?: string | null
           merchant_id: string
           mode?: string
           provider: string
@@ -217,6 +219,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string | null
+          logo_url?: string | null
           merchant_id?: string
           mode?: string
           provider?: string
@@ -2415,6 +2418,7 @@ export type Database = {
         Returns: {
           id: string
           label: string
+          logo_url: string
           mode: string
           provider: string
         }[]
