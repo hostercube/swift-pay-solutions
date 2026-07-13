@@ -315,6 +315,14 @@ function DraftEditor({
             <option value="live">Live</option>
           </select>
         </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs uppercase text-muted-foreground">Logo (defaults to provider brand)</label>
+          <ByoLogoField
+            value={draft.logo_url}
+            fallbackId={draft.provider}
+            onChange={(v) => onChange({ ...draft, logo_url: v })}
+          />
+        </div>
         <div className="sm:col-span-2 text-xs text-muted-foreground">
           Webhook URL to paste in the provider dashboard:
           <div className="mt-1 break-all rounded-md bg-muted px-2 py-1 font-mono text-[11px]">
