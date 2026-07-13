@@ -13,6 +13,11 @@ const isLovablePreview = Boolean(
     process.env.LOVABLE_PROJECT_ID,
 );
 
+const isSelfHostedNodeBuild =
+  process.env.PAYNOC_DOCKER_TARGET === "node" ||
+  process.env.NITRO_PRESET === "node-server" ||
+  process.env.NITRO_PRESET === "node";
+
 const pickEnv = (...names: string[]) => {
   for (const name of names) {
     const value = process.env[name];
@@ -84,6 +89,7 @@ if (SUPABASE_ANON_KEY_FOR_CLIENT) {
 supabaseDefines["import.meta.env.VITE_SUPABASE_PROJECT_ID"] = JSON.stringify(SUPABASE_PROJECT_ID_FOR_CLIENT);
 
 export default defineConfig({
+  nitro: isSelfHostedNodeBuild ? { preset: "node-server" } : undefined,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
