@@ -1,10 +1,15 @@
 name: Deploy to Coolify
 
-# Auto-triggers Coolify deploy on every push to main.
-# Setup: GitHub repo → Settings → Secrets and variables → Actions → New secret
-#   COOLIFY_WEBHOOK_URL  — Coolify → App resource → Webhooks → Deploy webhook URL
-#   COOLIFY_API_TOKEN    — Coolify → Keys & Tokens → API token (Bearer)
-# Both are required.
+# Triggers a Coolify deploy on every push to main.
+# Required GitHub Actions secrets (repo → Settings → Secrets and variables → Actions):
+#   COOLIFY_WEBHOOK_URL  — REQUIRED. Coolify → App → Webhooks → Deploy webhook URL.
+#                          Coolify webhooks already include the deploy UUID/token in the URL,
+#                          so this alone is normally sufficient.
+#   COOLIFY_API_TOKEN    — OPTIONAL. Only needed if you use the Coolify API endpoint
+#                          (https://<coolify>/api/v1/deploy?uuid=...) instead of a webhook URL.
+#
+# The workflow is defensive: it validates secrets, prints the HTTP status,
+# retries transient failures, and never fails silently.
 
 on:
   push:
@@ -15,7 +20,67 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Coolify deploy
+      - name: Validate secrets
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
         run: |
-          curl -fsSL -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
+          if [ -z "$COOLIFY_WEBHOOK_URL" ]; then
+            echo "::error::COOLIFY_WEBHOOK_URL secret is not set."
+            echo "Set it in: repo Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "Webhook URL host: $(echo "$COOLIFY_WEBHOOK_URL" | awk -F/ '{print $3}')"
+
+      - name: Trigger Coolify deploy
+        env:
+          COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+          COOLIFY_API_TOKEN:   ${{ secrets.COOLIFY_API_TOKEN }}
+        run: |
+          set -u
+          AUTH_HEADER=()
+          if [ -n "${COOLIFY_API_TOKEN:-}" ]; then
+            AUTH_HEADER=(-H "Authorization: Bearer ${COOLIFY_API_TOKEN}")
+            echo "Using Bearer token auth."
+          else
+            echo "No COOLIFY_API_TOKEN — sending the webhook URL as-is (token must be in the URL)."
+          fi
+
+          attempt=1
+          max_attempts=3
+          while :; do
+            echo "── Attempt ${attempt}/${max_attempts} ──"
+            http_code=$(curl -sS -o /tmp/coolify.out -w "%{http_code}" \
+              --connect-timeout 15 --max-time 60 \
+              -X GET "${COOLIFY_WEBHOOK_URL}" "${AUTH_HEADER[@]}" || echo "000")
+
+            echo "HTTP status: ${http_code}"
+            echo "── Response body ──"
+            head -c 2000 /tmp/coolify.out || true
+            echo
+            echo "───────────────────"
+
+            case "$http_code" in
+              2*)
+                echo "✅ Coolify deploy triggered."
+                exit 0
+                ;;
+              401|403|404)
+                echo "::error::Coolify rejected the request (${http_code}). Verify the webhook URL and token in repo secrets — no retry will help."
+                exit 1
+                ;;
+              000|5*|429)
+                if [ "$attempt" -ge "$max_attempts" ]; then
+                  echo "::error::Coolify unreachable / transient failure after ${max_attempts} attempts (last status ${http_code})."
+                  exit 1
+                fi
+                sleep_for=$(( attempt * 10 ))
+                echo "Transient failure — sleeping ${sleep_for}s before retry."
+                sleep "$sleep_for"
+                attempt=$(( attempt + 1 ))
+                ;;
+              *)
+                echo "::error::Unexpected status ${http_code} from Coolify."
+                exit 1
+                ;;
+            esac
+          done
