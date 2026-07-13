@@ -51,9 +51,27 @@ cd android-app
 # APK output: app/build/outputs/apk/release/app-release.apk
 ```
 
-Signing keys: place your `keystore.jks` at `android-app/keystore.jks` and set
-`KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` in `~/.gradle/gradle.properties`
-before running `assembleRelease`.
+### Release signing
+
+Generate a keystore once (keep it safe — losing it breaks Play Store updates):
+
+```bash
+keytool -genkeypair -v -keystore paynoc-release.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 -alias paynoc
+```
+
+Then expose it to Gradle either via `~/.gradle/gradle.properties`:
+
+```properties
+PAYNOC_KEYSTORE_FILE=/absolute/path/to/paynoc-release.jks
+PAYNOC_KEYSTORE_PASSWORD=...
+PAYNOC_KEY_ALIAS=paynoc
+PAYNOC_KEY_PASSWORD=...
+```
+
+…or as environment variables of the same names (used by CI). If none are set,
+`assembleRelease` still produces an APK but it is unsigned — installable for
+local testing only, not uploadable to the Play Store.
 
 For a public download on the PayNOC site, host the signed APK at
 `public/downloads/paynoc-merchant.apk` (create the directory) and link it from

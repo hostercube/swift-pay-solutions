@@ -28,6 +28,33 @@ android {
 
     buildFeatures { compose = true }
 
+    // Release signing. Reads keystore path/password from either Gradle
+    // properties (~/.gradle/gradle.properties) or environment variables so
+    // CI and local builds both work without committing secrets:
+    //   PAYNOC_KEYSTORE_FILE, PAYNOC_KEYSTORE_PASSWORD,
+    //   PAYNOC_KEY_ALIAS,     PAYNOC_KEY_PASSWORD
+    // If none are set, `assembleRelease` still runs but produces an unsigned
+    // APK — install-only for local testing; upload to Play requires signing.
+    signingConfigs {
+        create("release") {
+            val ksPath = (findProperty("PAYNOC_KEYSTORE_FILE") as String?)
+                ?: System.getenv("PAYNOC_KEYSTORE_FILE")
+            val ksPass = (findProperty("PAYNOC_KEYSTORE_PASSWORD") as String?)
+                ?: System.getenv("PAYNOC_KEYSTORE_PASSWORD")
+            val alias  = (findProperty("PAYNOC_KEY_ALIAS") as String?)
+                ?: System.getenv("PAYNOC_KEY_ALIAS")
+            val keyPass = (findProperty("PAYNOC_KEY_PASSWORD") as String?)
+                ?: System.getenv("PAYNOC_KEY_PASSWORD")
+            if (!ksPath.isNullOrBlank() && !ksPass.isNullOrBlank()
+                && !alias.isNullOrBlank() && !keyPass.isNullOrBlank()) {
+                storeFile = file(ksPath)
+                storePassword = ksPass
+                keyAlias = alias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -36,6 +63,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Only attach the signing config if keystore was actually configured.
+            val cfg = signingConfigs.getByName("release")
+            if (cfg.storeFile != null) signingConfig = cfg
         }
         debug {
             isMinifyEnabled = false
