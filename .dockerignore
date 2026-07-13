@@ -1,0 +1,23 @@
+.git
+.github
+.lovable
+.workspace
+node_modules
+.output
+dist
+dist-ssr
+.tanstack
+.nitro
+.vinxi
+*.log
+tsconfig.tsbuildinfo
+
+# Runtime secrets must be configured in Coolify, not copied into the image.
+.env
+.env.*
+!.env.example
+
+# Local/editor noise
+.DS_Store
+.idea
+.vscode

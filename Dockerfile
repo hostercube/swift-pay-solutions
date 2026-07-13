@@ -1,27 +1,55 @@
 # ---- PayNOC — Dockerfile for Coolify / any Docker host ----
 # Builds a Node server (Nitro node-server preset) that serves SSR + APIs.
-#
-# NOTE: bun:1.2-alpine ships Bun 1.2+ (new text lockfile format) AND a
-# Node runtime new enough (22.13+) for Vite 8. bun:1.1 ships Bun 1.1.x +
-# Node 22.6 which crashes Vite with "Export named 'parseEnv' not found
-# in module 'util'". Don't downgrade this image.
+# Vite 8 must run on real Node 22, not Bun's Node-compat runtime, otherwise
+# Coolify builds can fail with node:util/parseEnv-related errors.
 
-FROM oven/bun:1.2-alpine AS build
+FROM oven/bun:1.2.23-alpine AS bun
+
+FROM node:22-alpine AS build
 WORKDIR /app
+
+RUN apk add --no-cache libstdc++
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+
 COPY package.json bun.lock* bunfig.toml ./
 RUN bun install --frozen-lockfile || bun install
 COPY . .
-ENV NITRO_PRESET=node-server
-# Public envs baked at build time — Coolify injects them as build args/env.
-# Only PUBLISHABLE (anon) keys go here — never SERVICE_ROLE_KEY, that's
-# runtime-only and must stay out of the built image.
+
+# Public envs baked at build time. Only publishable/anon values are declared
+# here — never SERVICE_ROLE_KEY or other private runtime-only secrets.
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_PUBLISHABLE_KEY
+ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_SUPABASE_PROJECT_ID
+ARG SUPABASE_URL
+ARG SUPABASE_PUBLISHABLE_KEY
+ARG SUPABASE_ANON_KEY
+ARG SERVICE_URL_SUPABASEKONG
+ARG SERVICE_URL_SUPABASEKONG_8000
+ARG SERVICE_SUPABASEANON_KEY
+ARG PAYNOC_SUPABASE_URL
+ARG PAYNOC_SUPABASE_ANON_KEY
+ARG PAYNOC_SUPABASE_PUBLISHABLE_KEY
+ARG PAYNOC_SUPABASE_PROJECT_ID
+
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
     VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY \
-    VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
-RUN bun run build
+    VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY \
+    VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID \
+    SUPABASE_URL=$SUPABASE_URL \
+    SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY \
+    SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+    SERVICE_URL_SUPABASEKONG=$SERVICE_URL_SUPABASEKONG \
+    SERVICE_URL_SUPABASEKONG_8000=$SERVICE_URL_SUPABASEKONG_8000 \
+    SERVICE_SUPABASEANON_KEY=$SERVICE_SUPABASEANON_KEY \
+    PAYNOC_SUPABASE_URL=$PAYNOC_SUPABASE_URL \
+    PAYNOC_SUPABASE_ANON_KEY=$PAYNOC_SUPABASE_ANON_KEY \
+    PAYNOC_SUPABASE_PUBLISHABLE_KEY=$PAYNOC_SUPABASE_PUBLISHABLE_KEY \
+    PAYNOC_SUPABASE_PROJECT_ID=$PAYNOC_SUPABASE_PROJECT_ID \
+    PAYNOC_DOCKER_TARGET=node \
+    NITRO_PRESET=node-server
+
+RUN node ./node_modules/vite/bin/vite.js build
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
