@@ -8,6 +8,7 @@ FROM oven/bun:1.2.23-alpine AS bun
 FROM node:22-alpine AS build
 WORKDIR /app
 
+RUN apk add --no-cache libstdc++
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 COPY package.json bun.lock* bunfig.toml ./
