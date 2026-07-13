@@ -187,20 +187,14 @@ function AdminLoginPage() {
                 <ShieldCheck className="h-3.5 w-3.5" /> Restricted area
               </div>
               <h1 className="font-display text-2xl font-bold text-foreground">
-                {mode === "signin" ? "Admin console access" : "Create first super admin"}
+                Admin console access
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {mode === "signin" ? (
-                  <>
-                    Merchants — please use the{" "}
-                    <Link to="/auth" className="underline hover:text-foreground">
-                      merchant sign-in
-                    </Link>{" "}
-                    page.
-                  </>
-                ) : (
-                  "Only works while no admin account exists yet."
-                )}
+                Merchants — please use the{" "}
+                <Link to="/auth" className="underline hover:text-foreground">
+                  merchant sign-in
+                </Link>{" "}
+                page.
               </p>
 
               <form onSubmit={onSubmit} className="mt-6 space-y-4">
@@ -219,35 +213,16 @@ function AdminLoginPage() {
                   required
                   minLength={8}
                 />
-                {mode === "first-admin" && (
-                  <Field
-                    label="Confirm password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={setConfirmPassword}
-                    required
-                    minLength={8}
-                  />
-                )}
                 <button
                   type="submit"
                   disabled={loading}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-glow disabled:opacity-60"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {mode === "signin" ? "Sign in to admin" : "Create super admin"}
+                  Sign in to admin
                 </button>
               </form>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode((v) => (v === "signin" ? "first-admin" : "signin"));
-                  setConfirmPassword("");
-                }}
-                className="mt-4 w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
-              >
-                {mode === "signin" ? "No admin yet? Create the first super admin" : "Back to admin sign in"}
-              </button>
+
             </>
           )}
         </div>
