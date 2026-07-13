@@ -2,6 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+const DIRECT_BACKEND_OVERRIDE_KEY = 'paynoc-use-direct-backend';
+
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
@@ -27,13 +29,49 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 
+function normalizeUrl(value: string | undefined) {
+  return typeof value === 'string' ? value.replace(/\/+$/, '') : value;
+}
+
+function shouldUseSameOriginGateway(configuredUrl: string) {
+  if (typeof window === 'undefined') return false;
+  if (window.localStorage.getItem(DIRECT_BACKEND_OVERRIDE_KEY) === '1') return false;
+
+  const host = window.location.hostname.toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.lovable.app')) {
+    return false;
+  }
+
+  try {
+    const configuredHost = new URL(configuredUrl).hostname.toLowerCase();
+    return configuredHost !== host;
+  } catch {
+    return false;
+  }
+}
+
+function resolveSupabaseUrl(rawUrl: string | undefined) {
+  const configuredUrl = normalizeUrl(rawUrl);
+  if (!configuredUrl) return configuredUrl;
+
+  // Production/self-hosted browsers should not be blocked by a separate
+  // API gateway domain's DNS/CORS/SSL. The app exposes the same backend under
+  // /api/backend/*, so auth/rest/storage calls stay same-origin.
+  if (shouldUseSameOriginGateway(configuredUrl)) {
+    return `${window.location.origin}/api/backend`;
+  }
+
+  return configuredUrl;
+}
+
 function createSupabaseClient() {
   // Direct connection to Supabase (same Coolify stack, same domain setup).
-  // No proxy needed — frontend/backend/Supabase are co-located.
+  // On self-hosted production, use a same-origin gateway fallback when the
+  // configured API domain differs from the app domain.
   const rawUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   // Strip trailing slash — a URL like https://db.paynoc.com/ makes supabase-js
   // build /auth/v1//token, which some Kong configs reject with a CORS-less 404.
-  const SUPABASE_URL = typeof rawUrl === 'string' ? rawUrl.replace(/\/+$/, '') : rawUrl;
+  const SUPABASE_URL = resolveSupabaseUrl(rawUrl);
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
 
