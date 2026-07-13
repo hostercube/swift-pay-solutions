@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Plug, ExternalLink, Check, Settings2, X, Plus } from "lucide-react";
-import { GATEWAYS, getGateway, gatewaysByRegion } from "@/lib/gateways/registry";
+import { GATEWAYS, getGateway, gatewaysByRegion, defaultLogoFor } from "@/lib/gateways/registry";
+import { resolveLogoUrl } from "@/lib/logo-url";
 
 export const Route = createFileRoute("/_authenticated/integrations/byo")({
   head: () => ({ meta: [{ title: "Payment Gateways · PayNOC" }] }),
