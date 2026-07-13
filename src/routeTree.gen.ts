@@ -62,6 +62,7 @@ import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSmsnocRouteImport } from './routes/_authenticated/admin/smsnoc'
+import { Route as AuthenticatedAdminSmsEventsRouteImport } from './routes/_authenticated/admin/sms-events'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin/packages'
@@ -84,6 +85,7 @@ import { Route as ApiPublicHooksRunRecurringRouteImport } from './routes/api/pub
 import { Route as ApiPublicHooksRunDigestRouteImport } from './routes/api/public/hooks/run-digest'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
+import { Route as ApiPublicHooksDrainPendingRouteImport } from './routes/api/public/hooks/drain-pending'
 import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
 import { Route as AuthenticatedAdminPlatformPluginsRouteImport } from './routes/_authenticated/admin/platform.plugins'
 import { Route as AuthenticatedAdminPlatformIncidentsRouteImport } from './routes/_authenticated/admin/platform.incidents'
@@ -374,6 +376,12 @@ const AuthenticatedAdminSmsnocRoute =
     path: '/smsnoc',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminSmsEventsRoute =
+  AuthenticatedAdminSmsEventsRouteImport.update({
+    id: '/sms-events',
+    path: '/sms-events',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -496,6 +504,12 @@ const ApiPublicHooksExpireInvoicesRoute =
     path: '/api/public/hooks/expire-invoices',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksDrainPendingRoute =
+  ApiPublicHooksDrainPendingRouteImport.update({
+    id: '/api/public/hooks/drain-pending',
+    path: '/api/public/hooks/drain-pending',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminPlatformWebhooksRoute =
   AuthenticatedAdminPlatformWebhooksRouteImport.update({
     id: '/webhooks',
@@ -567,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -591,6 +606,7 @@ export interface FileRoutesByFullPath {
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -643,6 +659,7 @@ export interface FileRoutesByTo {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -667,6 +684,7 @@ export interface FileRoutesByTo {
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -726,6 +744,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/_authenticated/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -750,6 +769,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/_authenticated/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
   '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
+  '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/api/public/hooks/run-digest': typeof ApiPublicHooksRunDigestRoute
@@ -809,6 +829,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/platform'
     | '/admin/settings'
+    | '/admin/sms-events'
     | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
@@ -833,6 +854,7 @@ export interface FileRouteTypes {
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -885,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/packages'
     | '/admin/settings'
+    | '/admin/sms-events'
     | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
@@ -909,6 +932,7 @@ export interface FileRouteTypes {
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
     | '/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -967,6 +991,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/packages'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/sms-events'
     | '/_authenticated/admin/smsnoc'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/transactions'
@@ -991,6 +1016,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/platform/incidents'
     | '/_authenticated/admin/platform/plugins'
     | '/_authenticated/admin/platform/webhooks'
+    | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
     | '/api/public/hooks/refresh-fx'
     | '/api/public/hooks/run-digest'
@@ -1022,6 +1048,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   MSlugRoute: typeof MSlugRoute
   PayInvoiceIdRoute: typeof PayInvoiceIdRoute
+  ApiPublicHooksDrainPendingRoute: typeof ApiPublicHooksDrainPendingRoute
   ApiPublicHooksExpireInvoicesRoute: typeof ApiPublicHooksExpireInvoicesRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
   ApiPublicHooksRunDigestRoute: typeof ApiPublicHooksRunDigestRoute
@@ -1409,6 +1436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSmsnocRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/sms-events': {
+      id: '/_authenticated/admin/sms-events'
+      path: '/sms-events'
+      fullPath: '/admin/sms-events'
+      preLoaderRoute: typeof AuthenticatedAdminSmsEventsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -1563,6 +1597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksExpireInvoicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/drain-pending': {
+      id: '/api/public/hooks/drain-pending'
+      path: '/api/public/hooks/drain-pending'
+      fullPath: '/api/public/hooks/drain-pending'
+      preLoaderRoute: typeof ApiPublicHooksDrainPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/platform/webhooks': {
       id: '/_authenticated/admin/platform/webhooks'
       path: '/webhooks'
@@ -1633,6 +1674,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSmsEventsRoute: typeof AuthenticatedAdminSmsEventsRoute
   AuthenticatedAdminSmsnocRoute: typeof AuthenticatedAdminSmsnocRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
@@ -1652,6 +1694,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+    AuthenticatedAdminSmsEventsRoute: AuthenticatedAdminSmsEventsRoute,
     AuthenticatedAdminSmsnocRoute: AuthenticatedAdminSmsnocRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
@@ -1810,6 +1853,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   MSlugRoute: MSlugRoute,
   PayInvoiceIdRoute: PayInvoiceIdRoute,
+  ApiPublicHooksDrainPendingRoute: ApiPublicHooksDrainPendingRoute,
   ApiPublicHooksExpireInvoicesRoute: ApiPublicHooksExpireInvoicesRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
   ApiPublicHooksRunDigestRoute: ApiPublicHooksRunDigestRoute,

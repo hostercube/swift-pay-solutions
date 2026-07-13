@@ -1589,6 +1589,60 @@ export type Database = {
           },
         ]
       }
+      sms_event_logs: {
+        Row: {
+          amount: number | null
+          created_at: string
+          device_id: string | null
+          id: string
+          matched_invoice_id: string | null
+          matched_layer: string
+          matched_txn_id: string | null
+          merchant_id: string
+          outcome: string
+          provider: string | null
+          raw_body: string | null
+          reason: string | null
+          received_at: string | null
+          sender: string | null
+          trx_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          matched_invoice_id?: string | null
+          matched_layer: string
+          matched_txn_id?: string | null
+          merchant_id: string
+          outcome: string
+          provider?: string | null
+          raw_body?: string | null
+          reason?: string | null
+          received_at?: string | null
+          sender?: string | null
+          trx_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          matched_invoice_id?: string | null
+          matched_layer?: string
+          matched_txn_id?: string | null
+          merchant_id?: string
+          outcome?: string
+          provider?: string | null
+          raw_body?: string | null
+          reason?: string | null
+          received_at?: string | null
+          sender?: string | null
+          trx_id?: string | null
+        }
+        Relationships: []
+      }
       subscription_events: {
         Row: {
           created_at: string
@@ -1737,6 +1791,7 @@ export type Database = {
         Row: {
           bank_reference: string | null
           created_at: string
+          drained_at: string | null
           fee_amount: number
           gross_amount: number
           id: string
@@ -1763,6 +1818,7 @@ export type Database = {
         Insert: {
           bank_reference?: string | null
           created_at?: string
+          drained_at?: string | null
           fee_amount?: number
           gross_amount: number
           id?: string
@@ -1789,6 +1845,7 @@ export type Database = {
         Update: {
           bank_reference?: string | null
           created_at?: string
+          drained_at?: string | null
           fee_amount?: number
           gross_amount?: number
           id?: string
