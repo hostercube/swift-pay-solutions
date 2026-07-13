@@ -56,6 +56,10 @@ function forwardedHeaders(request: Request) {
     if (HOP_BY_HOP_HEADERS.has(name.toLowerCase())) headers.delete(name);
   }
   headers.delete("host");
+  // Always ask the internal gateway for plain bytes. Some deployments still
+  // return compressed auth JSON; if we forward those bytes after stripping the
+  // encoding header, supabase-js tries to parse gzip/br bytes as JSON.
+  headers.set("accept-encoding", "identity");
   return headers;
 }
 
@@ -81,6 +85,25 @@ function looksLikeWrongService(request: Request, response: Response) {
   return contentType.includes("text/html");
 }
 
+async function decodedBody(response: Response) {
+  const body = Buffer.from(await response.arrayBuffer());
+  const encoding = response.headers.get("content-encoding")?.toLowerCase().trim();
+
+  if (!encoding || encoding === "identity") return body;
+
+  try {
+    const { brotliDecompressSync, gunzipSync, inflateSync } = await import("zlib");
+
+    if (encoding.includes("br")) return brotliDecompressSync(body);
+    if (encoding.includes("gzip")) return gunzipSync(body);
+    if (encoding.includes("deflate")) return inflateSync(body);
+  } catch (error) {
+    console.error("[backend-gateway] failed to decode upstream body", error);
+  }
+
+  return body;
+}
+
 async function proxyBackend(request: Request) {
   const method = request.method.toUpperCase();
   const headers = forwardedHeaders(request);
@@ -102,11 +125,10 @@ async function proxyBackend(request: Request) {
           continue;
         }
 
-        // Buffer the body so any upstream gzip/br compression is decoded by
-        // fetch before we hand bytes back to the browser. Streaming `.body`
-        // through while stripping `content-encoding` sends raw compressed
-        // bytes to the browser and breaks JSON parsing.
-        const buf = await upstream.arrayBuffer();
+        // Buffer and decode the body before sending it back without an
+        // encoding header. This prevents `Unexpected token` JSON parse errors
+        // when the upstream auth API returns compressed JSON.
+        const buf = await decodedBody(upstream);
         return new Response(buf, {
           status: upstream.status,
           statusText: upstream.statusText,
