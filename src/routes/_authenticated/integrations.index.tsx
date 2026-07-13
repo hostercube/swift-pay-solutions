@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/integrations/")({
 });
 
 type MethodType =
-  | "bkash" | "nagad" | "rocket" | "upay" | "tap" | "mcash"
+  | "bkash" | "nagad" | "rocket" | "upay" | "tap" | "mcash" | "cellfin"
   | "sure_cash" | "bangla_qr" | "bank_transfer" | "card" | "crypto" | "other";
 type Mode = "manual" | "api";
 
