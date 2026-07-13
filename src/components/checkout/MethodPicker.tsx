@@ -140,24 +140,31 @@ export function MethodPicker({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {grouped[cat].map((m) => (
-            <button
-              key={m.id}
-              onClick={() => onSelectMethod(m)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-glass-border bg-card/50 p-3 text-left transition hover:border-brand hover:shadow-[0_20px_45px_-20px_hsl(var(--brand)/0.55)]"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand ring-1 ring-inset ring-brand/20">
-                {iconFor(m.type)}
-              </span>
-              <div className="min-w-0 w-full">
-                <div className="truncate text-sm font-semibold">{m.label}</div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</div>
-              </div>
-              <div className="mt-auto text-[10px] text-muted-foreground">
-                Fee {m.fee_percent}% + {m.fee_flat}
-              </div>
-            </button>
-          ))}
+          {grouped[cat].map((m) => {
+            const logo = resolveLogoUrl(m.logo_url, m.type);
+            return (
+              <button
+                key={m.id}
+                onClick={() => onSelectMethod(m)}
+                className="group flex flex-col items-start gap-2 rounded-xl border border-glass-border bg-card/50 p-3 text-left transition hover:border-brand hover:shadow-[0_20px_45px_-20px_hsl(var(--brand)/0.55)]"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90 ring-1 ring-inset ring-brand/20">
+                  {logo ? (
+                    <img src={logo} alt="" className="h-7 w-7 object-contain" loading="lazy" />
+                  ) : (
+                    <span className="text-brand">{iconFor(m.type)}</span>
+                  )}
+                </span>
+                <div className="min-w-0 w-full">
+                  <div className="truncate text-sm font-semibold">{m.label}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</div>
+                </div>
+                <div className="mt-auto text-[10px] text-muted-foreground">
+                  Fee {m.fee_percent}% + {m.fee_flat}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
