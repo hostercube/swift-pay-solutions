@@ -67,11 +67,12 @@ async function call(
 export async function sendSms(
   args: BaseArgs & { to: string; message: string; senderId?: string },
 ): Promise<SmsNocResult> {
+  // POST /send-sms uses `to` (single or array). See https://smsnoc.com/api-docs
   return call(
     args.apiKey,
     "/send-sms",
     {
-      recipient: normalizePhone(args.to),
+      to: normalizePhone(args.to),
       sender_id: args.senderId,
       message: args.message,
     },
@@ -89,46 +90,140 @@ export async function sendEmail(
     fromName?: string;
   },
 ): Promise<SmsNocResult> {
+  // POST /send-email uses `to`, `subject`, `html_body`, `text_body`, `config_id`.
+  const html = args.html ?? args.body;
   return call(
     args.apiKey,
     "/send-email",
     {
-      recipient: args.to,
+      to: args.to,
       subject: args.subject,
-      body: args.html ?? args.body,
-      html: args.html ?? undefined,
+      html_body: html,
+      text_body: args.body,
       config_id: args.configId,
-      from_name: args.fromName,
     },
     "email",
   );
 }
 
 export async function sendWhatsApp(
-  args: BaseArgs & { to: string; message: string; deviceId?: string },
+  args: BaseArgs & {
+    to: string;
+    message: string;
+    deviceId?: string;
+    mediaUrl?: string;
+    mediaType?: string;
+  },
 ): Promise<SmsNocResult> {
+  // POST /send-whatsapp uses `to`, `message`, `device_id`, `media_url`, `media_type`.
   return call(
     args.apiKey,
     "/send-whatsapp",
     {
-      recipient: normalizePhone(args.to),
-      device_id: args.deviceId,
+      to: normalizePhone(args.to),
       message: args.message,
+      device_id: args.deviceId,
+      media_url: args.mediaUrl,
+      media_type: args.mediaType,
     },
     "whatsapp",
   );
 }
 
+// -------- Voice: Text-to-Speech → upload → /send-voice --------
+// SMSNOC /send-voice does NOT accept raw text — it requires `voice_file_url`
+// (or a multipart file upload). We synthesize Bangla-capable speech via the
+// Lovable AI Gateway, upload the audio to a public storage bucket, and pass
+// the URL to smsnoc. Fails gracefully if TTS/storage is unavailable.
+async function synthesizeVoiceUrl(
+  text: string,
+): Promise<{ url: string } | { error: string }> {
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey) return { error: "no_lovable_api_key" };
+  try {
+    const ttsRes = await fetch(
+      "https://ai.gateway.lovable.dev/v1/audio/speech",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4o-mini-tts",
+          input: text,
+          voice: "alloy",
+          response_format: "mp3",
+        }),
+      },
+    );
+    if (!ttsRes.ok) {
+      const t = await ttsRes.text().catch(() => "");
+      return { error: `tts_${ttsRes.status}:${t.slice(0, 200)}` };
+    }
+    const buf = new Uint8Array(await ttsRes.arrayBuffer());
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const path = `voice/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.mp3`;
+    const up = await supabaseAdmin.storage
+      .from("voice-audio")
+      .upload(path, buf, { contentType: "audio/mpeg", upsert: false });
+    if (up.error) return { error: `upload:${up.error.message}` };
+    // Bucket is private — mint a signed URL valid long enough for smsnoc to fetch.
+    const signed = await supabaseAdmin.storage
+      .from("voice-audio")
+      .createSignedUrl(path, 60 * 60 * 24); // 24h
+    if (signed.error || !signed.data?.signedUrl) {
+      return { error: `sign:${signed.error?.message ?? "no_url"}` };
+    }
+    return { url: signed.data.signedUrl };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 export async function sendVoice(
-  args: BaseArgs & { to: string; message: string; callerId?: string },
+  args: BaseArgs & {
+    to: string;
+    message?: string;
+    voiceFileUrl?: string;
+    callerId?: string;
+    retry?: number;
+  },
 ): Promise<SmsNocResult> {
+  if (!args.apiKey)
+    return { status: "skipped", provider: "smsnoc", channel: "voice", error: "no_api_key" };
+
+  let voiceUrl = args.voiceFileUrl;
+  if (!voiceUrl) {
+    const text = (args.message || "").trim();
+    if (!text) {
+      return {
+        status: "skipped",
+        provider: "smsnoc",
+        channel: "voice",
+        error: "no_text_or_url",
+      };
+    }
+    const tts = await synthesizeVoiceUrl(text);
+    if ("error" in tts) {
+      return {
+        status: "failed",
+        provider: "smsnoc",
+        channel: "voice",
+        error: `tts:${tts.error}`,
+      };
+    }
+    voiceUrl = tts.url;
+  }
+
   return call(
     args.apiKey,
     "/send-voice",
     {
-      recipient: normalizePhone(args.to),
+      to: normalizePhone(args.to),
+      voice_file_url: voiceUrl,
       caller_id: args.callerId,
-      message: args.message,
+      retry: args.retry ?? 0,
     },
     "voice",
   );
