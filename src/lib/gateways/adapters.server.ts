@@ -709,17 +709,29 @@ function verifyCoinbase(v: VerifyArgs): VerifyResult {
   };
 }
 
+function sortedJsonString(obj: unknown): string {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+  if (Array.isArray(obj)) return `[${obj.map(sortedJsonString).join(",")}]`;
+  const keys = Object.keys(obj as Record<string, unknown>).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${sortedJsonString((obj as Record<string, unknown>)[k])}`).join(",")}}`;
+}
+
 function verifyNowpayments(v: VerifyArgs): VerifyResult {
+  // NOWPayments docs: HMAC-SHA512(ipn_secret, JSON with keys sorted alphabetically)
+  // hex-encoded, sent in header `x-nowpayments-sig`.
   const sig = v.headers["x-nowpayments-sig"];
   if (!sig || !v.creds.ipn_secret) return { verified: false, reason: "missing_signature" };
-  // NOWPayments signs the JSON body sorted; simplified check
-  const expected = hmacSha256Hex(v.creds.ipn_secret, v.rawBody);
+  const parsed = JSON.parse(v.rawBody) as Record<string, unknown>;
+  const sortedBody = sortedJsonString(parsed);
+  const expected = createHmac("sha512", v.creds.ipn_secret).update(sortedBody).digest("hex");
   if (!safeEqualHex(sig, expected)) return { verified: false, reason: "bad_signature" };
-  const body = JSON.parse(v.rawBody) as { payment_id: string; payment_status: string; order_id: string; price_amount: number; price_currency: string };
+  const body = parsed as { payment_id: string; payment_status: string; order_id: string;
+    price_amount: number; price_currency: string; actually_paid?: number; pay_currency?: string };
   return {
     verified: true, eventType: body.payment_status, providerEventId: String(body.payment_id),
     invoiceRef: body.order_id, providerTxnId: String(body.payment_id),
-    status: body.payment_status === "finished" ? "completed" : body.payment_status === "failed" ? "failed" : "pending",
+    status: body.payment_status === "finished" || body.payment_status === "confirmed" ? "completed"
+          : body.payment_status === "failed" || body.payment_status === "expired" ? "failed" : "pending",
     amount: body.price_amount, currency: body.price_currency?.toUpperCase(),
   };
 }
@@ -738,14 +750,53 @@ function verifyBkash(v: VerifyArgs): VerifyResult {
   };
 }
 
-function parsePaypal(v: VerifyArgs): Partial<VerifyResult> {
-  const body = JSON.parse(v.rawBody) as { id?: string; event_type?: string; resource?: { id?: string; purchase_units?: { reference_id?: string; amount?: { value: string; currency_code: string } }[] } };
+async function verifyPaypal(v: VerifyArgs): Promise<VerifyResult> {
+  // Official verification: POST to /v1/notifications/verify-webhook-signature
+  // with the original headers + webhook_id. Requires OAuth token from client creds.
+  if (!v.creds.client_id || !v.creds.client_secret || !v.creds.webhook_id) {
+    return { verified: false, reason: "missing_paypal_creds" };
+  }
+  const base = v.mode === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  const tokRes = await fetch(`${base}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: "Basic " + Buffer.from(`${v.creds.client_id}:${v.creds.client_secret}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const tok = (await tokRes.json()) as { access_token?: string };
+  if (!tok.access_token) return { verified: false, reason: "paypal_token_failed" };
+  const webhookEvent = JSON.parse(v.rawBody);
+  const verifyRes = await fetch(`${base}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${tok.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      auth_algo: v.headers["paypal-auth-algo"],
+      cert_url: v.headers["paypal-cert-url"],
+      transmission_id: v.headers["paypal-transmission-id"],
+      transmission_sig: v.headers["paypal-transmission-sig"],
+      transmission_time: v.headers["paypal-transmission-time"],
+      webhook_id: v.creds.webhook_id,
+      webhook_event: webhookEvent,
+    }),
+  });
+  const vr = (await verifyRes.json().catch(() => ({}))) as { verification_status?: string };
+  if (vr.verification_status !== "SUCCESS") return { verified: false, reason: "paypal_verify_failed" };
+  const body = webhookEvent as { id?: string; event_type?: string; resource?: { id?: string;
+    purchase_units?: { reference_id?: string; amount?: { value: string; currency_code: string } }[];
+    amount?: { value: string; currency_code: string }; custom_id?: string } };
   const pu = body.resource?.purchase_units?.[0];
+  const amt = pu?.amount ?? body.resource?.amount;
   return {
+    verified: true,
     eventType: body.event_type, providerEventId: body.id,
-    invoiceRef: pu?.reference_id, providerTxnId: body.resource?.id,
-    status: body.event_type?.includes("COMPLETED") ? "completed" : "pending",
-    amount: pu?.amount ? Number(pu.amount.value) : undefined, currency: pu?.amount?.currency_code,
+    invoiceRef: pu?.reference_id ?? body.resource?.custom_id,
+    providerTxnId: body.resource?.id,
+    status: body.event_type?.includes("COMPLETED") || body.event_type === "CHECKOUT.ORDER.APPROVED"
+      ? "completed" : "pending",
+    amount: amt ? Number(amt.value) : undefined,
+    currency: amt?.currency_code,
   };
 }
 
