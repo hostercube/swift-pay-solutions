@@ -113,6 +113,48 @@ function SettingsPage() {
         <Field label="Avatar URL">
           <Input value={p.avatar_url ?? ""} onChange={(v) => setP({ ...p, avatar_url: v })} />
         </Field>
+        <Field label="Website">
+          <Input value={p.website ?? ""} onChange={(v) => setP({ ...p, website: v })} />
+        </Field>
+        <Field label="Tax / VAT ID">
+          <Input value={p.tax_id ?? ""} onChange={(v) => setP({ ...p, tax_id: v })} />
+        </Field>
+        <Field label="Date of birth">
+          <input
+            type="date"
+            value={p.date_of_birth ?? ""}
+            onChange={(e) => setP({ ...p, date_of_birth: e.target.value || null })}
+            className="w-full rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-sm outline-none focus:border-brand"
+          />
+        </Field>
+        <Field label="Timezone">
+          <Input value={p.timezone ?? "Asia/Dhaka"} onChange={(v) => setP({ ...p, timezone: v })} />
+        </Field>
+        <Field label="Language">
+          <Input value={p.language ?? "en"} onChange={(v) => setP({ ...p, language: v })} />
+        </Field>
+      </div>
+
+      <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
+        <h2 className="font-display text-lg font-semibold">Business address</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Used on invoices, receipts, and KYC reviews.</p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <Field label="Street address">
+            <Input value={p.address ?? ""} onChange={(v) => setP({ ...p, address: v })} />
+          </Field>
+          <Field label="City">
+            <Input value={p.city ?? ""} onChange={(v) => setP({ ...p, city: v })} />
+          </Field>
+          <Field label="State / Division">
+            <Input value={p.state ?? ""} onChange={(v) => setP({ ...p, state: v })} />
+          </Field>
+          <Field label="Postcode">
+            <Input value={p.postcode ?? ""} onChange={(v) => setP({ ...p, postcode: v })} />
+          </Field>
+          <Field label="Country">
+            <Input value={p.country ?? ""} onChange={(v) => setP({ ...p, country: v })} />
+          </Field>
+        </div>
       </div>
 
       <div className="glass mt-8 rounded-2xl border border-glass-border p-6">
@@ -123,6 +165,7 @@ function SettingsPage() {
         <div className="mt-4 grid gap-6 md:grid-cols-2">
           <Field label="Logo URL">
             <Input value={p.logo_url ?? ""} onChange={(v) => setP({ ...p, logo_url: v })} />
+          </Field>
           </Field>
           <Field label="Brand color (hex)">
             <div className="flex items-center gap-2">
