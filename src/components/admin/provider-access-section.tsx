@@ -11,6 +11,7 @@ import { toast } from "sonner";
 const MANUAL_METHODS = [
   { id: "bank_transfer", label: "Bank Transfer", region: "MANUAL" as const },
   { id: "bangla_qr", label: "Bangla QR", region: "MANUAL" as const },
+  { id: "cellfin", label: "CellFin (Islami Bank)", region: "MANUAL" as const },
   { id: "card", label: "Card (manual)", region: "MANUAL" as const },
   { id: "crypto", label: "Crypto (manual)", region: "MANUAL" as const },
   { id: "sure_cash", label: "SureCash (manual)", region: "MANUAL" as const },
