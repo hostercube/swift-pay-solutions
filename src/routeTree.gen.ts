@@ -87,6 +87,7 @@ import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksExpireInvoicesRouteImport } from './routes/api/public/hooks/expire-invoices'
 import { Route as ApiPublicHooksDrainPendingRouteImport } from './routes/api/public/hooks/drain-pending'
 import { Route as AuthenticatedAdminPlatformWebhooksRouteImport } from './routes/_authenticated/admin/platform.webhooks'
+import { Route as AuthenticatedAdminPlatformProvidersRouteImport } from './routes/_authenticated/admin/platform.providers'
 import { Route as AuthenticatedAdminPlatformPluginsRouteImport } from './routes/_authenticated/admin/platform.plugins'
 import { Route as AuthenticatedAdminPlatformIncidentsRouteImport } from './routes/_authenticated/admin/platform.incidents'
 import { Route as AuthenticatedAdminMerchantsIdRouteImport } from './routes/_authenticated/admin/merchants.$id'
@@ -516,6 +517,12 @@ const AuthenticatedAdminPlatformWebhooksRoute =
     path: '/webhooks',
     getParentRoute: () => AuthenticatedAdminPlatformRoute,
   } as any)
+const AuthenticatedAdminPlatformProvidersRoute =
+  AuthenticatedAdminPlatformProvidersRouteImport.update({
+    id: '/providers',
+    path: '/providers',
+    getParentRoute: () => AuthenticatedAdminPlatformRoute,
+  } as any)
 const AuthenticatedAdminPlatformPluginsRoute =
   AuthenticatedAdminPlatformPluginsRouteImport.update({
     id: '/plugins',
@@ -605,6 +612,7 @@ export interface FileRoutesByFullPath {
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/admin/platform/providers': typeof AuthenticatedAdminPlatformProvidersRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
@@ -683,6 +691,7 @@ export interface FileRoutesByTo {
   '/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/admin/platform/providers': typeof AuthenticatedAdminPlatformProvidersRoute
   '/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
@@ -768,6 +777,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/merchants/$id': typeof AuthenticatedAdminMerchantsIdRoute
   '/_authenticated/admin/platform/incidents': typeof AuthenticatedAdminPlatformIncidentsRoute
   '/_authenticated/admin/platform/plugins': typeof AuthenticatedAdminPlatformPluginsRoute
+  '/_authenticated/admin/platform/providers': typeof AuthenticatedAdminPlatformProvidersRoute
   '/_authenticated/admin/platform/webhooks': typeof AuthenticatedAdminPlatformWebhooksRoute
   '/api/public/hooks/drain-pending': typeof ApiPublicHooksDrainPendingRoute
   '/api/public/hooks/expire-invoices': typeof ApiPublicHooksExpireInvoicesRoute
@@ -853,6 +863,7 @@ export interface FileRouteTypes {
     | '/admin/merchants/$id'
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
+    | '/admin/platform/providers'
     | '/admin/platform/webhooks'
     | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
@@ -931,6 +942,7 @@ export interface FileRouteTypes {
     | '/admin/merchants/$id'
     | '/admin/platform/incidents'
     | '/admin/platform/plugins'
+    | '/admin/platform/providers'
     | '/admin/platform/webhooks'
     | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
@@ -1015,6 +1027,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/merchants/$id'
     | '/_authenticated/admin/platform/incidents'
     | '/_authenticated/admin/platform/plugins'
+    | '/_authenticated/admin/platform/providers'
     | '/_authenticated/admin/platform/webhooks'
     | '/api/public/hooks/drain-pending'
     | '/api/public/hooks/expire-invoices'
@@ -1611,6 +1624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPlatformWebhooksRouteImport
       parentRoute: typeof AuthenticatedAdminPlatformRoute
     }
+    '/_authenticated/admin/platform/providers': {
+      id: '/_authenticated/admin/platform/providers'
+      path: '/providers'
+      fullPath: '/admin/platform/providers'
+      preLoaderRoute: typeof AuthenticatedAdminPlatformProvidersRouteImport
+      parentRoute: typeof AuthenticatedAdminPlatformRoute
+    }
     '/_authenticated/admin/platform/plugins': {
       id: '/_authenticated/admin/platform/plugins'
       path: '/plugins'
@@ -1645,6 +1665,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminPlatformRouteChildren {
   AuthenticatedAdminPlatformIncidentsRoute: typeof AuthenticatedAdminPlatformIncidentsRoute
   AuthenticatedAdminPlatformPluginsRoute: typeof AuthenticatedAdminPlatformPluginsRoute
+  AuthenticatedAdminPlatformProvidersRoute: typeof AuthenticatedAdminPlatformProvidersRoute
   AuthenticatedAdminPlatformWebhooksRoute: typeof AuthenticatedAdminPlatformWebhooksRoute
   AuthenticatedAdminPlatformIndexRoute: typeof AuthenticatedAdminPlatformIndexRoute
 }
@@ -1655,6 +1676,8 @@ const AuthenticatedAdminPlatformRouteChildren: AuthenticatedAdminPlatformRouteCh
       AuthenticatedAdminPlatformIncidentsRoute,
     AuthenticatedAdminPlatformPluginsRoute:
       AuthenticatedAdminPlatformPluginsRoute,
+    AuthenticatedAdminPlatformProvidersRoute:
+      AuthenticatedAdminPlatformProvidersRoute,
     AuthenticatedAdminPlatformWebhooksRoute:
       AuthenticatedAdminPlatformWebhooksRoute,
     AuthenticatedAdminPlatformIndexRoute: AuthenticatedAdminPlatformIndexRoute,

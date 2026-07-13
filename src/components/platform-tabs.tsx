@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Plug, Package, Webhook, Activity } from "lucide-react";
+import { Plug, Package, Webhook, Activity, Power } from "lucide-react";
 
 const TABS = [
   { to: "/admin/platform", label: "Gateways", icon: Plug, exact: true },
+  { to: "/admin/platform/providers", label: "Provider toggles", icon: Power },
   { to: "/admin/platform/plugins", label: "Plugins & SDKs", icon: Package },
   { to: "/admin/platform/webhooks", label: "Webhook health", icon: Webhook },
   { to: "/admin/platform/incidents", label: "Incidents", icon: Activity },
