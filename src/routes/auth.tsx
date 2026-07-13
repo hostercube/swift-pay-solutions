@@ -247,6 +247,12 @@ function AuthPage() {
       } else {
         const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (sd.user && (await isAdminUser(sd.user.id))) {
+          await supabase.auth.signOut();
+          toast.info("Admins must sign in from the admin portal.");
+          navigate({ to: "/ayman-login" });
+          return;
+        }
         await ensureMerchantAccount({ data: { email } });
 
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
