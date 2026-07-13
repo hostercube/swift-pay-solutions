@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Zap, Smartphone, CreditCard, Bitcoin, MoreHorizontal } from "lucide-react";
 import { getGateway } from "@/lib/gateways/registry";
+import { resolveLogoUrl } from "@/lib/logo-url";
 import { iconFor } from "./primitives";
 import type { Gw, Method } from "./types";
 
