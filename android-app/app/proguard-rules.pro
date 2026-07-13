@@ -26,3 +26,34 @@
 # App: WorkManager Worker classnames used via reflection
 -keep class bd.paynoc.merchant.work.** { *; }
 -keep class bd.paynoc.merchant.data.** { *; }
+
+# BroadcastReceiver / Service / Activity referenced from AndroidManifest
+-keep class bd.paynoc.merchant.sms.** { *; }
+-keep class bd.paynoc.merchant.system.** { *; }
+-keep class bd.paynoc.merchant.ui.** { *; }
+-keep class bd.paynoc.merchant.PayNocApp { *; }
+
+# Room generated implementations
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep class **_Impl { *; }
+-keepclassmembers class * {
+    @androidx.room.* <methods>;
+    @androidx.room.* <fields>;
+}
+
+# Moshi Kotlin reflective adapter fallback
+-keep class kotlin.reflect.jvm.internal.** { *; }
+-dontwarn kotlin.reflect.jvm.internal.**
+
+# AndroidX Security Crypto (Tink) — reflective key handling
+-keep class com.google.crypto.tink.** { *; }
+-dontwarn com.google.crypto.tink.**
+
+# Kotlin coroutines internal APIs
+-keepclassmembernames class kotlinx.** { volatile <fields>; }
+-dontwarn kotlinx.coroutines.debug.**
+
+# Suppress warnings for optional/desugar libs
+-dontwarn javax.annotation.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
