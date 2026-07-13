@@ -144,7 +144,7 @@ Coolify → **New Resource → Public Repository** → Build Pack: **Dockerfile*
 
 ### 3.2 Environment Variables (Developer View)
 
-Supabase resource থেকে actual value copy করে বসাও। `VITE_*` গুলোর জন্য "Available at build time" **ON** করবে।
+Backend resource থেকে actual value copy করে বসাও। `VITE_*` গুলোর জন্য "Available at build time" **ON** করবে।
 
 ```env
 # --- Runtime ---

@@ -15,8 +15,8 @@ COPY package.json bun.lock* bunfig.toml ./
 RUN bun install --frozen-lockfile || bun install
 COPY . .
 
-# Public envs baked at build time. Only publishable/anon values are declared
-# here — never SERVICE_ROLE_KEY or other private runtime-only secrets.
+# Build-time and runtime aliases accepted from Coolify/PAYNOC environments.
+# Private values are only used on the server side; never expose them as VITE_*.
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_PUBLISHABLE_KEY
 ARG VITE_SUPABASE_ANON_KEY
