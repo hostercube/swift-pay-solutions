@@ -505,17 +505,17 @@ private fun ConfigSheet(
 
 /* -------------------- helpers -------------------- */
 
-private data class Stats(val pending: Int, val sentToday: Int, val failed: Int)
+private data class Stats(val pending: Int, val matchedToday: Int, val failed: Int)
 
 private fun computeStats(events: List<QueuedEvent>): Stats {
     val today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString()
-    var pending = 0; var sentToday = 0; var failed = 0
+    var pending = 0; var matchedToday = 0; var failed = 0
     for (e in events) when (e.status) {
         "pending" -> pending++
         "failed" -> failed++
-        "sent" -> if (e.receivedAtIso.startsWith(today)) sentToday++
+        "matched" -> if (e.receivedAtIso.startsWith(today)) matchedToday++
     }
-    return Stats(pending, sentToday, failed)
+    return Stats(pending, matchedToday, failed)
 }
 
 private fun hasSmsPermission(ctx: android.content.Context): Boolean =
