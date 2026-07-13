@@ -578,6 +578,8 @@ const LOGO_DOMAINS: Record<string, string> = {
   uddoktapay: "uddoktapay.com",
   piprapay: "piprapay.com",
   ownpay: "ownpay.com.bd",
+  eps: "epsbd.com",
+  paystation: "paystation.com.bd",
   bank_transfer: "wikipedia.org",
   bangla_qr: "bb.org.bd",
   stripe: "stripe.com",
