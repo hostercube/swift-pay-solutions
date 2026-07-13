@@ -76,7 +76,7 @@ export type Brand = {
   custom_footer_html?: string | null;
 };
 
-export type Gw = { id?: string; provider: string; mode: string; label?: string | null };
+export type Gw = { id?: string; provider: string; mode: string; label?: string | null; logo_url?: string | null };
 
 export type ManualFormState = {
   sender_number: string;
