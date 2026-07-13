@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Shield, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -19,9 +20,43 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
+  const [recoveryReady, setRecoveryReady] = useState(false);
+
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(window.location.search);
+    const isRecoveryLink =
+      hashParams.get("type") === "recovery" ||
+      searchParams.get("type") === "recovery" ||
+      hashParams.has("access_token") ||
+      searchParams.has("code");
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (isRecoveryLink && session)) {
+        setRecoveryReady(true);
+        setCheckingLink(false);
+      }
+    });
+
+    const timer = window.setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      setRecoveryReady(isRecoveryLink && !!data.session);
+      setCheckingLink(false);
+    }, 800);
+
+    return () => {
+      window.clearTimeout(timer);
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!recoveryReady) {
+      toast.error("This reset link is invalid or expired. Please request a new one.");
+      return;
+    }
     if (password !== confirm) {
       toast.error("Passwords do not match");
       return;
@@ -33,7 +68,7 @@ function ResetPasswordPage() {
       toast.success("Password updated");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update password");
+      toast.error(getAuthErrorMessage(err, "Failed to update password. Please request a new reset link."));
     } finally {
       setLoading(false);
     }
@@ -65,6 +100,19 @@ function ResetPasswordPage() {
             Choose a strong password with at least 8 characters.
           </p>
 
+          {checkingLink ? (
+            <div className="mt-6 flex items-center gap-2 rounded-lg border border-glass-border bg-card/40 p-4 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Checking reset link...
+            </div>
+          ) : !recoveryReady ? (
+            <div className="mt-6 space-y-4 rounded-lg border border-glass-border bg-card/40 p-4 text-sm text-muted-foreground">
+              <p>This reset link is invalid or expired.</p>
+              <Link to="/forgot-password" className="inline-flex font-semibold text-foreground hover:underline">
+                Request a new reset link
+              </Link>
+            </div>
+          ) : (
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -101,6 +149,7 @@ function ResetPasswordPage() {
               Update password
             </button>
           </form>
+          )}
         </div>
       </div>
     </div>

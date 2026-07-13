@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Turnstile } from "@/components/turnstile";
 import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
 import { smsNocNotifyUserRegistered } from "@/lib/smsnoc.functions";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { ensureMerchantAccount } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -206,7 +208,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: window.location.origin,
             data: {
               full_name: contactName,
               business_name: companyName,
@@ -219,28 +221,39 @@ function AuthPage() {
         });
         if (error) throw error;
 
-        // Persist extras to profile (best-effort — profile row is created by trigger).
-        const uid = signUpData.user?.id;
-        if (uid) {
-          await supabase
-            .from("profiles")
-            .update({
+        if (signUpData.session) {
+          await ensureMerchantAccount({
+            data: {
+              email,
+              fullName: contactName,
+              businessName: companyName,
+              businessType,
               phone: fullPhone,
-              kyc_business_type: businessType,
-              full_name: contactName,
-              business_name: companyName,
-            })
-            .eq("id", uid);
+              websiteUrl: websiteUrl || undefined,
+            },
+          });
         }
 
         smsNocNotifyUserRegistered({
           data: { email, name: contactName || companyName || undefined },
         }).catch(() => undefined);
-        toast.success("Account created! You're signed in.");
-        navigate({ to: "/dashboard" });
+        if (signUpData.session) {
+          toast.success("Account created! You're signed in.");
+          navigate({ to: "/dashboard" });
+        } else {
+          toast.success("Account created. Please check your email to confirm it, then sign in.");
+          setMode("signin");
+        }
       } else {
         const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (sd.user && (await isAdminUser(sd.user.id))) {
+          await supabase.auth.signOut();
+          toast.info("Admins must sign in from the admin portal.");
+          navigate({ to: "/ayman-login" });
+          return;
+        }
+        await ensureMerchantAccount({ data: { email } });
 
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
@@ -260,8 +273,7 @@ function AuthPage() {
         navigate({ to: sd.user ? await landingForMerchant(sd.user.id) : "/dashboard" });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Authentication failed";
-      toast.error(msg);
+      toast.error(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

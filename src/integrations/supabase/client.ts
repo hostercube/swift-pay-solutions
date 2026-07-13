@@ -44,6 +44,10 @@ function shouldUseSameOriginGateway(configuredUrl: string) {
 
   try {
     const configuredHost = new URL(configuredUrl).hostname.toLowerCase();
+    // Lovable Cloud's backend already allows the published/custom app domain
+    // over CORS. Proxying it through /api/backend can fail when a self-hosted
+    // internal gateway DNS value is present on the server, which breaks login.
+    if (configuredHost.endsWith('.lovable.cloud')) return false;
     return configuredHost !== host;
   } catch {
     return false;
