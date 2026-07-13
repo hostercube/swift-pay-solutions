@@ -94,40 +94,7 @@ function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "first-admin") {
-        if (password.length < 8) throw new Error("Password must be at least 8 characters.");
-        if (password !== confirmPassword) throw new Error("Passwords do not match.");
 
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/ayman-login`,
-            data: {
-              full_name: "PayNOC Admin",
-              business_name: "PayNOC",
-            },
-          },
-        });
-        if (error) throw error;
-        if (!data.session?.user && !data.user) {
-          toast.success("Admin account created. Confirm the email, then sign in.");
-          setMode("signin");
-          return;
-        }
-
-        const userId = data.session?.user.id ?? data.user?.id;
-        if (!userId) throw new Error("Admin account created, but sign-in was not completed.");
-        const admin = await ensureAdminAccess(userId);
-        if (!admin) {
-          await supabase.auth.signOut();
-          throw new Error("A super admin already exists. Sign in with that admin account.");
-        }
-
-        toast.success("First super admin is ready");
-        navigate({ to: "/admin" });
-        return;
-      }
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
