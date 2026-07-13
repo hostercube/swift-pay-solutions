@@ -9,32 +9,8 @@ import {
   sendEmail,
   sendWhatsApp,
   sendVoice,
-  renderTemplate,
+  serializeSmsNocResult,
 } from "@/lib/smsnoc.server";
-
-function serializeResult(r: {
-  status: string;
-  channel: string;
-  http_status?: number;
-  provider_response?: unknown;
-  error?: string | null;
-}) {
-  return {
-    status: r.status,
-    channel: r.channel,
-    http_status: r.http_status ?? null,
-    provider_response: (() => {
-      try {
-        return typeof r.provider_response === "string"
-          ? r.provider_response
-          : JSON.stringify(r.provider_response ?? null);
-      } catch {
-        return String(r.provider_response ?? "");
-      }
-    })(),
-    error: r.error ?? null,
-  };
-}
 
 // ---------- Platform (super-admin) config ----------
 
@@ -145,7 +121,7 @@ export const sendPlatformSmsNocTest = createServerFn({ method: "POST" })
       });
     else
       result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
-    return serializeResult(result);
+    return serializeSmsNocResult(result);
   });
 
 // ---------- Merchant config ----------
@@ -254,7 +230,7 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
         deviceId: (cfg.whatsapp_device_id as string) || undefined,
       });
     else result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
-    return serializeResult(result);
+    return serializeSmsNocResult(result);
   });
 
 // ---------- Public platform-level triggers (called from public pages after auth actions) ----------

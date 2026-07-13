@@ -1,34 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertSuperAdmin(context: {
-  supabase: import("@supabase/supabase-js").SupabaseClient;
-  userId: string;
-}) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "super_admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: super_admin only");
-}
-
-async function logAudit(
-  context: { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string },
-  action: string,
-  merchant_id: string | null,
-  metadata: Record<string, unknown> = {},
-) {
-  await context.supabase.from("audit_logs").insert({
-    actor_id: context.userId,
-    merchant_id,
-    action,
-    resource: "merchant",
-    resource_id: merchant_id,
-    metadata,
-  });
-}
+import { assertSuperAdmin, logAudit } from "@/lib/admin-helpers.server";
 
 /** Admin creates a merchant account (no email confirmation needed). */
 export const adminCreateMerchant = createServerFn({ method: "POST" })

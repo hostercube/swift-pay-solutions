@@ -15,6 +15,30 @@ export type SmsNocResult = {
   error?: string | null;
 };
 
+export function serializeSmsNocResult(r: {
+  status: string;
+  channel: string;
+  http_status?: number;
+  provider_response?: unknown;
+  error?: string | null;
+}) {
+  return {
+    status: r.status,
+    channel: r.channel,
+    http_status: r.http_status ?? null,
+    provider_response: (() => {
+      try {
+        return typeof r.provider_response === "string"
+          ? r.provider_response
+          : JSON.stringify(r.provider_response ?? null);
+      } catch {
+        return String(r.provider_response ?? "");
+      }
+    })(),
+    error: r.error ?? null,
+  };
+}
+
 type BaseArgs = { apiKey: string };
 
 function normalizePhone(p: string): string {
