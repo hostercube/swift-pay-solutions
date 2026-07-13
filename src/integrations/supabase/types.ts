@@ -762,6 +762,48 @@ export type Database = {
           },
         ]
       }
+      merchant_provider_grants: {
+        Row: {
+          enabled: boolean
+          merchant_id: string
+          note: string | null
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          merchant_id: string
+          note?: string | null
+          provider: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          merchant_id?: string
+          note?: string | null
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_provider_grants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_brand"
+            referencedColumns: ["merchant_id"]
+          },
+          {
+            foreignKeyName: "merchant_provider_grants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_smsnoc_configs: {
         Row: {
           api_key: string | null
@@ -1774,6 +1816,7 @@ export type Database = {
       }
       subscription_packages: {
         Row: {
+          allowed_providers: string[] | null
           billing_cycle: Database["public"]["Enums"]["billing_cycle"]
           created_at: string
           currency: string
@@ -1792,6 +1835,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allowed_providers?: string[] | null
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
           created_at?: string
           currency?: string
@@ -1810,6 +1854,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allowed_providers?: string[] | null
           billing_cycle?: Database["public"]["Enums"]["billing_cycle"]
           created_at?: string
           currency?: string
@@ -2591,6 +2636,10 @@ export type Database = {
       }
       merchant_has_perm: {
         Args: { _merchant_id: string; _perm: string; _user_id: string }
+        Returns: boolean
+      }
+      merchant_provider_available: {
+        Args: { _merchant_id: string; _provider: string }
         Returns: boolean
       }
       provider_enabled: { Args: { _provider: string }; Returns: boolean }
