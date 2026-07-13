@@ -19,8 +19,6 @@ import bd.paynoc.merchant.network.PayNocApi
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToLong
-import java.util.concurrent.TimeUnit
-import kotlin.math.roundToLong
 
 /**
  * Drains queued SMS events to the PayNOC backend. Retried automatically
