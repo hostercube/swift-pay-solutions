@@ -165,15 +165,31 @@ private fun HomeScreen() {
                     OutlinedButton(
                         onClick = {
                             scope.launch {
-                                events = withContext(Dispatchers.IO) { EventStore.get(ctx).recent() }
-                                toast = "Refreshed"
+                                val store = EventStore.get(ctx)
+                                val requeued = withContext(Dispatchers.IO) {
+                                    val n = store.requeueFailed()
+                                    events = store.recent()
+                                    n
+                                }
+                                if (requeued > 0) {
+                                    androidx.work.WorkManager.getInstance(ctx).enqueueUniqueWork(
+                                        bd.paynoc.merchant.work.UploadWorker.UNIQUE_NAME,
+                                        androidx.work.ExistingWorkPolicy.APPEND_OR_REPLACE,
+                                        androidx.work.OneTimeWorkRequestBuilder<bd.paynoc.merchant.work.UploadWorker>()
+                                            .setConstraints(bd.paynoc.merchant.work.UploadWorker.constraints())
+                                            .build(),
+                                    )
+                                    toast = "Re-queued $requeued failed event${if (requeued == 1) "" else "s"}"
+                                } else {
+                                    toast = "Nothing to retry"
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Filled.Refresh, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Refresh")
+                        Text("Retry failed")
                     }
                     Button(
                         onClick = {
