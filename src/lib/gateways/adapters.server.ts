@@ -573,16 +573,16 @@ export async function initiateCheckout(providerId: string, args: InitiateArgs): 
 }
 
 // ─── Webhook verification ─────────────────────────────────────────
-export function verifyWebhook(providerId: string, v: VerifyArgs): VerifyResult {
+export async function verifyWebhook(providerId: string, v: VerifyArgs): Promise<VerifyResult> {
   try {
     switch (providerId) {
       case "stripe":            return verifyStripe(v);
-      case "sslcommerz":        return verifySslcz(v);
+      case "sslcommerz":        return await verifySslcz(v);
       case "razorpay":          return verifyRazorpay(v);
       case "coinbase_commerce": return verifyCoinbase(v);
       case "nowpayments":       return verifyNowpayments(v);
       case "bkash":             return verifyBkash(v);
-      case "paypal":            return { verified: true, ...parsePaypal(v) };
+      case "paypal":            return await verifyPaypal(v);
       case "uddoktapay":        return verifyUddoktapay(v);
       case "piprapay":          return verifyPiprapay(v);
       case "ownpay":            return verifyOwnpay(v);
