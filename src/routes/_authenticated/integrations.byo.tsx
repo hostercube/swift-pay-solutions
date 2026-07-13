@@ -51,7 +51,7 @@ function ByoPage() {
     if (!user) return;
     const { data, error } = await supabase
       .from("byo_gateways")
-      .select("id, provider, mode, credentials, is_active, label, created_at")
+      .select("id, provider, mode, credentials, is_active, label, logo_url, created_at")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
@@ -71,7 +71,7 @@ function ByoPage() {
   }, [rows]);
 
   const openNew = (providerId: string) => {
-    setDraft({ provider: providerId, mode: "sandbox", label: "", creds: {} });
+    setDraft({ provider: providerId, mode: "sandbox", label: "", logo_url: null, creds: {} });
   };
 
   const openEdit = (r: Row) => {
@@ -80,6 +80,7 @@ function ByoPage() {
       provider: r.provider,
       mode: r.mode,
       label: r.label ?? "",
+      logo_url: r.logo_url ?? null,
       creds: r.credentials ?? {},
     });
   };
@@ -97,6 +98,7 @@ function ByoPage() {
       provider: draft.provider,
       mode: draft.mode,
       label: draft.label.trim() || null,
+      logo_url: draft.logo_url,
       credentials: draft.creds,
       is_active: true,
     };
@@ -109,6 +111,7 @@ function ByoPage() {
     setDraft(null);
     load();
   };
+
 
   const toggleActive = async (r: Row) => {
     const { error } = await supabase
