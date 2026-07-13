@@ -46,13 +46,12 @@ function AdminLoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"signin" | "first-admin">("signin");
 
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
   const [mfaCode, setMfaCode] = useState("");
+
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
