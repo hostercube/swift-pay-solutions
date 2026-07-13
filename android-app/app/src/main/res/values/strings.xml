@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">PayNOC Merchant</string>
+    <string name="app_name">PayNOC</string>
+    <string name="app_full_name">PayNOC Merchant</string>
+    <string name="brand_tagline">Bangladesh\'s smart payment gateway</string>
+    <string name="listener_title">PayNOC is listening</string>
+    <string name="listener_body">Auto-verifying incoming payment SMS</string>
+    <string name="channel_matches_title">PayNOC · Payment verifications</string>
+    <string name="channel_matches_desc">Fires when a payment SMS is matched to a PayNOC invoice.</string>
+    <string name="channel_listener_title">PayNOC · Background listener</string>
+    <string name="channel_listener_desc">Keeps PayNOC alive so payment SMS is captured instantly.</string>
 </resources>
