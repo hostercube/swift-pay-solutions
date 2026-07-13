@@ -230,6 +230,11 @@ function MerchantDetailPage() {
             )}
           </Section>
 
+          <Section title="Provider access (per-merchant)">
+            <ProviderAccessSection merchantId={id} />
+          </Section>
+
+
           <Section title={`Recent invoices (${data.recent_invoices.length})`}>
             {data.recent_invoices.length === 0 ? (
               <Empty>No invoices yet.</Empty>
