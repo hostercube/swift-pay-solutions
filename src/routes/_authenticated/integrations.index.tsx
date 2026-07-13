@@ -6,6 +6,8 @@ import { Pencil, Trash2, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
+import { defaultLogoFor } from "@/lib/gateways/registry";
+import { resolveLogoUrl } from "@/lib/logo-url";
 
 export const Route = createFileRoute("/_authenticated/integrations/")({
   head: () => ({ meta: [{ title: "Payment methods · PayNOC" }] }),
