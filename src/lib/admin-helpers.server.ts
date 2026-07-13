@@ -25,6 +25,6 @@ export async function logAudit(
     action,
     resource: "merchant",
     resource_id: merchant_id,
-    metadata,
+    metadata: metadata as never,
   });
 }
