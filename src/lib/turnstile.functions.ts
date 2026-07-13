@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { resolveTurnstile } from "@/lib/turnstile.server";
 
 type TurnstileSettings = {
   enabled?: boolean;
@@ -9,6 +8,7 @@ type TurnstileSettings = {
 };
 
 export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
+  const { resolveTurnstile } = await import("@/lib/turnstile.server");
   const t = await resolveTurnstile();
   const siteKey = (t.site_key ?? "").trim();
   // Show captcha whenever a site key is configured AND enabled is true (or unset with env fallback).
@@ -19,6 +19,7 @@ export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(asyn
 export const verifyTurnstile = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
+    const { resolveTurnstile } = await import("@/lib/turnstile.server");
     const t = await resolveTurnstile();
     if (!t.enabled) return { ok: true };
     const secret = (t.secret_key ?? "").trim();

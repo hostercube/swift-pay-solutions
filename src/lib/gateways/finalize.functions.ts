@@ -8,7 +8,6 @@
 // carries ?paid=1 (or ?cancelled=1).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { bkashExecute } from "@/lib/gateways/finalize.server";
 
 const schema = z.object({
   invoiceId: z.string().uuid(),
@@ -62,6 +61,7 @@ export const finalizeGatewayReturn = createServerFn({ method: "POST" })
         .maybeSingle();
       const creds = (gw?.credentials as Record<string, string> | null) ?? null;
       if (!creds) return { ok: false, reason: "bkash_creds_missing" as const };
+      const { bkashExecute } = await import("@/lib/gateways/finalize.server");
       const exec = await bkashExecute(creds, ((gw?.mode as "sandbox" | "live") ?? "sandbox"), paymentID);
       if (!exec) return { ok: false, reason: "bkash_execute_failed" as const };
       const paid = exec.transactionStatus === "Completed" && exec.statusCode === "0000";

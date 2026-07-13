@@ -1,8 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { dispatchWebhooks } from "@/lib/webhooks.server";
-import { notify } from "@/lib/notifications.server";
-import { assertMerchantRole } from "@/lib/rbac.server";
 
 
 
@@ -26,6 +23,7 @@ export const verifyTransaction = createServerFn({ method: "POST" })
     if (tErr) throw new Error(tErr.message);
     if (!txn) throw new Error("Transaction not found");
     if (txn.status !== "pending") throw new Error("Transaction is not pending");
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
     await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
 
 
@@ -52,6 +50,7 @@ export const verifyTransaction = createServerFn({ method: "POST" })
     if (uInv || !invoice) throw new Error(uInv?.message ?? "Invoice update failed");
 
     // Dispatch webhook (privileged, tolerates failure)
+    const { dispatchWebhooks } = await import("@/lib/webhooks.server");
     dispatchWebhooks({
       merchantId: txn.merchant_id,
       invoiceId: invoice.id,
@@ -61,6 +60,7 @@ export const verifyTransaction = createServerFn({ method: "POST" })
     }).catch(() => undefined);
 
 
+    const { notify } = await import("@/lib/notifications.server");
     notify({
       merchantId: txn.merchant_id,
       event: "invoice.completed",
@@ -85,6 +85,7 @@ export const rejectTransaction = createServerFn({ method: "POST" })
       .maybeSingle();
     if (tErr) throw new Error(tErr.message);
     if (!txn) throw new Error("Transaction not found");
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
     await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
     const { error } = await supabase
       .from("transactions")
@@ -125,6 +126,7 @@ export const updatePayoutStatus = createServerFn({ method: "POST" })
     if (error || !row) throw new Error(error?.message ?? "Payout update failed");
 
     if (data.status === "processed") {
+      const { dispatchWebhooks } = await import("@/lib/webhooks.server");
       dispatchWebhooks({
         merchantId: (row as { merchant_id: string }).merchant_id,
         invoiceId: (row as { id: string }).id,
@@ -132,6 +134,7 @@ export const updatePayoutStatus = createServerFn({ method: "POST" })
         data: row,
       }).catch(() => undefined);
 
+      const { notify } = await import("@/lib/notifications.server");
       notify({
         merchantId: (row as { merchant_id: string }).merchant_id,
         event: "payout.processed",
@@ -156,6 +159,7 @@ export const createRefund = createServerFn({ method: "POST" })
       .eq("id", data.invoiceId)
       .maybeSingle();
     if (iErr || !inv) throw new Error(iErr?.message ?? "Invoice not found");
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
     await assertMerchantRole(supabase, userId, inv.merchant_id, "operator");
     if (inv.status !== "completed") throw new Error("Only completed invoices can be refunded");
     if (data.amount <= 0 || data.amount > Number(inv.amount))
@@ -184,6 +188,7 @@ export const createRefund = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    const { dispatchWebhooks } = await import("@/lib/webhooks.server");
     dispatchWebhooks({
       merchantId: inv.merchant_id,
       invoiceId: inv.id,
@@ -240,6 +245,8 @@ export const updateRefundStatus = createServerFn({ method: "POST" })
     const currency = (row as { currency: string }).currency;
     const amount = (row as { amount: number }).amount;
     const refundId = (row as { id: string }).id;
+    const { dispatchWebhooks } = await import("@/lib/webhooks.server");
+    const { notify } = await import("@/lib/notifications.server");
 
     if (data.status === "approved") {
       dispatchWebhooks({ merchantId, invoiceId, event: "refund.approved", data: row }).catch(() => undefined);

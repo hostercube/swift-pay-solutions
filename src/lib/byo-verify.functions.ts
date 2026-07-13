@@ -1,9 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertMerchantRole } from "@/lib/rbac.server";
-import { dispatchWebhooks } from "@/lib/webhooks.server";
-import { notify } from "@/lib/notifications.server";
-import { verifyBkash, verifyNagad, verifyUddoktapay } from "@/lib/byo-verify.server";
 
 type Creds = Record<string, string>;
 
@@ -22,6 +18,7 @@ export const byoVerifyTransaction = createServerFn({ method: "POST" })
     if (!txn) throw new Error("Transaction not found");
     if (txn.status !== "pending") throw new Error("Transaction not pending");
     if (!txn.provider_txn_id) throw new Error("Missing provider transaction id");
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
     await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
 
     const provider = String(txn.method_type).toLowerCase();
@@ -46,6 +43,7 @@ export const byoVerifyTransaction = createServerFn({ method: "POST" })
     if (!gw) throw new Error(`No active ${provider} (${mode}) gateway configured`);
     const creds = (gw.credentials ?? {}) as Creds;
 
+    const { verifyBkash, verifyNagad, verifyUddoktapay } = await import("@/lib/byo-verify.server");
     const result = provider === "bkash"
       ? await verifyBkash(mode, creds, txn.provider_txn_id)
       : provider === "nagad"
@@ -79,10 +77,12 @@ export const byoVerifyTransaction = createServerFn({ method: "POST" })
     }).eq("id", txn.invoice_id).select("*").single();
 
     if (invoice) {
+      const { dispatchWebhooks } = await import("@/lib/webhooks.server");
       dispatchWebhooks({
         merchantId: txn.merchant_id, invoiceId: invoice.id,
         event: "invoice.completed", data: invoice, mode,
       }).catch(() => undefined);
+      const { notify } = await import("@/lib/notifications.server");
       notify({
         merchantId: txn.merchant_id, event: "invoice.completed",
         title: `Payment auto-verified: ${(invoice as { invoice_number?: string }).invoice_number ?? invoice.id}`,

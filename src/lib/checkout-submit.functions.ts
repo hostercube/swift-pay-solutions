@@ -1,6 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { dispatchWebhooks } from "@/lib/webhooks.server";
-import { notify } from "@/lib/notifications.server";
 
 /**
  * Anonymous customer submits a manual payment (bKash/Nagad/Rocket/Bank etc.)
@@ -127,6 +125,7 @@ export const submitManualPayment = createServerFn({ method: "POST" })
       throw new Error(msg);
     }
 
+    const { dispatchWebhooks } = await import("@/lib/webhooks.server");
     dispatchWebhooks({
       merchantId: inv.merchant_id,
       invoiceId: inv.id,
@@ -134,6 +133,7 @@ export const submitManualPayment = createServerFn({ method: "POST" })
       data: { transaction_id: txn.id, invoice_id: inv.id, provider_txn_id: data.providerTxnId },
     }).catch(() => undefined);
 
+    const { notify } = await import("@/lib/notifications.server");
     notify({
       merchantId: inv.merchant_id,
       event: "transaction.submitted",
