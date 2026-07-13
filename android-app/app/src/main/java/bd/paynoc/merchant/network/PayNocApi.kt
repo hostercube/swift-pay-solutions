@@ -8,7 +8,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import java.util.concurrent.TimeUnit
 
 /**
@@ -30,6 +29,7 @@ class PayNocApi private constructor(
 
     private val moshi: Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
     private val requestAdapter = moshi.adapter(SmsEventsBody::class.java)
+    private val responseAdapter = moshi.adapter(SmsEventsResponse::class.java)
 
     @JsonClass(generateAdapter = true)
     data class SmsEventDto(
@@ -45,7 +45,29 @@ class PayNocApi private constructor(
     @JsonClass(generateAdapter = true)
     data class SmsEventsBody(val events: List<SmsEventDto>)
 
-    fun postSmsEvents(batch: List<QueuedEvent>, deviceId: String): Response {
+    /** Server-side per-event outcome — order matches request `events`. */
+    @JsonClass(generateAdapter = true)
+    data class SmsEventResult(
+        val trx_id: String?,
+        val matched: Boolean = false,
+        val invoice_id: String? = null,
+        val reason: String? = null,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class SmsEventsResponse(
+        val ok: Boolean = false,
+        val results: List<SmsEventResult> = emptyList(),
+    )
+
+    /** HTTP result + parsed per-event outcomes (empty on non-2xx). */
+    data class PostResult(
+        val httpCode: Int,
+        val isSuccessful: Boolean,
+        val results: List<SmsEventResult>,
+    )
+
+    fun postSmsEvents(batch: List<QueuedEvent>, deviceId: String): PostResult {
         val body = SmsEventsBody(
             events = batch.map {
                 SmsEventDto(
@@ -64,10 +86,23 @@ class PayNocApi private constructor(
             .url("$baseUrl/api/public/v1/sms-events")
             .header("Authorization", "Bearer $apiKey")
             .header("Content-Type", "application/json")
-            .header("User-Agent", "PayNOC-Merchant-APK/1.1")
+            .header("User-Agent", "PayNOC-Merchant-APK/1.2")
             .post(json.toRequestBody("application/json".toMediaType()))
             .build()
-        return http.newCall(request).execute()
+        http.newCall(request).execute().use { response ->
+            val code = response.code()
+            val parsed = if (response.isSuccessful) {
+                runCatching {
+                    val text = response.body?.string().orEmpty()
+                    responseAdapter.fromJson(text)?.results.orEmpty()
+                }.getOrDefault(emptyList())
+            } else emptyList()
+            return PostResult(
+                httpCode = code,
+                isSuccessful = response.isSuccessful,
+                results = parsed,
+            )
+        }
     }
 
     /** Cheap round-trip that authenticates the key. Returns the HTTP status. */
@@ -75,7 +110,7 @@ class PayNocApi private constructor(
         val request = Request.Builder()
             .url("$baseUrl/api/public/v1/balance")
             .header("Authorization", "Bearer $apiKey")
-            .header("User-Agent", "PayNOC-Merchant-APK/1.1")
+            .header("User-Agent", "PayNOC-Merchant-APK/1.2")
             .get()
             .build()
         return http.newCall(request).execute().use { it.code() }
