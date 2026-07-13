@@ -28,6 +28,16 @@ type Profile = {
   public_bio: string | null;
   accept_tips: boolean;
   tip_min_amount: number;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  postcode: string | null;
+  tax_id: string | null;
+  website: string | null;
+  timezone: string | null;
+  language: string | null;
+  date_of_birth: string | null;
 };
 
 
