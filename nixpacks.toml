@@ -1,0 +1,18 @@
+providers = ["node"]
+
+[variables]
+NODE_ENV = "production"
+NITRO_PRESET = "node-server"
+PAYNOC_DOCKER_TARGET = "node"
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "bun"]
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile || bun install"]
+
+[phases.build]
+cmds = ["node ./node_modules/vite/bin/vite.js build"]
+
+[start]
+cmd = "node .output/server/index.mjs"
