@@ -509,3 +509,51 @@ export function getGateway(id: string): GatewaySpec | undefined {
 export function gatewaysByRegion(region: GatewayRegion): GatewaySpec[] {
   return GATEWAYS.filter((g) => g.region === region);
 }
+
+// ── Default logos ────────────────────────────────────────────────
+// Map each supported gateway / manual-method type to a public brand
+// domain, resolved through Google's S2 favicon service (no auth
+// required, globally cached). Merchants can override with their own
+// upload via `payment_methods.logo_url` or `byo_gateways.logo_url`.
+const LOGO_DOMAINS: Record<string, string> = {
+  bkash: "bkash.com",
+  nagad: "nagad.com.bd",
+  rocket: "dutchbanglabank.com",
+  upay: "upaybd.com",
+  tap: "tappayments.com",
+  mcash: "islamibankbd.com",
+  mycash: "mycash.com.bd",
+  dmoney: "dmoney.com.bd",
+  surecash: "surecash.net",
+  sure_cash: "surecash.net",
+  sslcommerz: "sslcommerz.com",
+  shurjopay: "shurjopay.com.bd",
+  aamarpay: "aamarpay.com",
+  portwallet: "portwallet.com",
+  walletmix: "walletmix.com",
+  uddoktapay: "uddoktapay.com",
+  piprapay: "piprapay.com",
+  ownpay: "ownpay.com.bd",
+  bank_transfer: "wikipedia.org",
+  bangla_qr: "bb.org.bd",
+  stripe: "stripe.com",
+  paypal: "paypal.com",
+  razorpay: "razorpay.com",
+  paddle: "paddle.com",
+  twocheckout: "2checkout.com",
+  coinbase_commerce: "commerce.coinbase.com",
+  nowpayments: "nowpayments.io",
+  binance_pay: "binance.com",
+  cryptomus: "cryptomus.com",
+  card: "visa.com",
+  crypto: "bitcoin.org",
+  other: "wikipedia.org",
+};
+
+/** Public logo URL for a gateway id or manual payment-method type. */
+export function defaultLogoFor(id: string): string | undefined {
+  const domain = LOGO_DOMAINS[id];
+  if (!domain) return undefined;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
