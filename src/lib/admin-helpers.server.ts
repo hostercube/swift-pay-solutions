@@ -18,7 +18,8 @@ export async function logAudit(
   merchant_id: string | null,
   metadata: Record<string, unknown> = {},
 ) {
-  await context.supabase.from("audit_logs").insert({
+  const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+  await supabaseAdmin.from("audit_logs").insert({
     actor_id: context.userId,
     merchant_id,
     action,

@@ -64,7 +64,7 @@ export const adminImpersonate = createServerFn({ method: "POST" })
     if (linkErr) throw new Error(linkErr.message);
 
     const { data: me } = await context.supabase.auth.getUser();
-    await context.supabase.from("impersonation_events").insert({
+    await supabaseAdmin.from("impersonation_events").insert({
       admin_user_id: context.userId,
       admin_email: me.user?.email ?? "",
       target_user_id: data.target_user_id,
@@ -327,7 +327,8 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    let q = context.supabase.from("profiles").select("id, status, kyc_status");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    let q = supabaseAdmin.from("profiles").select("id, status, kyc_status");
     if (data.audience === "active") q = q.eq("status", "active");
     else if (data.audience === "suspended") q = q.eq("status", "suspended");
     else if (data.audience === "kyc_pending") q = q.in("kyc_status", ["pending", "unverified"]);
@@ -343,7 +344,7 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
     }));
     if (rows.length === 0) return { sent: 0 };
 
-    const { error: insertErr } = await context.supabase.from("notifications").insert(rows);
+    const { error: insertErr } = await supabaseAdmin.from("notifications").insert(rows);
     if (insertErr) throw new Error(insertErr.message);
     await logAudit(context, "broadcast.sent", null, { audience: data.audience, count: rows.length, title: data.title });
     return { sent: rows.length };
