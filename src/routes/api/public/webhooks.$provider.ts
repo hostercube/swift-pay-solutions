@@ -42,12 +42,13 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
           ...(platformRes.data ?? []).map((r) => ({ ...r, merchant_id: null })),
         ];
 
-        let result: ReturnType<typeof verifyWebhook> | null = null;
+        type VerifyR = Awaited<ReturnType<typeof verifyWebhook>>;
+        let result: VerifyR | null = null;
         let matched: { merchant_id: string | null; credentials: Record<string, string>; mode: string } | null = null;
         for (const c of candidates) {
           const creds = ((c as { credentials?: Record<string, string> }).credentials) ?? {};
           const mode = ((c as { mode?: string }).mode) ?? "sandbox";
-          const r = verifyWebhook(provider, { rawBody, headers, creds, mode: mode as "sandbox" | "live" });
+          const r = await verifyWebhook(provider, { rawBody, headers, creds, mode: mode as "sandbox" | "live" });
           if (r.verified) {
             result = r;
             matched = { merchant_id: (c as { merchant_id: string | null }).merchant_id, credentials: creds, mode };
