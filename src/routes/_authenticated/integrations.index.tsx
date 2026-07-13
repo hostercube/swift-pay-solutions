@@ -39,6 +39,7 @@ type Method = {
   branch_name: string | null;
   routing_number: string | null;
   swift_code: string | null;
+  logo_url: string | null;
 };
 
 const METHOD_TYPES: { value: MethodType; label: string }[] = [
