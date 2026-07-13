@@ -36,51 +36,71 @@ jobs:
           COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
           COOLIFY_API_TOKEN:   ${{ secrets.COOLIFY_API_TOKEN }}
         run: |
-          set -u
-          AUTH_HEADER=()
-          if [ -n "${COOLIFY_API_TOKEN:-}" ]; then
-            AUTH_HEADER=(-H "Authorization: Bearer ${COOLIFY_API_TOKEN}")
-            echo "Using Bearer token auth."
+          set +u
+          AUTH_ARGS=()
+          if [ -n "${COOLIFY_API_TOKEN}" ]; then
+            AUTH_ARGS=(-H "Authorization: Bearer ${COOLIFY_API_TOKEN}")
+            echo "🔐 Using Bearer token auth."
           else
-            echo "No COOLIFY_API_TOKEN — sending the webhook URL as-is (token must be in the URL)."
+            echo "ℹ️  No COOLIFY_API_TOKEN — relying on token embedded in webhook URL."
           fi
+
+          call_coolify() {
+            local method="$1"
+            echo "→ ${method} $(echo "${COOLIFY_WEBHOOK_URL}" | sed -E 's/(token=|uuid=)[^&]+/\1***/g')"
+            curl -sS -o /tmp/coolify.out -w "%{http_code}" \
+              --connect-timeout 15 --max-time 60 \
+              -X "${method}" "${COOLIFY_WEBHOOK_URL}" "${AUTH_ARGS[@]}" 2>/tmp/coolify.err || echo "000"
+          }
+
+          print_response() {
+            echo "── Response body ──"
+            head -c 2000 /tmp/coolify.out 2>/dev/null || true
+            echo
+            if [ -s /tmp/coolify.err ]; then
+              echo "── curl stderr ──"
+              head -c 1000 /tmp/coolify.err
+              echo
+            fi
+            echo "───────────────────"
+          }
 
           attempt=1
           max_attempts=3
           while :; do
-            echo "── Attempt ${attempt}/${max_attempts} ──"
-            http_code=$(curl -sS -o /tmp/coolify.out -w "%{http_code}" \
-              --connect-timeout 15 --max-time 60 \
-              -X GET "${COOLIFY_WEBHOOK_URL}" "${AUTH_HEADER[@]}" || echo "000")
-
+            echo "══ Attempt ${attempt}/${max_attempts} (GET) ══"
+            http_code=$(call_coolify GET)
             echo "HTTP status: ${http_code}"
-            echo "── Response body ──"
-            head -c 2000 /tmp/coolify.out || true
-            echo
-            echo "───────────────────"
+            print_response
 
             case "$http_code" in
               2*)
                 echo "✅ Coolify deploy triggered."
-                exit 0
+                exit 0 ;;
+              405|400)
+                echo "↻ Server rejected GET (${http_code}) — retrying with POST."
+                http_code=$(call_coolify POST)
+                echo "HTTP status: ${http_code}"
+                print_response
+                case "$http_code" in
+                  2*) echo "✅ Coolify deploy triggered (POST)."; exit 0 ;;
+                  *)  echo "::error::Coolify rejected both GET and POST (last ${http_code})."; exit 1 ;;
+                esac
                 ;;
               401|403|404)
-                echo "::error::Coolify rejected the request (${http_code}). Verify the webhook URL and token in repo secrets — no retry will help."
-                exit 1
-                ;;
+                echo "::error::Coolify rejected the request (${http_code}). Verify COOLIFY_WEBHOOK_URL (and COOLIFY_API_TOKEN if used). No retry will help."
+                exit 1 ;;
               000|5*|429)
                 if [ "$attempt" -ge "$max_attempts" ]; then
-                  echo "::error::Coolify unreachable / transient failure after ${max_attempts} attempts (last status ${http_code})."
+                  echo "::error::Coolify unreachable after ${max_attempts} attempts (last ${http_code})."
                   exit 1
                 fi
                 sleep_for=$(( attempt * 10 ))
-                echo "Transient failure — sleeping ${sleep_for}s before retry."
+                echo "⏳ Transient failure — sleeping ${sleep_for}s."
                 sleep "$sleep_for"
-                attempt=$(( attempt + 1 ))
-                ;;
+                attempt=$(( attempt + 1 )) ;;
               *)
                 echo "::error::Unexpected status ${http_code} from Coolify."
-                exit 1
-                ;;
+                exit 1 ;;
             esac
           done
