@@ -11,6 +11,7 @@ import {
   adminImpersonate,
   adminDeleteMerchant,
 } from "@/lib/admin.functions";
+import { ProviderAccessSection } from "@/components/admin/provider-access-section";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
