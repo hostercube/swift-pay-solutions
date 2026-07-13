@@ -25,6 +25,7 @@ type Row = {
   credentials: Record<string, string>;
   is_active: boolean;
   label: string | null;
+  logo_url: string | null;
   created_at: string;
 };
 
@@ -33,6 +34,7 @@ type Draft = {
   provider: string;
   mode: "sandbox" | "live";
   label: string;
+  logo_url: string | null;
   creds: Record<string, string>;
 };
 
