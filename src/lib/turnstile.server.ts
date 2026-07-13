@@ -7,16 +7,21 @@ export type TurnstileSettings = {
 async function readDbTurnstile(): Promise<TurnstileSettings> {
   try {
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("platform_settings")
       .select("settings")
       .order("id")
       .limit(1)
       .maybeSingle();
+    if (error) {
+      console.error("[turnstile] readDbTurnstile error:", error);
+      return {};
+    }
+    console.log("[turnstile] readDbTurnstile data:", JSON.stringify(data));
     const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
     return s.turnstile ?? {};
   } catch (e) {
-    console.error("[turnstile] readDbTurnstile failed:", e);
+    console.error("[turnstile] readDbTurnstile threw:", e);
     return {};
   }
 }
