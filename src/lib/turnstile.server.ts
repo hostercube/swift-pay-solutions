@@ -17,7 +17,7 @@ async function readDbTurnstile(): Promise<TurnstileSettings> {
       console.error("[turnstile] readDbTurnstile error:", error);
       return {};
     }
-    console.log("[turnstile] readDbTurnstile data:", JSON.stringify(data));
+
     const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
     return s.turnstile ?? {};
   } catch (e) {
