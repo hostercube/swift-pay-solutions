@@ -1064,6 +1064,7 @@ function labelForType(t: string) {
   const map: Record<string, string> = {
     bkash: "bKash", nagad: "Nagad", rocket: "Rocket", upay: "Upay",
     tap: "Tap", mcash: "MCash", sure_cash: "SureCash",
+    bangla_qr: "Bangla QR",
   };
   return map[t] ?? t;
 }
