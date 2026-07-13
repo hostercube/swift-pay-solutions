@@ -51,7 +51,7 @@ function SettingsPage() {
     supabase
       .from("profiles")
       .select(
-        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, custom_head_html, custom_footer_html, slug, public_bio, accept_tips, tip_min_amount",
+        "full_name, business_name, phone, email, avatar_url, brand_color, logo_url, support_email, checkout_footer, checkout_style, custom_head_html, custom_footer_html, slug, public_bio, accept_tips, tip_min_amount, address, city, state, country, postcode, tax_id, website, timezone, language, date_of_birth",
       )
       .eq("id", user.id)
       .maybeSingle()
@@ -73,11 +73,20 @@ function SettingsPage() {
       checkout_style: p.checkout_style,
       custom_head_html: p.custom_head_html,
       custom_footer_html: p.custom_footer_html,
-
       slug: p.slug,
       public_bio: p.public_bio,
       accept_tips: p.accept_tips,
       tip_min_amount: p.tip_min_amount,
+      address: p.address,
+      city: p.city,
+      state: p.state,
+      country: p.country,
+      postcode: p.postcode,
+      tax_id: p.tax_id,
+      website: p.website,
+      timezone: p.timezone,
+      language: p.language,
+      date_of_birth: p.date_of_birth,
     } as never).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
