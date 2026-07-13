@@ -8,6 +8,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const HOP_BY_HOP = new Set([
   "connection",
+  "content-encoding",
   "keep-alive",
   "proxy-authenticate",
   "proxy-authorization",
@@ -39,6 +40,10 @@ async function proxy(request: Request, splat: string): Promise<Response> {
   target.search = incoming.search;
 
   const headers = stripHopByHop(request.headers);
+  // The server runtime may transparently decompress upstream responses. Force
+  // identity encoding and strip any remaining content-encoding header so the
+  // browser never receives a decoded body labelled as gzip/br.
+  headers.set("accept-encoding", "identity");
 
   const method = request.method.toUpperCase();
   const hasBody = method !== "GET" && method !== "HEAD";
