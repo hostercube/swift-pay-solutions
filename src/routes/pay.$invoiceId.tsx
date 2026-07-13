@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { trackPurchase, type TrackingConfig } from "@/components/merchant-tracking";
 import { initiateGatewayCheckout } from "@/lib/gateways/checkout.functions";
+import { finalizeGatewayReturn } from "@/lib/gateways/finalize.functions";
 import { submitManualPayment } from "@/lib/checkout-submit.functions";
 import { Shell } from "@/components/checkout/Shell";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/pay/$invoiceId")({
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
   const initiateGw = useServerFn(initiateGatewayCheckout);
+  const finalizeReturn = useServerFn(finalizeGatewayReturn);
   const submitManual = useServerFn(submitManualPayment);
 
   const [inv, setInv] = useState<Invoice | null>(null);
@@ -79,6 +81,34 @@ function CheckoutPage() {
   }, [invoiceId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // ─── Gateway return handler ──────────────────────────────────────
+  // Runs once on mount when the URL carries ?paid=1 / ?cancelled=1.
+  // Finalizes providers that need a post-return API call (bKash execute)
+  // or reverts optimistic "processing" state on cancel.
+  const finalizedRef = useRef(false);
+  useEffect(() => {
+    if (finalizedRef.current || typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const paid = q.get("paid") === "1";
+    const cancelled = q.get("cancelled") === "1";
+    if (!paid && !cancelled) return;
+    finalizedRef.current = true;
+    const params: Record<string, string> = {};
+    q.forEach((v, k) => { if (k !== "paid" && k !== "cancelled") params[k] = v; });
+    (async () => {
+      try {
+        const r = await finalizeReturn({ data: { invoiceId, cancelled, params } });
+        if (cancelled) toast.info("Payment cancelled");
+        else if (r?.status === "completed") toast.success("Payment confirmed");
+        else if (r && !r.ok) toast.error(String(r.reason ?? "Could not confirm payment"));
+      } catch (e) {
+        console.error("[checkout] finalize failed", e);
+      } finally {
+        load();
+      }
+    })();
+  }, [invoiceId, finalizeReturn, load]);
 
   // ─── FX conversion for display currency ──────────────────────────
   useEffect(() => {
