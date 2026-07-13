@@ -243,6 +243,7 @@ private fun HomeScreen() {
                 when (val r = Settings.save(ctx, url, key)) {
                     is Settings.Companion.SaveResult.Ok -> {
                         settings = Settings.load(ctx)
+                        bd.paynoc.merchant.system.ListenerService.start(ctx)
                         toast = "Saved securely"
                         showConfig = false
                     }
@@ -254,6 +255,7 @@ private fun HomeScreen() {
             onClear = {
                 Settings.clear(ctx)
                 settings = Settings.load(ctx)
+                bd.paynoc.merchant.system.ListenerService.stop(ctx)
                 toast = "Credentials cleared"
             },
         )

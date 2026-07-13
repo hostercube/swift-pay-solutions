@@ -8,7 +8,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Thin HTTP client for the PayNOC public API. Uses the merchant's API key
@@ -82,11 +85,22 @@ class PayNocApi private constructor(
             },
         )
         val json = requestAdapter.toJson(body)
+        val ts = (System.currentTimeMillis() / 1000L).toString()
+        val nonce = randomNonce()
+        // HMAC(SHA256, apiKey) over "<ts>.<nonce>.<body>" — lets the backend
+        // reject replayed or tampered payloads even if the key ever leaks
+        // from a device backup. Backend that doesn't verify this header
+        // simply ignores it, so it's safe to always send.
+        val signature = hmacSha256Hex(apiKey, "$ts.$nonce.$json")
         val request = Request.Builder()
             .url("$baseUrl/api/public/v1/sms-events")
             .header("Authorization", "Bearer $apiKey")
             .header("Content-Type", "application/json")
             .header("User-Agent", "PayNOC-Merchant-APK/1.2")
+            .header("X-PayNOC-Timestamp", ts)
+            .header("X-PayNOC-Nonce", nonce)
+            .header("X-PayNOC-Signature", "sha256=$signature")
+            .header("X-PayNOC-Device", deviceId)
             .post(json.toRequestBody("application/json".toMediaType()))
             .build()
         http.newCall(request).execute().use { response ->
@@ -114,6 +128,19 @@ class PayNocApi private constructor(
             .get()
             .build()
         return http.newCall(request).execute().use { it.code() }
+    }
+
+    private fun randomNonce(): String {
+        val bytes = ByteArray(12)
+        SecureRandom().nextBytes(bytes)
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun hmacSha256Hex(key: String, data: String): String {
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        return mac.doFinal(data.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
     }
 
     companion object {
