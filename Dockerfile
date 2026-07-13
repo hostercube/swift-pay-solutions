@@ -3,10 +3,12 @@
 # Vite 8 must run on real Node 22, not Bun's Node-compat runtime, otherwise
 # Coolify builds can fail with node:util/parseEnv-related errors.
 
+FROM oven/bun:1.2.23-alpine AS bun
+
 FROM node:22-alpine AS build
 WORKDIR /app
 
-RUN npm install -g bun@1.2.23
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 COPY package.json bun.lock* bunfig.toml ./
 RUN bun install --frozen-lockfile || bun install
