@@ -76,6 +76,7 @@ const EMPTY: Partial<Method> = {
   branch_name: null,
   routing_number: null,
   swift_code: null,
+  logo_url: null,
 };
 
 
