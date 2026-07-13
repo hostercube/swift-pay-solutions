@@ -30,7 +30,10 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 function createSupabaseClient() {
   // Direct connection to Supabase (same Coolify stack, same domain setup).
   // No proxy needed — frontend/backend/Supabase are co-located.
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const rawUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  // Strip trailing slash — a URL like https://db.paynoc.com/ makes supabase-js
+  // build /auth/v1//token, which some Kong configs reject with a CORS-less 404.
+  const SUPABASE_URL = typeof rawUrl === 'string' ? rawUrl.replace(/\/+$/, '') : rawUrl;
   const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 
 
@@ -43,6 +46,7 @@ function createSupabaseClient() {
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }
+
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {

@@ -32,11 +32,15 @@ async function ensureAdminAccess(userId: string): Promise<boolean> {
 
 function authErrorMessage(err: unknown) {
   const msg = err instanceof Error ? err.message : "Access denied";
-  if (/failed to fetch|networkerror|load failed/i.test(msg)) {
-    return "Backend auth endpoint is unreachable. Check that the backend URL points to the API gateway and that SSL/CORS are valid.";
+  if (/failed to fetch|networkerror|load failed|typeerror.*fetch/i.test(msg)) {
+    const url =
+      (import.meta.env.VITE_SUPABASE_URL as string | undefined) ||
+      "(VITE_SUPABASE_URL not set)";
+    return `Cannot reach backend at ${url}. On the backend host (Coolify → Supabase Kong) allow this site's origin (${typeof window !== "undefined" ? window.location.origin : ""}) in CORS, and confirm HTTPS resolves from the browser.`;
   }
   return msg;
 }
+
 
 function AdminLoginPage() {
   const navigate = useNavigate();
