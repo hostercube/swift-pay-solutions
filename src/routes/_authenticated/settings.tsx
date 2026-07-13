@@ -166,7 +166,6 @@ function SettingsPage() {
           <Field label="Logo URL">
             <Input value={p.logo_url ?? ""} onChange={(v) => setP({ ...p, logo_url: v })} />
           </Field>
-          </Field>
           <Field label="Brand color (hex)">
             <div className="flex items-center gap-2">
               <Input value={p.brand_color ?? ""} onChange={(v) => setP({ ...p, brand_color: v })} />
