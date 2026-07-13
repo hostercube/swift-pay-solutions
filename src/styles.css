@@ -196,9 +196,29 @@
 
 @utility glass {
   background-color: var(--glass);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(160%);
   border: 1px solid var(--glass-border);
+}
+
+@utility glass-premium {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--brand) 6%, var(--card)) 0%,
+      var(--card) 60%
+    );
+  backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid color-mix(in oklab, var(--brand) 18%, var(--glass-border));
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, var(--brand) 12%, transparent) inset,
+    0 40px 80px -40px color-mix(in oklab, var(--brand) 40%, transparent),
+    0 2px 8px -2px oklch(0 0 0 / 0.25);
+}
+
+@utility ring-brand-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--brand) 30%, transparent),
+    0 20px 60px -20px color-mix(in oklab, var(--brand) 40%, transparent);
 }
 
 @utility text-gradient-brand {
