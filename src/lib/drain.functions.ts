@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertMerchantRole } from "@/lib/rbac.server";
 
 /**
  * Manually trigger the drain/re-verify pipeline for one merchant. Used by
@@ -16,7 +15,9 @@ export const drainPendingForMerchant = createServerFn({ method: "POST" })
 
     // Merchants (operator+) can drain their own; super-admin can drain any
     const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "super_admin" });
-    if (!isAdmin) await assertMerchantRole(supabase, userId, data.merchantId, "operator");
+    const merchantId = isAdmin ? data.merchantId : userId;
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
+    if (!isAdmin) await assertMerchantRole(supabase, userId, merchantId, "operator");
 
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
     const { matchAndVerify } = await import("@/lib/sms-match.server");
@@ -26,7 +27,7 @@ export const drainPendingForMerchant = createServerFn({ method: "POST" })
     const { data: retryable } = await supabaseAdmin
       .from("sms_event_logs")
       .select("id, merchant_id, provider, trx_id, sender, amount, raw_body, device_id, received_at")
-      .eq("merchant_id", data.merchantId)
+      .eq("merchant_id", merchantId)
       .in("outcome", ["no_match", "error"])
       .gte("created_at", since)
       .order("created_at", { ascending: true })
@@ -52,7 +53,7 @@ export const drainPendingForMerchant = createServerFn({ method: "POST" })
     const { data: stale } = await supabaseAdmin
       .from("transactions")
       .select("id, invoices!inner(status, expires_at)")
-      .eq("merchant_id", data.merchantId)
+      .eq("merchant_id", merchantId)
       .eq("status", "pending")
       .lt("created_at", cutoff)
       .limit(200);
@@ -93,6 +94,7 @@ export const reverifyTransaction = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!txn) throw new Error("Transaction not found");
     if (txn.status !== "pending") throw new Error("Transaction is not pending");
+    const { assertMerchantRole } = await import("@/lib/rbac.server");
     await assertMerchantRole(supabase, userId, txn.merchant_id, "operator");
 
     const { supabaseAdmin } = await import("@/lib/supabase-admin.server");

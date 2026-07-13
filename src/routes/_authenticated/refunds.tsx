@@ -39,7 +39,7 @@ const COLOR: Record<string, string> = {
 };
 
 function RefundsPage() {
-  const { roles } = useAuth();
+  const { roles, user } = useAuth();
   const isAdmin = roles.includes("super_admin");
   const [rows, setRows] = useState<Row[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -52,19 +52,17 @@ function RefundsPage() {
   const updateFn = useServerFn(updateRefundStatus);
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
-    const fromLoose = (supabase.from as unknown as (t: string) => {
-      select: (s: string) => {
-        order: (c: string, o: { ascending: boolean }) => {
-          limit: (n: number) => Promise<{ data: Row[] | null }>;
-        };
-      };
-    }).bind(supabase);
-    const { data } = await fromLoose("refunds")
-      .select("*")
+    let refundsQuery = supabase
+      .from("refunds")
+      .select("*");
+    if (!isAdmin) refundsQuery = refundsQuery.eq("merchant_id", user.id);
+    const { data, error } = await refundsQuery
       .order("created_at", { ascending: false })
       .limit(500);
-    setRows(data ?? []);
+    if (error) toast.error(error.message);
+    setRows((data ?? []) as Row[]);
     setLoading(false);
 
 
@@ -77,7 +75,7 @@ function RefundsPage() {
     setInvoices((inv ?? []) as Invoice[]);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [user, isAdmin]);
 
   const submit = async () => {
     if (!invoiceId || !amount) return toast.error("Pick an invoice and enter an amount");

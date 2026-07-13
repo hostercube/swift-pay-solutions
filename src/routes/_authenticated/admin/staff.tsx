@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,12 @@ import { Trash2, UserPlus, Save } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_PERM_GROUPS } from "@/lib/permissions";
 import { FilteredList } from "@/components/filtered-list";
+import {
+  adminInviteStaff,
+  adminListStaff,
+  adminRemoveStaff,
+  adminUpdateStaffPerms,
+} from "@/lib/admin.functions";
 
 
 export const Route = createFileRoute("/_authenticated/admin/staff")({
@@ -29,50 +34,58 @@ type Row = {
 };
 
 function AdminStaffPage() {
-  const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [newPerms, setNewPerms] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const listFn = useServerFn(adminListStaff);
+  const inviteFn = useServerFn(adminInviteStaff);
+  const updatePermsFn = useServerFn(adminUpdateStaffPerms);
+  const removeFn = useServerFn(adminRemoveStaff);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("admin_staff")
-      .select("id, email, full_name, permissions, status, created_at")
-      .order("created_at", { ascending: false });
-    setRows((data ?? []) as Row[]);
+    try {
+      setRows((await listFn()) as Row[]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to load staff");
+    }
   };
   useEffect(() => { load(); }, []);
 
   const invite = async () => {
-    if (!email.trim() || !user) return;
+    if (!email.trim()) return;
     setBusy(true);
-    const { error } = await supabase.from("admin_staff").insert({
-      email: email.trim().toLowerCase(),
-      full_name: name.trim() || null,
-      permissions: newPerms,
-      invited_by: user.id,
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Staff invited");
-    setEmail(""); setName(""); setNewPerms([]);
-    load();
+    try {
+      await inviteFn({ data: { email, full_name: name || null, permissions: newPerms } });
+      toast.success("Staff invited");
+      setEmail(""); setName(""); setNewPerms([]);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const savePerms = async (id: string, perms: string[]) => {
-    const { error } = await supabase.from("admin_staff").update({ permissions: perms }).eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Saved");
-    load();
+    try {
+      await updatePermsFn({ data: { id, permissions: perms } });
+      toast.success("Saved");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
   };
 
   const remove = async (id: string) => {
     if (!confirm("Remove this staff member?")) return;
-    const { error } = await supabase.from("admin_staff").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    load();
+    try {
+      await removeFn({ data: { id } });
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
   };
 
   return (

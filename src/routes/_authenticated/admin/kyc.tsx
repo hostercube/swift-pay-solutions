@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { adminReviewKyc } from "@/lib/admin.functions";
+import { adminReviewKyc, adminSetVerificationMode } from "@/lib/admin.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { FilteredList } from "@/components/filtered-list";
 
@@ -36,6 +36,7 @@ function KycPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [mode, setMode] = useState<string>("manual");
   const review = useServerFn(adminReviewKyc);
+  const setModeFn = useServerFn(adminSetVerificationMode);
 
   const load = async () => {
     const { data } = await supabase
@@ -54,10 +55,13 @@ function KycPage() {
   useEffect(() => { load(); }, []);
 
   const saveMode = async (m: string) => {
-    const { error } = await supabase.from("platform_settings").update({ verification_mode: m }).eq("id", 1);
-    if (error) return toast.error(error.message);
-    toast.success(`Verification mode: ${m}`);
-    setMode(m);
+    try {
+      await setModeFn({ data: { mode: m as "manual" | "auto" } });
+      toast.success(`Verification mode: ${m}`);
+      setMode(m);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    }
   };
 
   const decide = async (id: string, decision: "verified" | "rejected", note: string) => {

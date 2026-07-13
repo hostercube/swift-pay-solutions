@@ -3,9 +3,6 @@ import { createHash } from "crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const sha256 = (v: string | null | undefined) =>
-  v ? createHash("sha256").update(v.trim().toLowerCase()).digest("hex") : undefined;
-
 /**
  * Send a Purchase event to Meta's Conversion API for a merchant.
  * Called server-side (webhook / payment completion path).
@@ -28,6 +25,9 @@ export const sendMetaCapiPurchase = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const sha256 = (v: string | null | undefined) =>
+      v ? createHash("sha256").update(v.trim().toLowerCase()).digest("hex") : undefined;
+
     const { data: cfg, error } = await context.supabase
       .from("profiles")
       .select("meta_pixel_id, meta_capi_token, meta_capi_test_code")

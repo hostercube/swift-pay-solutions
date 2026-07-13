@@ -7,45 +7,8 @@ type TurnstileSettings = {
   secret_key?: string;
 };
 
-async function readDbTurnstile(): Promise<TurnstileSettings> {
-  try {
-    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
-    const { data } = await supabaseAdmin
-      .from("platform_settings")
-      .select("settings")
-      .order("id")
-      .limit(1)
-      .maybeSingle();
-    const s = (data?.settings ?? {}) as { turnstile?: TurnstileSettings };
-    return s.turnstile ?? {};
-  } catch (e) {
-    console.error("[turnstile] readDbTurnstile failed:", e);
-    return {};
-  }
-}
-
-function envTurnstile(): TurnstileSettings {
-  const site = process.env.TURNSTILE_SITE_KEY || process.env.VITE_TURNSTILE_SITE_KEY || "";
-  const secret = process.env.TURNSTILE_SECRET_KEY || "";
-  return {
-    enabled: !!(site && secret),
-    site_key: site,
-    secret_key: secret,
-  };
-}
-
-/** DB config takes precedence, env-vars are the fallback. */
-async function resolveTurnstile(): Promise<TurnstileSettings> {
-  const db = await readDbTurnstile();
-  const env = envTurnstile();
-  return {
-    enabled: db.enabled ?? env.enabled,
-    site_key: db.site_key || env.site_key || "",
-    secret_key: db.secret_key || env.secret_key || "",
-  };
-}
-
 export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(async () => {
+  const { resolveTurnstile } = await import("@/lib/turnstile.server");
   const t = await resolveTurnstile();
   const siteKey = (t.site_key ?? "").trim();
   // Show captcha whenever a site key is configured AND enabled is true (or unset with env fallback).
@@ -56,6 +19,7 @@ export const getTurnstileConfig = createServerFn({ method: "GET" }).handler(asyn
 export const verifyTurnstile = createServerFn({ method: "POST" })
   .inputValidator((d: { token: string }) => d)
   .handler(async ({ data }) => {
+    const { resolveTurnstile } = await import("@/lib/turnstile.server");
     const t = await resolveTurnstile();
     if (!t.enabled) return { ok: true };
     const secret = (t.secret_key ?? "").trim();

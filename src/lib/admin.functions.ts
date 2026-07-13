@@ -1,34 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-async function assertSuperAdmin(context: {
-  supabase: import("@supabase/supabase-js").SupabaseClient;
-  userId: string;
-}) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "super_admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: super_admin only");
-}
-
-async function logAudit(
-  context: { supabase: import("@supabase/supabase-js").SupabaseClient; userId: string },
-  action: string,
-  merchant_id: string | null,
-  metadata: Record<string, unknown> = {},
-) {
-  await context.supabase.from("audit_logs").insert({
-    actor_id: context.userId,
-    merchant_id,
-    action,
-    resource: "merchant",
-    resource_id: merchant_id,
-    metadata,
-  });
-}
+import { assertSuperAdmin, logAudit } from "@/lib/admin-helpers";
 
 /** Admin creates a merchant account (no email confirmation needed). */
 export const adminCreateMerchant = createServerFn({ method: "POST" })
@@ -91,7 +64,7 @@ export const adminImpersonate = createServerFn({ method: "POST" })
     if (linkErr) throw new Error(linkErr.message);
 
     const { data: me } = await context.supabase.auth.getUser();
-    await context.supabase.from("impersonation_events").insert({
+    await supabaseAdmin.from("impersonation_events").insert({
       admin_user_id: context.userId,
       admin_email: me.user?.email ?? "",
       target_user_id: data.target_user_id,
@@ -117,7 +90,8 @@ export const adminReviewKyc = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({
         kyc_status: data.decision,
@@ -155,7 +129,8 @@ export const adminUpdateMerchant = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update(data.patch)
       .eq("id", data.merchant_id);
@@ -178,7 +153,8 @@ export const adminSetMerchantStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const { error } = await context.supabase
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({ status: data.status })
       .eq("id", data.merchant_id);
@@ -186,7 +162,7 @@ export const adminSetMerchantStatus = createServerFn({ method: "POST" })
 
     // If suspending, also deactivate their API keys so nothing keeps flowing.
     if (data.status === "suspended") {
-      await context.supabase.from("api_keys").update({ is_active: false }).eq("merchant_id", data.merchant_id);
+      await supabaseAdmin.from("api_keys").update({ is_active: false }).eq("merchant_id", data.merchant_id);
     }
     await logAudit(context, `merchant.${data.status}`, data.merchant_id, { reason: data.reason });
     return { ok: true };
@@ -226,13 +202,64 @@ export const adminDeleteMerchant = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** List merchants for the admin grid using privileged server access after role check. */
+export const adminListMerchants = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const [{ data: profiles, error }, { data: adminRoles, error: roleErr }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name, business_name, status, kyc_status, created_at")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.from("user_roles").select("user_id").eq("role", "super_admin"),
+    ]);
+    if (error) throw new Error(error.message);
+    if (roleErr) throw new Error(roleErr.message);
+
+    const admins = new Set((adminRoles ?? []).map((r) => r.user_id));
+    return (profiles ?? []).map((r) => ({ ...r, is_super_admin: admins.has(r.id) }));
+  });
+
+/** Grant/revoke super-admin from the admin merchant list. */
+export const adminSetSuperAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ user_id: z.string().uuid(), enabled: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    if (data.user_id === context.userId && !data.enabled) {
+      throw new Error("You cannot revoke your own super-admin access");
+    }
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    if (data.enabled) {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: data.user_id, role: "super_admin" }, { onConflict: "user_id,role" });
+      if (error) throw new Error(error.message);
+      await logAudit(context, "merchant.super_admin_granted", data.user_id);
+    } else {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.user_id)
+        .eq("role", "super_admin");
+      if (error) throw new Error(error.message);
+      await logAudit(context, "merchant.super_admin_revoked", data.user_id);
+    }
+    return { ok: true };
+  });
+
 /** Aggregated merchant profile for the admin deep-dive page. */
 export const adminGetMerchantOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ merchant_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    const s = context.supabase;
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const s = supabaseAdmin;
     const mid = data.merchant_id;
 
     const [
@@ -300,7 +327,8 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context);
-    let q = context.supabase.from("profiles").select("id, status, kyc_status");
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    let q = supabaseAdmin.from("profiles").select("id, status, kyc_status");
     if (data.audience === "active") q = q.eq("status", "active");
     else if (data.audience === "suspended") q = q.eq("status", "suspended");
     else if (data.audience === "kyc_pending") q = q.in("kyc_status", ["pending", "unverified"]);
@@ -316,10 +344,95 @@ export const adminBroadcastNotification = createServerFn({ method: "POST" })
     }));
     if (rows.length === 0) return { sent: 0 };
 
-    const { error: insertErr } = await context.supabase.from("notifications").insert(rows);
+    const { error: insertErr } = await supabaseAdmin.from("notifications").insert(rows);
     if (insertErr) throw new Error(insertErr.message);
     await logAudit(context, "broadcast.sent", null, { audience: data.audience, count: rows.length, title: data.title });
     return { sent: rows.length };
+  });
+
+/** List admin office staff. */
+export const adminListStaff = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { data, error } = await supabaseAdmin
+      .from("admin_staff")
+      .select("id, email, full_name, permissions, status, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+/** Invite admin office staff. */
+export const adminInviteStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      email: z.string().email(),
+      full_name: z.string().nullable().optional(),
+      permissions: z.array(z.string()).default([]),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin.from("admin_staff").insert({
+      email: data.email.trim().toLowerCase(),
+      full_name: data.full_name?.trim() || null,
+      permissions: data.permissions,
+      invited_by: context.userId,
+    });
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.invited", null, { email: data.email });
+    return { ok: true };
+  });
+
+/** Update admin staff permissions. */
+export const adminUpdateStaffPerms = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ id: z.string().uuid(), permissions: z.array(z.string()) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
+      .from("admin_staff")
+      .update({ permissions: data.permissions })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.permissions_updated", null, { staff_id: data.id });
+    return { ok: true };
+  });
+
+/** Remove admin office staff. */
+export const adminRemoveStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin.from("admin_staff").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "admin_staff.removed", null, { staff_id: data.id });
+    return { ok: true };
+  });
+
+/** Change KYC verification mode. */
+export const adminSetVerificationMode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ mode: z.enum(["manual", "auto"]) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
+    const { error } = await supabaseAdmin
+      .from("platform_settings")
+      .update({ verification_mode: data.mode })
+      .eq("id", 1);
+    if (error) throw new Error(error.message);
+    await logAudit(context, "kyc.verification_mode_updated", null, { mode: data.mode });
+    return { ok: true };
   });
 
 /** Change a merchant subscription: swap package, edit end date, toggle auto-renew, or force a status. */

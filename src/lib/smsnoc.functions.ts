@@ -1,40 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  DEFAULT_PLATFORM_SMSNOC,
-  loadPlatformSmsNoc,
-  loadPlatformBrandName,
-  type PlatformSmsNocConfig,
-  sendSms,
-  sendEmail,
-  sendWhatsApp,
-  sendVoice,
-  renderTemplate,
-} from "@/lib/smsnoc.server";
 
-function serializeResult(r: {
-  status: string;
-  channel: string;
-  http_status?: number;
-  provider_response?: unknown;
-  error?: string | null;
-}) {
-  return {
-    status: r.status,
-    channel: r.channel,
-    http_status: r.http_status ?? null,
-    provider_response: (() => {
-      try {
-        return typeof r.provider_response === "string"
-          ? r.provider_response
-          : JSON.stringify(r.provider_response ?? null);
-      } catch {
-        return String(r.provider_response ?? "");
-      }
-    })(),
-    error: r.error ?? null,
-  };
-}
+type PlatformSmsNocConfig = {
+  enabled: boolean;
+  api_key: string;
+  sender_id: string;
+  whatsapp_device_id: string;
+  email_config_id: string;
+  channel_sms: boolean;
+  channel_email: boolean;
+  channel_whatsapp: boolean;
+  channel_voice: boolean;
+  events: Record<string, boolean>;
+  templates: Record<string, string>;
+};
 
 // ---------- Platform (super-admin) config ----------
 
@@ -48,6 +27,7 @@ export const getPlatformSmsNocConfig = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+    const { loadPlatformSmsNoc } = await import("@/lib/smsnoc.server");
     const cfg = await loadPlatformSmsNoc();
     return cfg;
   });
@@ -63,6 +43,8 @@ export const savePlatformSmsNocConfig = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+
+    const { DEFAULT_PLATFORM_SMSNOC, loadPlatformSmsNoc } = await import("@/lib/smsnoc.server");
 
     const merged: PlatformSmsNocConfig = {
       ...DEFAULT_PLATFORM_SMSNOC,
@@ -114,6 +96,15 @@ export const sendPlatformSmsNocTest = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+    const {
+      loadPlatformSmsNoc,
+      loadPlatformBrandName,
+      sendSms,
+      sendEmail,
+      sendWhatsApp,
+      sendVoice,
+      serializeSmsNocResult,
+    } = await import("@/lib/smsnoc.server");
     const cfg = await loadPlatformSmsNoc();
     if (!cfg.api_key) throw new Error("Platform SMS NOC API key is not configured");
     const brand = await loadPlatformBrandName();
@@ -145,7 +136,7 @@ export const sendPlatformSmsNocTest = createServerFn({ method: "POST" })
       });
     else
       result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
-    return serializeResult(result);
+    return serializeSmsNocResult(result);
   });
 
 // ---------- Merchant config ----------
@@ -227,6 +218,14 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
       .eq("merchant_id", userId)
       .maybeSingle();
     if (!cfg || !cfg.api_key) throw new Error("Configure your SMS NOC API key first");
+    const {
+      loadPlatformBrandName,
+      sendSms,
+      sendEmail,
+      sendWhatsApp,
+      sendVoice,
+      serializeSmsNocResult,
+    } = await import("@/lib/smsnoc.server");
     const brand = await loadPlatformBrandName();
     const message = data.message || `Test message via ${brand}/SMS NOC.`;
     let result;
@@ -254,7 +253,7 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
         deviceId: (cfg.whatsapp_device_id as string) || undefined,
       });
     else result = await sendVoice({ apiKey: cfg.api_key, to: data.to, message });
-    return serializeResult(result);
+    return serializeSmsNocResult(result);
   });
 
 // ---------- Public platform-level triggers (called from public pages after auth actions) ----------
@@ -283,6 +282,3 @@ export const smsNocNotifyPasswordReset = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
-
-// Silences unused import lint
-void renderTemplate;
