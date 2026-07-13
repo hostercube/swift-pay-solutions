@@ -1,16 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  DEFAULT_PLATFORM_SMSNOC,
-  loadPlatformSmsNoc,
-  loadPlatformBrandName,
-  type PlatformSmsNocConfig,
-  sendSms,
-  sendEmail,
-  sendWhatsApp,
-  sendVoice,
-  serializeSmsNocResult,
-} from "@/lib/smsnoc.server";
+import type { PlatformSmsNocConfig } from "@/lib/smsnoc.server";
 
 // ---------- Platform (super-admin) config ----------
 
@@ -24,6 +14,7 @@ export const getPlatformSmsNocConfig = createServerFn({ method: "GET" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+    const { loadPlatformSmsNoc } = await import("@/lib/smsnoc.server");
     const cfg = await loadPlatformSmsNoc();
     return cfg;
   });
@@ -39,6 +30,8 @@ export const savePlatformSmsNocConfig = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+
+    const { DEFAULT_PLATFORM_SMSNOC, loadPlatformSmsNoc } = await import("@/lib/smsnoc.server");
 
     const merged: PlatformSmsNocConfig = {
       ...DEFAULT_PLATFORM_SMSNOC,
@@ -90,6 +83,15 @@ export const sendPlatformSmsNocTest = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .in("role", ["super_admin", "admin"]);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+    const {
+      loadPlatformSmsNoc,
+      loadPlatformBrandName,
+      sendSms,
+      sendEmail,
+      sendWhatsApp,
+      sendVoice,
+      serializeSmsNocResult,
+    } = await import("@/lib/smsnoc.server");
     const cfg = await loadPlatformSmsNoc();
     if (!cfg.api_key) throw new Error("Platform SMS NOC API key is not configured");
     const brand = await loadPlatformBrandName();
@@ -203,6 +205,14 @@ export const sendMerchantSmsNocTest = createServerFn({ method: "POST" })
       .eq("merchant_id", userId)
       .maybeSingle();
     if (!cfg || !cfg.api_key) throw new Error("Configure your SMS NOC API key first");
+    const {
+      loadPlatformBrandName,
+      sendSms,
+      sendEmail,
+      sendWhatsApp,
+      sendVoice,
+      serializeSmsNocResult,
+    } = await import("@/lib/smsnoc.server");
     const brand = await loadPlatformBrandName();
     const message = data.message || `Test message via ${brand}/SMS NOC.`;
     let result;

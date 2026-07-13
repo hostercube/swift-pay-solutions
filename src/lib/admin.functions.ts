@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertSuperAdmin, logAudit } from "@/lib/admin-helpers.server";
+import { assertSuperAdmin, logAudit } from "@/lib/admin-helpers";
 
 /** Admin creates a merchant account (no email confirmation needed). */
 export const adminCreateMerchant = createServerFn({ method: "POST" })
