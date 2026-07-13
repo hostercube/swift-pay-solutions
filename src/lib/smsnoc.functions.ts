@@ -1,6 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { PlatformSmsNocConfig } from "@/lib/smsnoc.server";
+
+type PlatformSmsNocConfig = {
+  enabled: boolean;
+  api_key: string;
+  sender_id: string;
+  whatsapp_device_id: string;
+  email_config_id: string;
+  channel_sms: boolean;
+  channel_email: boolean;
+  channel_whatsapp: boolean;
+  channel_voice: boolean;
+  events: Record<string, boolean>;
+  templates: Record<string, string>;
+};
 
 // ---------- Platform (super-admin) config ----------
 
