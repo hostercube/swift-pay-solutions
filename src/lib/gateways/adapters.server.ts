@@ -623,31 +623,54 @@ function verifyStripe(v: VerifyArgs): VerifyResult {
   }
   const body = JSON.parse(v.rawBody) as {
     id: string; type: string;
-    data: { object: { metadata?: Record<string, string>; id?: string; amount_total?: number; currency?: string; payment_status?: string } };
+    data: { object: { metadata?: Record<string, string>; id?: string; payment_intent?: string;
+      amount_total?: number; amount?: number; currency?: string; payment_status?: string; status?: string } };
   };
   const obj = body.data.object;
+  // For Checkout Sessions, store the PaymentIntent so refunds work later.
+  const providerTxnId = obj.payment_intent ?? obj.id;
+  const paid = obj.payment_status === "paid" || obj.status === "succeeded"
+            || body.type === "checkout.session.completed" || body.type === "payment_intent.succeeded";
   return {
     verified: true, eventType: body.type, providerEventId: body.id,
-    invoiceRef: obj.metadata?.invoice_id, providerTxnId: obj.id,
-    status: obj.payment_status === "paid" ? "completed" : "pending",
-    amount: obj.amount_total ? obj.amount_total / 100 : undefined,
+    invoiceRef: obj.metadata?.invoice_id, providerTxnId,
+    status: paid ? "completed" : "pending",
+    amount: obj.amount_total ? obj.amount_total / 100 : (obj.amount ? obj.amount / 100 : undefined),
     currency: obj.currency?.toUpperCase(),
   };
 }
 
-function verifySslcz(v: VerifyArgs): VerifyResult {
-  // SSLCommerz IPN posts form-encoded; caller passes rawBody as querystring.
+async function verifySslcz(v: VerifyArgs): Promise<VerifyResult> {
+  // SSLCommerz IPN posts form-encoded fields. The ONLY safe verification path
+  // is a server-to-server call to the Validator API with val_id + store creds
+  // — the IPN payload itself is untrusted (no signature).
   const p = Object.fromEntries(new URLSearchParams(v.rawBody));
-  // verify_sign = md5(concat of key=val sorted + store_password md5)
-  // For brevity we accept as verified if store_id matches and status = VALID
-  const ok = p.status === "VALID" && p.store_id === v.creds.store_id;
+  if (!p.val_id || !v.creds.store_id || !v.creds.store_password) {
+    return { verified: false, reason: "missing_val_id_or_creds" };
+  }
+  if (p.store_id && p.store_id !== v.creds.store_id) {
+    return { verified: false, reason: "store_mismatch" };
+  }
+  const host = v.mode === "live"
+    ? "https://securepay.sslcommerz.com"
+    : "https://sandbox.sslcommerz.com";
+  const url = `${host}/validator/api/validationserverAPI.php?val_id=${encodeURIComponent(p.val_id)}`
+    + `&store_id=${encodeURIComponent(v.creds.store_id)}`
+    + `&store_passwd=${encodeURIComponent(v.creds.store_password)}&format=json`;
+  const res = await fetch(url);
+  const j = (await res.json().catch(() => ({}))) as {
+    status?: string; tran_id?: string; bank_tran_id?: string; amount?: string;
+    currency?: string; store_id?: string;
+  };
+  const ok = (j.status === "VALID" || j.status === "VALIDATED") && j.store_id === v.creds.store_id;
   return {
-    verified: ok, eventType: p.status,
-    providerEventId: p.tran_id, invoiceRef: p.tran_id, providerTxnId: p.bank_tran_id ?? p.tran_id,
+    verified: ok, eventType: j.status,
+    providerEventId: j.tran_id ?? p.tran_id, invoiceRef: j.tran_id ?? p.tran_id,
+    providerTxnId: j.bank_tran_id ?? p.bank_tran_id ?? p.tran_id,
     status: ok ? "completed" : "failed",
-    amount: p.amount ? Number(p.amount) : undefined,
-    currency: p.currency,
-    reason: ok ? undefined : "sslcz_invalid",
+    amount: j.amount ? Number(j.amount) : (p.amount ? Number(p.amount) : undefined),
+    currency: j.currency ?? p.currency,
+    reason: ok ? undefined : "sslcz_validator_rejected",
   };
 }
 
