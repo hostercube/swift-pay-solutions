@@ -1,11 +1,14 @@
 package bd.paynoc.merchant.parsers
 
 /**
- * Regex-based SMS parsers for common Bangladesh payment providers.
- * Add a new [Parser] entry to support a new bank / MFS.
+ * Regex-based SMS parsers for common Bangladesh payment providers, including
+ * Bangla QR (Bangladesh Bank unified QR) notifications from banks and MFS.
  *
  * Each parser must expose named regex groups: `trxId`, `amount`, and
- * optionally `sender` (the number that paid).
+ * optionally `sender` (the payer number / masked card). Parsers are tried in
+ * order; the first match wins. Order matters: put provider-specific templates
+ * before the generic bank credit fallback so a bKash / Nagad SMS is not
+ * classified as `bank`.
  */
 data class ParsedSms(
     val provider: String,
@@ -22,8 +25,8 @@ private data class Parser(
 )
 
 private val PARSERS = listOf(
-    // "You have received Tk 500.00 from 017XXXXXXXX. Fee Tk 0.00.
-    //  Balance Tk 1,234.56. TrxID ABC123XYZ at ..."
+    // ── bKash Merchant / Personal receive ───────────────────────────────
+    // "You have received Tk 500.00 from 017XXXXXXXX. ... TrxID ABC123XYZ"
     Parser(
         provider = "bkash",
         senderIds = listOf("bKash", "16247"),
@@ -32,8 +35,17 @@ private val PARSERS = listOf(
             RegexOption.IGNORE_CASE,
         ),
     ),
-    // "Money Received. Amount: Tk 500.00, Sender: 017XXXXXXXX,
-    //  TxnId: 76A2B1CD, ..."
+    // bKash QR-Pay merchant SMS: "QR Payment received Tk 500.00 ... TrxID ..."
+    Parser(
+        provider = "bangla_qr",
+        senderIds = listOf("bKash", "16247"),
+        regex = Regex(
+            """QR\s*Pay(?:ment)?\s*(?:received|credited)?\s*(?:Tk|BDT)\s*(?<amount>[\d,]+\.?\d*).*?(?:from\s+(?<sender>\d+).*?)?TrxID\s+(?<trxId>[A-Z0-9]+)""",
+            RegexOption.IGNORE_CASE,
+        ),
+    ),
+
+    // ── Nagad ───────────────────────────────────────────────────────────
     Parser(
         provider = "nagad",
         senderIds = listOf("NAGAD", "16167"),
@@ -42,19 +54,51 @@ private val PARSERS = listOf(
             RegexOption.IGNORE_CASE,
         ),
     ),
-    // "Cash In Tk 500.00 from 017XXXXXXXX. TxnID 12345678. Bal Tk ..."
+    Parser(
+        provider = "bangla_qr",
+        senderIds = listOf("NAGAD", "16167"),
+        regex = Regex(
+            """QR\s*(?:Payment|Pay)\s*Received.*?Tk\s*(?<amount>[\d,]+\.?\d*).*?TxnId:?\s*(?<trxId>[A-Z0-9]+)""",
+            RegexOption.IGNORE_CASE,
+        ),
+    ),
+
+    // ── Rocket / DBBL ───────────────────────────────────────────────────
     Parser(
         provider = "rocket",
-        senderIds = listOf("DBBL", "16216"),
+        senderIds = listOf("DBBL", "16216", "ROCKET"),
         regex = Regex(
             """Cash\s+In\s+Tk\s+(?<amount>[\d,]+\.?\d*)\s+from\s+(?<sender>\d+).*?TxnID\s+(?<trxId>[A-Z0-9]+)""",
             RegexOption.IGNORE_CASE,
         ),
     ),
-    // Generic bank credit — "BDT 500.00 credited ... Ref: XYZ123"
+    // DBBL Nexus / Bangla QR: "QR sale BDT 500.00 ... Ref XXXX"
+    Parser(
+        provider = "bangla_qr",
+        senderIds = listOf("DBBL", "16216", "NEXUSPAY"),
+        regex = Regex(
+            """QR\s+(?:sale|payment|credit).*?BDT\s+(?<amount>[\d,]+\.?\d*).*?(?:Ref|TxnID)[:\s]+(?<trxId>[A-Z0-9]+)""",
+            RegexOption.IGNORE_CASE,
+        ),
+    ),
+
+    // ── Generic Bangla QR (any bank) ────────────────────────────────────
+    // Covers City Bank Citytouch, EBL Skypay, MTB Smart, BRAC Astha, Bank
+    // Asia, IFIC Aamar, IBBL mCash, Standard Chartered Straight2Bank etc.
+    // Example: "Bangla QR: BDT 500.00 credited to A/C ****1234. TrxID/Ref: 8A7BXY"
+    Parser(
+        provider = "bangla_qr",
+        senderIds = emptyList(),
+        regex = Regex(
+            """(?:Bangla\s*QR|BanglaQR|QR\s*Pay(?:ment)?)[^\n]*?(?:BDT|Tk)\s*(?<amount>[\d,]+\.?\d*)[^\n]*?(?:TrxID|Txn(?:ID)?|Ref)[:\s]+(?<trxId>[A-Z0-9]+)""",
+            RegexOption.IGNORE_CASE,
+        ),
+    ),
+
+    // ── Generic bank credit (must stay last) ────────────────────────────
     Parser(
         provider = "bank",
-        senderIds = emptyList(), // matches by regex only
+        senderIds = emptyList(),
         regex = Regex(
             """BDT\s+(?<amount>[\d,]+\.?\d*)\s+credited.*?Ref[:\s]+(?<trxId>[A-Z0-9]+)""",
             RegexOption.IGNORE_CASE,
