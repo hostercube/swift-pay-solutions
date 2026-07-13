@@ -102,7 +102,12 @@ async function proxyBackend(request: Request) {
           continue;
         }
 
-        return new Response(upstream.body, {
+        // Buffer the body so any upstream gzip/br compression is decoded by
+        // fetch before we hand bytes back to the browser. Streaming `.body`
+        // through while stripping `content-encoding` sends raw compressed
+        // bytes to the browser and breaks JSON parsing.
+        const buf = await upstream.arrayBuffer();
+        return new Response(buf, {
           status: upstream.status,
           statusText: upstream.statusText,
           headers: responseHeaders(upstream),
