@@ -16,34 +16,52 @@ export type Database = {
     Tables: {
       admin_staff: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          department: string | null
           email: string
           full_name: string | null
           id: string
           invited_by: string | null
+          last_login_at: string | null
+          mfa_enabled: boolean
+          mfa_enrolled_at: string | null
           permissions: string[]
+          phone: string | null
           status: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email: string
           full_name?: string | null
           id?: string
           invited_by?: string | null
+          last_login_at?: string | null
+          mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           permissions?: string[]
+          phone?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email?: string
           full_name?: string | null
           id?: string
           invited_by?: string | null
+          last_login_at?: string | null
+          mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           permissions?: string[]
+          phone?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -1286,14 +1304,18 @@ export type Database = {
       profiles: {
         Row: {
           accept_tips: boolean
+          address: string | null
           avatar_url: string | null
           brand_color: string | null
           business_name: string | null
           checkout_footer: string | null
           checkout_style: string
+          city: string | null
+          country: string | null
           created_at: string
           custom_footer_html: string | null
           custom_head_html: string | null
+          date_of_birth: string | null
           email: string
           full_name: string | null
           ga4_measurement_id: string | null
@@ -1310,32 +1332,43 @@ export type Database = {
           kyc_reviewer_note: string | null
           kyc_status: string
           kyc_submitted_at: string | null
+          language: string | null
           logo_url: string | null
           meta_capi_test_code: string | null
           meta_capi_token: string | null
           meta_pixel_id: string | null
           mfa_enabled: boolean
+          mfa_enrolled_at: string | null
           phone: string | null
+          postcode: string | null
           public_bio: string | null
           seo_meta_description: string | null
           seo_meta_keywords: string | null
           slug: string | null
+          state: string | null
           status: string
           support_email: string | null
+          tax_id: string | null
           tiktok_pixel_id: string | null
+          timezone: string | null
           tip_min_amount: number
           updated_at: string
+          website: string | null
         }
         Insert: {
           accept_tips?: boolean
+          address?: string | null
           avatar_url?: string | null
           brand_color?: string | null
           business_name?: string | null
           checkout_footer?: string | null
           checkout_style?: string
+          city?: string | null
+          country?: string | null
           created_at?: string
           custom_footer_html?: string | null
           custom_head_html?: string | null
+          date_of_birth?: string | null
           email: string
           full_name?: string | null
           ga4_measurement_id?: string | null
@@ -1352,32 +1385,43 @@ export type Database = {
           kyc_reviewer_note?: string | null
           kyc_status?: string
           kyc_submitted_at?: string | null
+          language?: string | null
           logo_url?: string | null
           meta_capi_test_code?: string | null
           meta_capi_token?: string | null
           meta_pixel_id?: string | null
           mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           phone?: string | null
+          postcode?: string | null
           public_bio?: string | null
           seo_meta_description?: string | null
           seo_meta_keywords?: string | null
           slug?: string | null
+          state?: string | null
           status?: string
           support_email?: string | null
+          tax_id?: string | null
           tiktok_pixel_id?: string | null
+          timezone?: string | null
           tip_min_amount?: number
           updated_at?: string
+          website?: string | null
         }
         Update: {
           accept_tips?: boolean
+          address?: string | null
           avatar_url?: string | null
           brand_color?: string | null
           business_name?: string | null
           checkout_footer?: string | null
           checkout_style?: string
+          city?: string | null
+          country?: string | null
           created_at?: string
           custom_footer_html?: string | null
           custom_head_html?: string | null
+          date_of_birth?: string | null
           email?: string
           full_name?: string | null
           ga4_measurement_id?: string | null
@@ -1394,21 +1438,28 @@ export type Database = {
           kyc_reviewer_note?: string | null
           kyc_status?: string
           kyc_submitted_at?: string | null
+          language?: string | null
           logo_url?: string | null
           meta_capi_test_code?: string | null
           meta_capi_token?: string | null
           meta_pixel_id?: string | null
           mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           phone?: string | null
+          postcode?: string | null
           public_bio?: string | null
           seo_meta_description?: string | null
           seo_meta_keywords?: string | null
           slug?: string | null
+          state?: string | null
           status?: string
           support_email?: string | null
+          tax_id?: string | null
           tiktok_pixel_id?: string | null
+          timezone?: string | null
           tip_min_amount?: number
           updated_at?: string
+          website?: string | null
         }
         Relationships: []
       }
@@ -1751,37 +1802,49 @@ export type Database = {
       team_members: {
         Row: {
           accepted_at: string | null
+          avatar_url: string | null
+          department: string | null
           id: string
           invited_at: string
+          last_login_at: string | null
           member_email: string
           member_id: string | null
           member_user_id: string | null
           merchant_id: string
           permissions: string[]
+          phone: string | null
           role: string
           status: string
         }
         Insert: {
           accepted_at?: string | null
+          avatar_url?: string | null
+          department?: string | null
           id?: string
           invited_at?: string
+          last_login_at?: string | null
           member_email: string
           member_id?: string | null
           member_user_id?: string | null
           merchant_id: string
           permissions?: string[]
+          phone?: string | null
           role?: string
           status?: string
         }
         Update: {
           accepted_at?: string | null
+          avatar_url?: string | null
+          department?: string | null
           id?: string
           invited_at?: string
+          last_login_at?: string | null
           member_email?: string
           member_id?: string | null
           member_user_id?: string | null
           merchant_id?: string
           permissions?: string[]
+          phone?: string | null
           role?: string
           status?: string
         }
@@ -2517,6 +2580,7 @@ export type Database = {
           ok: boolean
         }[]
       }
+      sync_mfa_state: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "merchant"
