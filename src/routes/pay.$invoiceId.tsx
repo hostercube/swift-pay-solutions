@@ -26,6 +26,7 @@ export const Route = createFileRoute("/pay/$invoiceId")({
 function CheckoutPage() {
   const { invoiceId } = Route.useParams();
   const initiateGw = useServerFn(initiateGatewayCheckout);
+  const finalizeReturn = useServerFn(finalizeGatewayReturn);
   const submitManual = useServerFn(submitManualPayment);
 
   const [inv, setInv] = useState<Invoice | null>(null);
