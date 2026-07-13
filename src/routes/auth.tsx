@@ -7,6 +7,7 @@ import { Turnstile } from "@/components/turnstile";
 import { getTurnstileConfig, verifyTurnstile } from "@/lib/turnstile.functions";
 import { smsNocNotifyUserRegistered } from "@/lib/smsnoc.functions";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { ensureMerchantAccount } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -220,18 +221,17 @@ function AuthPage() {
         });
         if (error) throw error;
 
-        // Persist extras to profile (best-effort — profile row is created by trigger).
-        const uid = signUpData.user?.id;
-        if (uid) {
-          await supabase
-            .from("profiles")
-            .update({
+        if (signUpData.session) {
+          await ensureMerchantAccount({
+            data: {
+              email,
+              fullName: contactName,
+              businessName: companyName,
+              businessType,
               phone: fullPhone,
-              kyc_business_type: businessType,
-              full_name: contactName,
-              business_name: companyName,
-            })
-            .eq("id", uid);
+              websiteUrl: websiteUrl || undefined,
+            },
+          });
         }
 
         smsNocNotifyUserRegistered({
@@ -247,6 +247,7 @@ function AuthPage() {
       } else {
         const { data: sd, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await ensureMerchantAccount({ data: { email } });
 
         const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aal?.nextLevel === "aal2" && aal.currentLevel === "aal1") {
