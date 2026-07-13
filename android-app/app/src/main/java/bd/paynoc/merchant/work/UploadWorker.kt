@@ -16,6 +16,9 @@ import bd.paynoc.merchant.data.EventStore
 import bd.paynoc.merchant.data.QueuedEvent
 import bd.paynoc.merchant.data.Settings
 import bd.paynoc.merchant.network.PayNocApi
+import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
+import kotlin.math.roundToLong
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToLong
 
@@ -43,7 +46,12 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
 
         val api = PayNocApi.create(baseUrl, apiKey)
         return try {
-            val res = api.postSmsEvents(batch, deviceId)
+            // Force IO dispatcher — CoroutineWorker defaults to Dispatchers.Default
+            // (the shared CPU-bound pool). A blocking OkHttp execute() there
+            // starves other coroutines app-wide for up to the full timeout.
+            val res = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                api.postSmsEvents(batch, deviceId)
+            }
             when {
                 res.isSuccessful -> {
                     applyResults(store, batch, res.results)
@@ -65,21 +73,16 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
         batch: List<QueuedEvent>,
         results: List<PayNocApi.SmsEventResult>,
     ) {
-        // Best-effort pairing:
-        //  1) match by trx_id (the server echoes what we sent),
-        //  2) fall back to index when trx_ids collide inside the same batch.
-        val remaining = results.toMutableList()
-        for ((idx, ev) in batch.withIndex()) {
-            val idxOfTrx = remaining.indexOfFirst {
-                !it.trx_id.isNullOrBlank() && it.trx_id.equals(ev.trxId, ignoreCase = true)
-            }
-            val hit = when {
-                idxOfTrx >= 0 -> remaining.removeAt(idxOfTrx)
-                idx < remaining.size -> remaining.removeAt(0)
-                else -> null
-            }
+        // Pair strictly by trx_id. A positional fallback risks pairing event N
+        // with a result that belongs to a different SMS — the wrong invoice
+        // would be marked "auto-verified" and the wrong merchant notification
+        // fired. If the server omits a result for an event, treat as unmatched
+        // rather than guess.
+        val byTrx = results.filter { !it.trx_id.isNullOrBlank() }
+            .associateBy { it.trx_id!!.lowercase() }
+        for (ev in batch) {
+            val hit = byTrx[ev.trxId.lowercase()]
             if (hit == null) {
-                // Server didn't include a result — treat as uploaded, no info.
                 store.updateResult(ev.id, "unmatched", "Uploaded (no server result)", null)
                 continue
             }
@@ -116,7 +119,10 @@ class UploadWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .build()
-        runCatching { nm.notify(ev.id.toInt(), notification) }
+        // Use trxId hash (not the Long PK cast to Int) so unrelated events
+        // can't collide on the same notification id after DB resets.
+        val notifId = ev.trxId.hashCode() and 0x7FFFFFFF
+        runCatching { nm.notify(notifId, notification) }
     }
 
     companion object {
