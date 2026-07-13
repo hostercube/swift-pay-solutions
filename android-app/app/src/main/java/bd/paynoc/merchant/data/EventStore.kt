@@ -16,6 +16,19 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+/**
+ * Local SMS queue.
+ *
+ * `status` values:
+ *  - `pending`    — captured, not yet uploaded
+ *  - `matched`    — uploaded AND the backend matched it to a pending invoice
+ *                   (invoice was auto-verified, webhook fired, merchant paid).
+ *  - `unmatched`  — uploaded but the backend had no pending transaction for
+ *                   this trxId / amount / sender (informational only — the
+ *                   SMS is not necessarily a real payment for this merchant).
+ *  - `failed`     — permanent HTTP 4xx from the API (bad key, malformed).
+ *                   Tap "Retry failed" in the UI to re-queue as `pending`.
+ */
 @Entity(tableName = "queued_events")
 data class QueuedEvent(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -25,8 +38,9 @@ data class QueuedEvent(
     val sender: String?,
     @ColumnInfo(name = "raw_body") val rawBody: String,
     @ColumnInfo(name = "received_at_iso") val receivedAtIso: String,
-    val status: String = "pending", // pending | sent | failed
+    val status: String = "pending",
     val note: String? = null,
+    @ColumnInfo(name = "invoice_id") val invoiceId: String? = null,
 )
 
 @Dao
@@ -37,17 +51,23 @@ interface EventDao {
     @Query("SELECT * FROM queued_events WHERE status = 'pending' ORDER BY id ASC LIMIT :limit")
     suspend fun pending(limit: Int): List<QueuedEvent>
 
-    @Query("UPDATE queued_events SET status = 'sent' WHERE id IN (:ids)")
-    suspend fun markSent(ids: List<Long>)
+    @Query("UPDATE queued_events SET status = :status, note = :note, invoice_id = :invoiceId WHERE id = :id")
+    suspend fun updateResult(id: Long, status: String, note: String?, invoiceId: String?)
 
     @Query("UPDATE queued_events SET status = 'failed', note = :note WHERE id IN (:ids)")
-    suspend fun markFailed(ids: List<Long>, note: String)
+    suspend fun markFailedBatch(ids: List<Long>, note: String)
+
+    @Query("UPDATE queued_events SET status = 'pending', note = NULL WHERE status = 'failed'")
+    suspend fun requeueFailed(): Int
 
     @Query("SELECT * FROM queued_events ORDER BY id DESC LIMIT 200")
     suspend fun recent(): List<QueuedEvent>
+
+    @Query("SELECT COUNT(*) FROM queued_events WHERE status = 'failed'")
+    suspend fun failedCount(): Int
 }
 
-@Database(entities = [QueuedEvent::class], version = 1, exportSchema = false)
+@Database(entities = [QueuedEvent::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun events(): EventDao
 }
@@ -73,8 +93,12 @@ class EventStore private constructor(private val db: AppDatabase) {
 
     suspend fun pending(limit: Int): List<QueuedEvent> = db.events().pending(limit)
     suspend fun recent(): List<QueuedEvent> = db.events().recent()
-    suspend fun markSent(ids: List<Long>) = db.events().markSent(ids)
-    suspend fun markFailed(ids: List<Long>, note: String) = db.events().markFailed(ids, note)
+    suspend fun updateResult(id: Long, status: String, note: String?, invoiceId: String?) =
+        db.events().updateResult(id, status, note, invoiceId)
+    suspend fun markFailedBatch(ids: List<Long>, note: String) =
+        db.events().markFailedBatch(ids, note)
+    suspend fun requeueFailed(): Int = db.events().requeueFailed()
+    suspend fun failedCount(): Int = db.events().failedCount()
 
     companion object {
         @Volatile private var instance: EventStore? = null
@@ -84,7 +108,11 @@ class EventStore private constructor(private val db: AppDatabase) {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "paynoc-events",
-                ).build(),
+                )
+                    // Queue is device-local + self-healing — drop old rows on
+                    // schema upgrade rather than shipping migrations.
+                    .fallbackToDestructiveMigration()
+                    .build(),
             ).also { instance = it }
         }
 
