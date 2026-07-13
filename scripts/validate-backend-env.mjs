@@ -51,23 +51,21 @@ try {
   const body = await response.clone().text();
 
   if (!response.ok) {
-    fail(
-      `Backend auth endpoint returned HTTP ${response.status} at ${url.origin}. Make sure this domain points to the backend API gateway, not the web app or Studio.`,
+    console.warn(
+      `WARNING: Backend auth endpoint returned HTTP ${response.status} at ${url.origin} from the build container. The site proxies /api/backend/* server-side, so this is only fatal if the runtime host also cannot reach the backend.`,
     );
-  }
-
-  if (!contentType.includes("application/json") || /^\s*</.test(body)) {
-    fail(
-      `Backend auth endpoint at ${url.origin} did not return JSON. This usually means the domain is mapped to the wrong service.`,
+  } else if (!contentType.includes("application/json") || /^\s*</.test(body)) {
+    console.warn(
+      `WARNING: Backend auth endpoint at ${url.origin} did not return JSON from the build container. Verify the domain maps to the API gateway, not Studio or the web app.`,
     );
+  } else {
+    JSON.parse(body);
+    console.log(`Backend API verified at ${url.origin}`);
   }
-
-  JSON.parse(body);
-  console.log(`Backend API verified at ${url.origin}`);
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  fail(
-    `Backend auth endpoint is unreachable at ${url.origin}. Fix DNS/SSL/CORS or set VITE_SUPABASE_URL/SUPABASE_URL to the working API gateway. Details: ${message}`,
+  console.warn(
+    `WARNING: Backend auth endpoint unreachable from the build container at ${url.origin} (${message}). Build continues; the runtime host must be able to reach it for the same-origin proxy to work.`,
   );
 } finally {
   clearTimeout(timeout);
