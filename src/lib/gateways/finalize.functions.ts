@@ -66,7 +66,7 @@ export const finalizeGatewayReturn = createServerFn({ method: "POST" })
         await supabaseAdmin.from("invoices").update({ status: "pending" }).eq("id", inv.id);
       }
       await supabaseAdmin.from("transactions")
-        .update({ status: "cancelled", note: "Customer cancelled at gateway" })
+        .update({ status: "rejected", note: "Customer cancelled at gateway" })
         .eq("invoice_id", inv.id).eq("status", "pending");
       return { ok: true, status: "cancelled" as const };
     }
@@ -83,7 +83,7 @@ export const finalizeGatewayReturn = createServerFn({ method: "POST" })
       if (returnStatus === "cancel" || returnStatus === "failure") {
         await supabaseAdmin.from("invoices").update({ status: "pending" }).eq("id", inv.id);
         await supabaseAdmin.from("transactions")
-          .update({ status: "cancelled", note: `bKash returned ${returnStatus}` })
+          .update({ status: "rejected", note: `bKash returned ${returnStatus}` })
           .eq("invoice_id", inv.id).eq("provider_txn_id", paymentID);
         return { ok: true, status: "cancelled" as const };
       }
