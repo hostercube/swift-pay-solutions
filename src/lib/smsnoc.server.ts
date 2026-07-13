@@ -168,11 +168,14 @@ async function synthesizeVoiceUrl(
       .from("voice-audio")
       .upload(path, buf, { contentType: "audio/mpeg", upsert: false });
     if (up.error) return { error: `upload:${up.error.message}` };
-    const { data } = supabaseAdmin.storage
+    // Bucket is private — mint a signed URL valid long enough for smsnoc to fetch.
+    const signed = await supabaseAdmin.storage
       .from("voice-audio")
-      .getPublicUrl(path);
-    if (!data?.publicUrl) return { error: "no_public_url" };
-    return { url: data.publicUrl };
+      .createSignedUrl(path, 60 * 60 * 24); // 24h
+    if (signed.error || !signed.data?.signedUrl) {
+      return { error: `sign:${signed.error?.message ?? "no_url"}` };
+    }
+    return { url: signed.data.signedUrl };
   } catch (e) {
     return { error: (e as Error).message };
   }
