@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Plug, ExternalLink, Check, Settings2, X, Plus } from "lucide-react";
-import { GATEWAYS, getGateway, gatewaysByRegion } from "@/lib/gateways/registry";
+import { GATEWAYS, getGateway, gatewaysByRegion, defaultLogoFor } from "@/lib/gateways/registry";
+import { resolveLogoUrl } from "@/lib/logo-url";
 
 export const Route = createFileRoute("/_authenticated/integrations/byo")({
   head: () => ({ meta: [{ title: "Payment Gateways · PayNOC" }] }),
@@ -24,6 +25,7 @@ type Row = {
   credentials: Record<string, string>;
   is_active: boolean;
   label: string | null;
+  logo_url: string | null;
   created_at: string;
 };
 
@@ -32,6 +34,7 @@ type Draft = {
   provider: string;
   mode: "sandbox" | "live";
   label: string;
+  logo_url: string | null;
   creds: Record<string, string>;
 };
 
@@ -48,7 +51,7 @@ function ByoPage() {
     if (!user) return;
     const { data, error } = await supabase
       .from("byo_gateways")
-      .select("id, provider, mode, credentials, is_active, label, created_at")
+      .select("id, provider, mode, credentials, is_active, label, logo_url, created_at")
       .eq("merchant_id", user.id)
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
@@ -68,7 +71,7 @@ function ByoPage() {
   }, [rows]);
 
   const openNew = (providerId: string) => {
-    setDraft({ provider: providerId, mode: "sandbox", label: "", creds: {} });
+    setDraft({ provider: providerId, mode: "sandbox", label: "", logo_url: null, creds: {} });
   };
 
   const openEdit = (r: Row) => {
@@ -77,6 +80,7 @@ function ByoPage() {
       provider: r.provider,
       mode: r.mode,
       label: r.label ?? "",
+      logo_url: r.logo_url ?? null,
       creds: r.credentials ?? {},
     });
   };
@@ -94,6 +98,7 @@ function ByoPage() {
       provider: draft.provider,
       mode: draft.mode,
       label: draft.label.trim() || null,
+      logo_url: draft.logo_url,
       credentials: draft.creds,
       is_active: true,
     };
@@ -106,6 +111,7 @@ function ByoPage() {
     setDraft(null);
     load();
   };
+
 
   const toggleActive = async (r: Row) => {
     const { error } = await supabase
@@ -309,6 +315,14 @@ function DraftEditor({
             <option value="live">Live</option>
           </select>
         </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs uppercase text-muted-foreground">Logo (defaults to provider brand)</label>
+          <ByoLogoField
+            value={draft.logo_url}
+            fallbackId={draft.provider}
+            onChange={(v) => onChange({ ...draft, logo_url: v })}
+          />
+        </div>
         <div className="sm:col-span-2 text-xs text-muted-foreground">
           Webhook URL to paste in the provider dashboard:
           <div className="mt-1 break-all rounded-md bg-muted px-2 py-1 font-mono text-[11px]">
@@ -382,5 +396,68 @@ function DraftEditor({
   );
 }
 
+function ByoLogoField({
+  value, fallbackId, onChange,
+}: {
+  value: string | null;
+  fallbackId: string;
+  onChange: (v: string | null) => void;
+}) {
+  const { user } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const preview = resolveLogoUrl(value, fallbackId);
+  const isDefault = !value && !!defaultLogoFor(fallbackId);
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-3">
+      {preview && (
+        <img
+          src={preview}
+          alt="Logo preview"
+          className="h-14 w-14 rounded-lg border border-glass-border bg-white/90 object-contain p-1"
+        />
+      )}
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={busy || !user}
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f || !user) return;
+            setBusy(true);
+            const path = `logos/${user.id}/${crypto.randomUUID()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
+            const { error } = await supabase.storage
+              .from("payment-assets")
+              .upload(path, f, { upsert: false, contentType: f.type });
+            setBusy(false);
+            if (error) return toast.error(error.message);
+            onChange(path);
+            toast.success("Logo uploaded");
+          }}
+        />
+        {busy ? "Uploading…" : value ? "Replace logo" : "Upload custom logo"}
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-xs text-destructive hover:underline"
+        >
+          Reset to default
+        </button>
+      )}
+      <p className="basis-full text-[11px] text-muted-foreground">
+        {isDefault
+          ? "Using the default provider logo. Upload one to override for this configuration."
+          : value
+            ? "Custom logo — shown to customers at checkout."
+            : "No default logo available; upload one to show at checkout."}
+      </p>
+    </div>
+  );
+}
+
 // Ensure the registry stays imported even if we later trim unused exports.
 void GATEWAYS;
+

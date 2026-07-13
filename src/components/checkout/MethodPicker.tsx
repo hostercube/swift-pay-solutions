@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Zap, Smartphone, CreditCard, Bitcoin, MoreHorizontal } from "lucide-react";
 import { getGateway } from "@/lib/gateways/registry";
+import { resolveLogoUrl } from "@/lib/logo-url";
 import { iconFor } from "./primitives";
 import type { Gw, Method } from "./types";
 
@@ -101,6 +102,7 @@ export function MethodPicker({
             const spec = getGateway(g.provider);
             const key = g.id ?? g.provider;
             const busy = redirecting === key;
+            const logo = resolveLogoUrl(g.logo_url, g.provider);
             return (
               <button
                 key={key}
@@ -110,8 +112,12 @@ export function MethodPicker({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand ring-1 ring-inset ring-brand/20">
-                      <Zap className="h-4 w-4" />
+                    <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90 ring-1 ring-inset ring-brand/20">
+                      {logo ? (
+                        <img src={logo} alt="" className="h-6 w-6 object-contain" loading="lazy" />
+                      ) : (
+                        <Zap className="h-4 w-4 text-brand" />
+                      )}
                     </span>
                     <div className="min-w-0">
                       <div className="truncate font-semibold">
@@ -134,24 +140,31 @@ export function MethodPicker({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {grouped[cat].map((m) => (
-            <button
-              key={m.id}
-              onClick={() => onSelectMethod(m)}
-              className="group flex flex-col items-start gap-2 rounded-xl border border-glass-border bg-card/50 p-3 text-left transition hover:border-brand hover:shadow-[0_20px_45px_-20px_hsl(var(--brand)/0.55)]"
-            >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand ring-1 ring-inset ring-brand/20">
-                {iconFor(m.type)}
-              </span>
-              <div className="min-w-0 w-full">
-                <div className="truncate text-sm font-semibold">{m.label}</div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</div>
-              </div>
-              <div className="mt-auto text-[10px] text-muted-foreground">
-                Fee {m.fee_percent}% + {m.fee_flat}
-              </div>
-            </button>
-          ))}
+          {grouped[cat].map((m) => {
+            const logo = resolveLogoUrl(m.logo_url, m.type);
+            return (
+              <button
+                key={m.id}
+                onClick={() => onSelectMethod(m)}
+                className="group flex flex-col items-start gap-2 rounded-xl border border-glass-border bg-card/50 p-3 text-left transition hover:border-brand hover:shadow-[0_20px_45px_-20px_hsl(var(--brand)/0.55)]"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90 ring-1 ring-inset ring-brand/20">
+                  {logo ? (
+                    <img src={logo} alt="" className="h-7 w-7 object-contain" loading="lazy" />
+                  ) : (
+                    <span className="text-brand">{iconFor(m.type)}</span>
+                  )}
+                </span>
+                <div className="min-w-0 w-full">
+                  <div className="truncate text-sm font-semibold">{m.label}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.type}</div>
+                </div>
+                <div className="mt-auto text-[10px] text-muted-foreground">
+                  Fee {m.fee_percent}% + {m.fee_flat}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
