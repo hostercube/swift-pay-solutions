@@ -493,3 +493,66 @@ function QrThumb({ path }: { path: string }) {
   if (!url) return <div className="h-24 w-24 animate-pulse rounded-lg bg-muted" />;
   return <img src={url} alt="QR" className="h-24 w-24 rounded-lg border border-glass-border object-contain bg-background/60" />;
 }
+
+function LogoField({
+  value, fallbackId, onChange, userId,
+}: {
+  value: string | null;
+  fallbackId?: string;
+  onChange: (v: string | null) => void;
+  userId: string | undefined;
+}) {
+  const [busy, setBusy] = useState(false);
+  const preview = resolveLogoUrl(value, fallbackId);
+  const isDefault = !value && !!fallbackId && !!defaultLogoFor(fallbackId);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {preview && (
+        <img
+          src={preview}
+          alt="Logo preview"
+          className="h-14 w-14 rounded-lg border border-glass-border bg-white/90 object-contain p-1"
+        />
+      )}
+      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-glass-border bg-card/60 px-3 py-2 text-xs font-semibold hover:border-brand">
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          disabled={busy || !userId}
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            if (!f || !userId) return;
+            setBusy(true);
+            const path = `logos/${userId}/${crypto.randomUUID()}-${f.name.replace(/[^\w.\-]/g, "_")}`;
+            const { error } = await supabase.storage
+              .from("payment-assets")
+              .upload(path, f, { upsert: false, contentType: f.type });
+            setBusy(false);
+            if (error) return toast.error(error.message);
+            onChange(path);
+            toast.success("Logo uploaded");
+          }}
+        />
+        {busy ? "Uploading…" : value ? "Replace logo" : "Upload custom logo"}
+      </label>
+      {value && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-xs text-destructive hover:underline"
+        >
+          Reset to default
+        </button>
+      )}
+      <p className="basis-full text-[11px] text-muted-foreground">
+        {isDefault
+          ? "Using the default brand logo. Upload one to override."
+          : value
+            ? "Custom logo — shown to customers at checkout."
+            : "No default logo for this type; upload one to show at checkout."}
+      </p>
+    </div>
+  );
+}
+
