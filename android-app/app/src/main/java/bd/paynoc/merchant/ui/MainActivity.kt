@@ -156,7 +156,7 @@ private fun HomeScreen() {
             item {
                 StatsRow(
                     pending = stats.pending,
-                    sentToday = stats.sentToday,
+                    matchedToday = stats.matchedToday,
                     failed = stats.failed,
                 )
             }
@@ -165,15 +165,31 @@ private fun HomeScreen() {
                     OutlinedButton(
                         onClick = {
                             scope.launch {
-                                events = withContext(Dispatchers.IO) { EventStore.get(ctx).recent() }
-                                toast = "Refreshed"
+                                val store = EventStore.get(ctx)
+                                val requeued = withContext(Dispatchers.IO) {
+                                    val n = store.requeueFailed()
+                                    events = store.recent()
+                                    n
+                                }
+                                if (requeued > 0) {
+                                    androidx.work.WorkManager.getInstance(ctx).enqueueUniqueWork(
+                                        bd.paynoc.merchant.work.UploadWorker.UNIQUE_NAME,
+                                        androidx.work.ExistingWorkPolicy.APPEND_OR_REPLACE,
+                                        androidx.work.OneTimeWorkRequestBuilder<bd.paynoc.merchant.work.UploadWorker>()
+                                            .setConstraints(bd.paynoc.merchant.work.UploadWorker.constraints())
+                                            .build(),
+                                    )
+                                    toast = "Re-queued $requeued failed event${if (requeued == 1) "" else "s"}"
+                                } else {
+                                    toast = "Nothing to retry"
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Filled.Refresh, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Refresh")
+                        Text("Retry failed")
                     }
                     Button(
                         onClick = {
@@ -316,10 +332,10 @@ private fun Badge(text: String, color: Color, leading: (@Composable () -> Unit)?
 }
 
 @Composable
-private fun StatsRow(pending: Int, sentToday: Int, failed: Int) {
+private fun StatsRow(pending: Int, matchedToday: Int, failed: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StatCard("Pending", pending, Brand, Modifier.weight(1f))
-        StatCard("Sent today", sentToday, Success, Modifier.weight(1f))
+        StatCard("Verified today", matchedToday, Success, Modifier.weight(1f))
         StatCard("Failed", failed, Danger, Modifier.weight(1f))
     }
 }
@@ -377,10 +393,13 @@ private fun EmptyState() {
 @Composable
 private fun EventRow(e: QueuedEvent) {
     val (chipColor, chipLabel) = when (e.status) {
-        "sent" -> Success to "SENT"
+        "matched" -> Success to "AUTO-VERIFIED"
+        "unmatched" -> TextMuted to "UPLOADED"
         "failed" -> Danger to "FAILED"
+        "sent" -> Success to "SENT" // legacy rows from older schema
         else -> Brand to "PENDING"
     }
+    val noteColor = if (e.status == "failed") Danger else TextMuted
     Surface(
         color = BgSurface,
         shape = RoundedCornerShape(14.dp),
@@ -401,11 +420,18 @@ private fun EventRow(e: QueuedEvent) {
             }
             Text("TrxID ${e.trxId}", color = TextMuted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             e.sender?.let { Text("From $it", color = TextMuted, fontSize = 11.sp) }
-            e.note?.let { Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.ErrorOutline, null, tint = Danger, modifier = Modifier.size(11.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(it, color = Danger, fontSize = 11.sp)
-            } }
+            e.invoiceId?.let {
+                Text("Invoice ${it.take(8)}", color = Success, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+            e.note?.let {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (e.status == "failed") {
+                        Icon(Icons.Filled.ErrorOutline, null, tint = Danger, modifier = Modifier.size(11.dp))
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    Text(it, color = noteColor, fontSize = 11.sp)
+                }
+            }
         }
     }
 }
@@ -479,17 +505,17 @@ private fun ConfigSheet(
 
 /* -------------------- helpers -------------------- */
 
-private data class Stats(val pending: Int, val sentToday: Int, val failed: Int)
+private data class Stats(val pending: Int, val matchedToday: Int, val failed: Int)
 
 private fun computeStats(events: List<QueuedEvent>): Stats {
     val today = java.time.LocalDate.now(java.time.ZoneOffset.UTC).toString()
-    var pending = 0; var sentToday = 0; var failed = 0
+    var pending = 0; var matchedToday = 0; var failed = 0
     for (e in events) when (e.status) {
         "pending" -> pending++
         "failed" -> failed++
-        "sent" -> if (e.receivedAtIso.startsWith(today)) sentToday++
+        "matched" -> if (e.receivedAtIso.startsWith(today)) matchedToday++
     }
-    return Stats(pending, sentToday, failed)
+    return Stats(pending, matchedToday, failed)
 }
 
 private fun hasSmsPermission(ctx: android.content.Context): Boolean =

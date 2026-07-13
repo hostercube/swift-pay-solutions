@@ -11,15 +11,21 @@ parsed events to your PayNOC backend for auto-verification.
 - **Offline queue**: every SMS is persisted in a local Room DB. When the phone
   has no network, events pile up locally and drain automatically via WorkManager
   when connectivity returns.
+- **Per-event verification feedback**: the backend response is parsed and each
+  SMS row is marked `AUTO-VERIFIED` (matched to an invoice), `UPLOADED` (no
+  matching pending invoice), or `FAILED` (bad key / malformed). A heads-up
+  notification fires the moment a payment is matched.
+- **Retry failed**: one tap re-queues every `FAILED` row (e.g. after rotating a
+  bad API key) — no need to reinstall.
 - **Battery-friendly**: `SmsReceiver` runs only when SMS arrive; no background
-  polling.
-- **Zero-touch parsing**: regex-based parsers for the standard bKash / Nagad /
-  Rocket / DBBL / MTB / EBL / City Bank SMS templates. Add more in
-  `parsers/SmsParsers.kt`.
+  polling. A 15-min periodic drain covers cold-start / reboot cases.
+- **Zero-touch parsing**: regex-based parsers for bKash, Nagad, Rocket, DBBL
+  Nexus, and Bangla QR (Bangladesh Bank unified QR) SMS from any bank / MFS.
+  Add more in `parsers/SmsParsers.kt`.
 - **Idempotent**: backend matches on `(merchant_id, provider_txn_id)`, so
   duplicate SMS deliveries are safe.
-- **Premium UI**: Material 3, dynamic color, dark theme, transaction log with
-  filters, live send-queue status.
+- **Premium UI**: Material 3 dark theme, live pending / verified-today / failed
+  counters, transaction log with per-row match status.
 
 ## How it plugs into PayNOC
 
