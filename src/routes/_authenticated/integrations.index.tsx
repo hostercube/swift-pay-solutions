@@ -50,6 +50,7 @@ const METHOD_TYPES: { value: MethodType; label: string }[] = [
   { value: "upay", label: "Upay" },
   { value: "tap", label: "Tap" },
   { value: "mcash", label: "MCash" },
+  { value: "cellfin", label: "CellFin (Islami Bank)" },
   { value: "sure_cash", label: "SureCash" },
   { value: "bangla_qr", label: "Bangla QR (BB unified)" },
   { value: "bank_transfer", label: "Bank Transfer" },
