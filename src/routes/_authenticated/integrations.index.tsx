@@ -268,7 +268,7 @@ function MethodsPage() {
                   onChange={(e) => setEditing({ ...editing, type: e.target.value as MethodType })}
                   className={inputCls}
                 >
-                  {METHOD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {availableTypes.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </Field>
 
