@@ -62,6 +62,7 @@ import { Route as AuthenticatedIntegrationsApiRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminTransactionsRouteImport } from './routes/_authenticated/admin/transactions'
 import { Route as AuthenticatedAdminStaffRouteImport } from './routes/_authenticated/admin/staff'
 import { Route as AuthenticatedAdminSmsnocRouteImport } from './routes/_authenticated/admin/smsnoc'
+import { Route as AuthenticatedAdminSmsEventsRouteImport } from './routes/_authenticated/admin/sms-events'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
 import { Route as AuthenticatedAdminPlatformRouteImport } from './routes/_authenticated/admin/platform'
 import { Route as AuthenticatedAdminPackagesRouteImport } from './routes/_authenticated/admin/packages'
@@ -375,6 +376,12 @@ const AuthenticatedAdminSmsnocRoute =
     path: '/smsnoc',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminSmsEventsRoute =
+  AuthenticatedAdminSmsEventsRouteImport.update({
+    id: '/sms-events',
+    path: '/sms-events',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -574,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -651,6 +659,7 @@ export interface FileRoutesByTo {
   '/admin/kyc': typeof AuthenticatedAdminKycRoute
   '/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -735,6 +744,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/packages': typeof AuthenticatedAdminPackagesRoute
   '/_authenticated/admin/platform': typeof AuthenticatedAdminPlatformRouteWithChildren
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/sms-events': typeof AuthenticatedAdminSmsEventsRoute
   '/_authenticated/admin/smsnoc': typeof AuthenticatedAdminSmsnocRoute
   '/_authenticated/admin/staff': typeof AuthenticatedAdminStaffRoute
   '/_authenticated/admin/transactions': typeof AuthenticatedAdminTransactionsRoute
@@ -819,6 +829,7 @@ export interface FileRouteTypes {
     | '/admin/packages'
     | '/admin/platform'
     | '/admin/settings'
+    | '/admin/sms-events'
     | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
@@ -896,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/kyc'
     | '/admin/packages'
     | '/admin/settings'
+    | '/admin/sms-events'
     | '/admin/smsnoc'
     | '/admin/staff'
     | '/admin/transactions'
@@ -979,6 +991,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/packages'
     | '/_authenticated/admin/platform'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/sms-events'
     | '/_authenticated/admin/smsnoc'
     | '/_authenticated/admin/staff'
     | '/_authenticated/admin/transactions'
@@ -1423,6 +1436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSmsnocRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/sms-events': {
+      id: '/_authenticated/admin/sms-events'
+      path: '/sms-events'
+      fullPath: '/admin/sms-events'
+      preLoaderRoute: typeof AuthenticatedAdminSmsEventsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -1654,6 +1674,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminPackagesRoute: typeof AuthenticatedAdminPackagesRoute
   AuthenticatedAdminPlatformRoute: typeof AuthenticatedAdminPlatformRouteWithChildren
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSmsEventsRoute: typeof AuthenticatedAdminSmsEventsRoute
   AuthenticatedAdminSmsnocRoute: typeof AuthenticatedAdminSmsnocRoute
   AuthenticatedAdminStaffRoute: typeof AuthenticatedAdminStaffRoute
   AuthenticatedAdminTransactionsRoute: typeof AuthenticatedAdminTransactionsRoute
@@ -1673,6 +1694,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminPlatformRoute:
       AuthenticatedAdminPlatformRouteWithChildren,
     AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+    AuthenticatedAdminSmsEventsRoute: AuthenticatedAdminSmsEventsRoute,
     AuthenticatedAdminSmsnocRoute: AuthenticatedAdminSmsnocRoute,
     AuthenticatedAdminStaffRoute: AuthenticatedAdminStaffRoute,
     AuthenticatedAdminTransactionsRoute: AuthenticatedAdminTransactionsRoute,
