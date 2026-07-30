@@ -5,6 +5,8 @@
 -- Replace the placeholders below before running:
 --   {{APP_URL}}       e.g. https://pay.yourdomain.com
 --   {{ANON_KEY}}      your self-hosted Supabase anon / publishable key
+--   {{CRON_SECRET}}   same value as the app's CRON_SECRET env var
+
 -- =============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
