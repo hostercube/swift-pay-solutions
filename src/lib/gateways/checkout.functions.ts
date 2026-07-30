@@ -48,7 +48,7 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
     let gw: Gw | null = null;
     if (data.source === "platform") {
       const res = await admin.from("platform_gateways")
-        .select("credentials, mode, is_active, provider")
+        .select("credentials, mode, is_active, provider, commission_percent, commission_flat")
         .eq("provider", data.provider).maybeSingle();
       gw = res.data as Gw | null;
     } else if (data.configId) {
@@ -87,15 +87,28 @@ export const initiateGatewayCheckout = createServerFn({ method: "POST" })
     // that aren't part of the historical enum (paypal, razorpay, stripe, …).
     const enumTypes = ["bkash","nagad","rocket","upay","tap","mcash","sure_cash","card","bank_transfer","crypto","other"];
     const methodType = enumTypes.includes(data.provider) ? data.provider : "other";
-    await admin.from("transactions").insert({
+    // Persist fee/net now — completion paths copy these onto the invoice, and a
+    // null here silently zeroes out merchant fee accounting.
+    const gross = Number(inv.amount);
+    const feePercent = Number((gw as { commission_percent?: number }).commission_percent ?? 0);
+    const feeFlat = Number((gw as { commission_flat?: number }).commission_flat ?? 0);
+    const fee = Math.round(((gross * feePercent) / 100 + feeFlat) * 100) / 100;
+    const net = Math.round((gross - fee) * 100) / 100;
+
+    const { error: txnErr } = await admin.from("transactions").insert({
       invoice_id: inv.id,
       merchant_id: inv.merchant_id,
       status: "pending",
       method_type: methodType,
-      gross_amount: inv.amount,
+      gross_amount: gross,
+      fee_amount: fee,
+      net_amount: net,
       provider_txn_id: result.providerRef,
       note: `Gateway checkout initiated (${data.provider}, ${data.source})`,
     });
+    if (txnErr) {
+      throw new Error("Payment session was created but could not be recorded. Please retry.");
+    }
     await admin.from("invoices").update({ status: "processing" }).eq("id", inv.id);
 
     return {

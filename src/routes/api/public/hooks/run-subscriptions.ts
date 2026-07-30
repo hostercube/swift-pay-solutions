@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 import { createClient } from "@supabase/supabase-js";
 import { notifyPlatform } from "@/lib/smsnoc.server";
 
@@ -9,7 +10,9 @@ import { notifyPlatform } from "@/lib/smsnoc.server";
 export const Route = createFileRoute("/api/public/hooks/run-subscriptions")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = assertCronRequest(request);
+        if (denied) return denied;
         const { requirePaynocBackendEnv } = await import(
           "@/lib/paynoc-env.server"
         );

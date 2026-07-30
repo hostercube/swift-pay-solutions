@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import {
   DollarSign, Activity, Receipt, Clock, TrendingUp, TrendingDown,
   Plus, KeyRound, Webhook, Plug,
@@ -20,6 +21,7 @@ type Tx = { id: string; created_at: string; gross_amount: number; status: string
 
 function DashboardPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [profile, setProfile] = useState<{ business_name: string | null; full_name: string | null } | null>(null);
   const [txs, setTxs] = useState<Tx[]>([]);
   const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
@@ -31,18 +33,18 @@ function DashboardPage() {
       const d30 = new Date(Date.now() - 30 * 864e5).toISOString();
       const [p, tx, inv, invCount, pendCount, dispCount] = await Promise.all([
         supabase.from("profiles").select("business_name, full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("transactions").select("id,created_at,gross_amount,status,method_type,invoice_id").eq("merchant_id", user.id).gte("created_at", d30).order("created_at", { ascending: false }).limit(500),
-        supabase.from("invoices").select("id,invoice_number,amount,status,created_at,customer_name").eq("merchant_id", user.id).order("created_at", { ascending: false }).limit(6),
-        supabase.from("invoices").select("*", { count: "exact", head: true }).eq("merchant_id", user.id),
-        supabase.from("invoices").select("*", { count: "exact", head: true }).eq("merchant_id", user.id).eq("status", "pending"),
-        supabase.from("disputes").select("*", { count: "exact", head: true }).eq("merchant_id", user.id).in("status", ["open", "under_review"]),
+        supabase.from("transactions").select("id,created_at,gross_amount,status,method_type,invoice_id").eq("merchant_id", activeMerchantId ?? user.id).gte("created_at", d30).order("created_at", { ascending: false }).limit(500),
+        supabase.from("invoices").select("id,invoice_number,amount,status,created_at,customer_name").eq("merchant_id", activeMerchantId ?? user.id).order("created_at", { ascending: false }).limit(6),
+        supabase.from("invoices").select("*", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id),
+        supabase.from("invoices").select("*", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id).eq("status", "pending"),
+        supabase.from("disputes").select("*", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id).in("status", ["open", "under_review"]),
       ]);
       setProfile(p.data);
       setTxs((tx.data ?? []) as Tx[]);
       setRecentInvoices(inv.data ?? []);
       setCounts({ invoices: invCount.count ?? 0, pending: pendCount.count ?? 0, disputes: dispCount.count ?? 0 });
     })();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const stats = useMemo(() => {
     const now = Date.now();

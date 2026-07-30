@@ -125,7 +125,12 @@ CREATE EXTENSION IF NOT EXISTS pg_net;
 ### 2.2 Schema
 Repo থেকে `db/install.sql` পুরো copy → SQL Editor → Run।
 তারপর `db/storage.sql` → Run।
-তারপর `db/cron/schedule.sql` → Run।
+তারপর `db/cron/schedule.sql` → placeholder (`{{APP_URL}}`, `{{ANON_KEY}}`, `{{CRON_SECRET}}`) replace করে Run।
+
+> **CRON_SECRET (জরুরি):** app-এর env-এ একটা random `CRON_SECRET` সেট করো এবং
+> `db/cron/schedule.sql`-এর `{{CRON_SECRET}}`-এ ঠিক একই value বসাও। এটা না দিলে
+> `/api/public/hooks/*` scheduled endpoint গুলো ইন্টারনেট থেকে যে কেউ কল করতে পারবে।
+
 
 > "already exists" warnings ignore করো।
 

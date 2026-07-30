@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ const COLOR: Record<string, string> = {
 
 function RefundsPage() {
   const { roles, user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const isAdmin = roles.includes("super_admin");
   const [rows, setRows] = useState<Row[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -57,7 +59,7 @@ function RefundsPage() {
     let refundsQuery = supabase
       .from("refunds")
       .select("*");
-    if (!isAdmin) refundsQuery = refundsQuery.eq("merchant_id", user.id);
+    if (!isAdmin) refundsQuery = refundsQuery.eq("merchant_id", activeMerchantId ?? user.id);
     const { data, error } = await refundsQuery
       .order("created_at", { ascending: false })
       .limit(500);
@@ -75,7 +77,7 @@ function RefundsPage() {
     setInvoices((inv ?? []) as Invoice[]);
   };
 
-  useEffect(() => { load(); }, [user, isAdmin]);
+  useEffect(() => { load(); }, [user, isAdmin, activeMerchantId]);
 
   const submit = async () => {
     if (!invoiceId || !amount) return toast.error("Pick an invoice and enter an amount");

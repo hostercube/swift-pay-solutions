@@ -90,7 +90,7 @@ export async function authenticateApiKey(request: Request): Promise<
     .from("api_keys")
     .update({ last_used_at: new Date().toISOString() })
     .eq("id", data.id)
-    .then(() => undefined);
+    .then(() => undefined, () => undefined);
 
   supabaseAdmin
     .from("audit_logs")
@@ -103,7 +103,7 @@ export async function authenticateApiKey(request: Request): Promise<
       user_agent: request.headers.get("user-agent"),
       metadata: { path: new URL(request.url).pathname, method: request.method, request_id: requestId } as never,
     })
-    .then(() => undefined);
+    .then(() => undefined, () => undefined);
 
   return {
     merchantId: data.merchant_id,

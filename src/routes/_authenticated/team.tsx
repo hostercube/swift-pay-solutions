@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ type Row = {
 
 function TeamPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("viewer");
@@ -41,18 +43,18 @@ function TeamPage() {
     const { data } = await supabase
       .from("team_members")
       .select("id, member_email, role, status, invited_at, permissions")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("invited_at", { ascending: false });
     setRows((data ?? []) as Row[]);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   const invite = async () => {
     if (!user || !email.trim()) return;
     setBusy(true);
     const { error } = await supabase.from("team_members").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       member_email: email.trim().toLowerCase(),
       role,
       permissions: newPerms,

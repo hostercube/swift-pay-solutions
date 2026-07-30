@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 
 /**
  * Background drainer for pending transactions.
@@ -17,7 +18,9 @@ const STALE_TXN_HOURS = 24;         // pending txns older than this get drained
 export const Route = createFileRoute("/api/public/hooks/drain-pending")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = assertCronRequest(request);
+        if (denied) return denied;
         const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
         const { matchAndVerify } = await import("@/lib/sms-match.server");
 

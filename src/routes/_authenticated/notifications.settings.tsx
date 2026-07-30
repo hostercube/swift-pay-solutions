@@ -5,6 +5,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { NotificationsTabs } from "@/components/notifications-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
@@ -50,6 +51,7 @@ const DEFAULTS: Settings = {
 
 function NotifSettingsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [s, setS] = useState<Settings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
 
@@ -58,7 +60,7 @@ function NotifSettingsPage() {
     supabase
       .from("notification_settings")
       .select("*")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
@@ -76,13 +78,13 @@ function NotifSettingsPage() {
           });
         }
       });
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   async function save() {
     if (!user) return;
     setSaving(true);
     const payload = {
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       email_enabled: s.email_enabled,
       sms_enabled: s.sms_enabled,
       inapp_enabled: s.inapp_enabled,

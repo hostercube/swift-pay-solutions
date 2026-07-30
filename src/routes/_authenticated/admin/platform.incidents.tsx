@@ -15,29 +15,35 @@ import { Trash2 } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/admin/platform/incidents")({
   head: () => ({ meta: [{ title: "Admin · Incidents" }] }),
   component: IncidentsPage,
-  errorComponent: ({ error, reset }) => {
-    const router = useRouter();
-    return (
-      <AdminShell title="Incidents" subtitle="Something went wrong loading incidents">
-        <PlatformTabs />
-        <Card className="p-6">
-          <div className="text-sm font-medium text-destructive">Failed to load incidents</div>
-          <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
-            {error?.message ?? String(error)}
-          </p>
-          <Button
-            className="mt-4"
-            variant="outline"
-            onClick={() => { reset(); router.invalidate(); }}
-          >
-            Try again
-          </Button>
-        </Card>
-      </AdminShell>
-    );
-  },
+  errorComponent: IncidentsErrorPage,
   notFoundComponent: () => <div className="p-8">Not found</div>,
 });
+
+function IncidentsErrorPage({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  return (
+    <AdminShell title="Incidents" subtitle="Something went wrong loading incidents">
+      <PlatformTabs />
+      <Card className="p-6">
+        <div className="text-sm font-medium text-destructive">Failed to load incidents</div>
+        <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
+          {error?.message ?? String(error)}
+        </p>
+        <Button
+          className="mt-4"
+          variant="outline"
+          onClick={() => {
+            reset();
+            router.invalidate();
+          }}
+        >
+          Try again
+        </Button>
+      </Card>
+    </AdminShell>
+  );
+}
+
 
 type Severity = "minor" | "major" | "critical";
 type Status = "investigating" | "identified" | "monitoring" | "resolved";

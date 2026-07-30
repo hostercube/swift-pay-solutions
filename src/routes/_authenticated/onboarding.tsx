@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -21,6 +22,7 @@ type Status = {
 
 function OnboardingPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status | null>(null);
   const [saving, setSaving] = useState(false);
@@ -30,9 +32,9 @@ function OnboardingPage() {
     if (!user) return;
     const [p, m, i, w] = await Promise.all([
       supabase.from("profiles").select("business_name, full_name, support_email").eq("id", user.id).maybeSingle(),
-      supabase.from("payment_methods").select("id", { count: "exact", head: true }).eq("merchant_id", user.id),
-      supabase.from("invoices").select("id", { count: "exact", head: true }).eq("merchant_id", user.id),
-      supabase.from("webhook_endpoints").select("id", { count: "exact", head: true }).eq("merchant_id", user.id),
+      supabase.from("payment_methods").select("id", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id),
+      supabase.from("invoices").select("id", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id),
+      supabase.from("webhook_endpoints").select("id", { count: "exact", head: true }).eq("merchant_id", activeMerchantId ?? user.id),
     ]);
     setStatus({
       business: !!p.data?.business_name,
@@ -49,7 +51,7 @@ function OnboardingPage() {
     }
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   const saveBusiness = async () => {
     if (!user) return;

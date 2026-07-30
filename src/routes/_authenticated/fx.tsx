@@ -5,6 +5,7 @@ import { Plus, Trash2, Save, RefreshCw, ChevronLeft, ChevronRight, Search } from
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 
 export const Route = createFileRoute("/_authenticated/fx")({
   head: () => ({ meta: [{ title: "Currency rates · PayNOC" }] }),
@@ -28,6 +29,7 @@ const PAGE_SIZE = 10;
 
 function FxPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [globals, setGlobals] = useState<Global[]>([]);
   const [drafts, setDrafts] = useState<Record<string, { rate?: string; markup?: string }>>({});
@@ -46,12 +48,12 @@ function FxPage() {
   const load = useCallback(async () => {
     if (!user) return;
     const [{ data: mine }, { data: g }] = await Promise.all([
-      supabase.from("merchant_fx_rates").select("*").eq("merchant_id", user.id).order("base_currency"),
+      supabase.from("merchant_fx_rates").select("*").eq("merchant_id", activeMerchantId ?? user.id).order("base_currency"),
       supabase.from("fx_rates").select("base_currency, quote_currency, rate, updated_at"),
     ]);
     setRows((mine ?? []) as Row[]);
     setGlobals((g ?? []) as Global[]);
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -132,7 +134,7 @@ function FxPage() {
     setBusy(true);
     const { error } = await supabase.from("merchant_fx_rates").upsert(
       {
-        merchant_id: user.id,
+        merchant_id: activeMerchantId ?? user.id,
         base_currency: base,
         quote_currency: quote,
         mode: adding.mode,

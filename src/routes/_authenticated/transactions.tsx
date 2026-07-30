@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,6 +35,7 @@ const STATUS_TONE: Record<string, string> = {
 
 function TransactionsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [draining, setDraining] = useState(false);
@@ -47,7 +49,7 @@ function TransactionsPage() {
     supabase
       .from("transactions")
       .select("id, method_type, gross_amount, fee_amount, net_amount, status, sender_number, reference, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false })
       .limit(500)
       .then(({ data }) => {
@@ -56,7 +58,7 @@ function TransactionsPage() {
       });
   };
 
-  useEffect(load, [user]);
+  useEffect(load, [user, activeMerchantId]);
 
   const onDrain = async () => {
     if (!user || draining) return;

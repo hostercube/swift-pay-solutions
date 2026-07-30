@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 
 // Sends daily/weekly summary email digest to each merchant that has one due.
 // Cron: every hour at :00. Only runs merchants whose frequency window has elapsed.
 export const Route = createFileRoute("/api/public/hooks/run-digest")({
   server: {
     handlers: {
-      POST: async () => handle(),
-      GET: async () => handle(),
+      POST: async ({ request }) => assertCronRequest(request) ?? handle(),
+      GET: async ({ request }) => assertCronRequest(request) ?? handle(),
     },
   },
 });

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 
 // Refreshes platform fx_rates from a free public FX source once per day.
 // Merchants with mode='auto' automatically pick up the new rates via
@@ -6,8 +7,8 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/public/hooks/refresh-fx")({
   server: {
     handlers: {
-      POST: async () => handle(),
-      GET: async () => handle(),
+      POST: async ({ request }) => assertCronRequest(request) ?? handle(),
+      GET: async ({ request }) => assertCronRequest(request) ?? handle(),
     },
   },
 });

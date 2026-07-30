@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ type Draft = {
 
 function ByoPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const { isEnabled } = useEnabledProviders();
   const [rows, setRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"BD" | "GLOBAL" | "CRYPTO">("BD");
@@ -54,13 +56,13 @@ function ByoPage() {
     const { data, error } = await supabase
       .from("byo_gateways")
       .select("id, provider, mode, credentials, is_active, label, logo_url, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data ?? []) as unknown as Row[]);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   const byProvider = useMemo(() => {
     const map = new Map<string, Row[]>();
@@ -96,7 +98,7 @@ function ByoPage() {
     }
     setBusy(true);
     const payload = {
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       provider: draft.provider,
       mode: draft.mode,
       label: draft.label.trim() || null,

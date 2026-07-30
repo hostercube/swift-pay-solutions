@@ -5,6 +5,7 @@ import { Copy, Trash2 } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/webhooks")({
@@ -32,6 +33,7 @@ function randomSecret() {
 
 function WebhooksPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [url, setUrl] = useState("");
   const [mode, setMode] = useState<"live" | "test">("live");
@@ -44,19 +46,19 @@ function WebhooksPage() {
     const { data } = await supabase
       .from("webhook_endpoints")
       .select("id, url, events, signing_secret, is_active, created_at, mode")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
     setLoading(false);
   }
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   async function create() {
     if (!user) return;
     if (!/^https?:\/\//.test(url)) return toast.error("URL must start with http(s)://");
     if (selected.length === 0) return toast.error("Select at least one event");
     const { error } = await supabase.from("webhook_endpoints").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       url,
       events: selected,
       signing_secret: randomSecret(),

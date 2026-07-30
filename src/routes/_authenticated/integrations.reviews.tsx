@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Clock, FileText, ExternalLink, RefreshCw } from 
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/integrations/reviews")({
@@ -37,6 +38,7 @@ type Filter = "pending" | "verified" | "rejected" | "all";
 
 function ReviewsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<Filter>("pending");
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ function ReviewsPage() {
     let q = supabase
       .from("transactions")
       .select("id, invoice_id, method_type, status, gross_amount, provider_txn_id, sender_number, sender_name, slip_url, bank_reference, created_at, verified_at, verified_by, rejected_reason, rejected_by, rejected_at, note, invoices(invoice_number, customer_email, currency)")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false })
       .limit(200);
     if (filter !== "all") q = q.eq("status", filter);
@@ -57,7 +59,7 @@ function ReviewsPage() {
     if (error) return toast.error(error.message);
     setRows((data ?? []) as unknown as Row[]);
   }
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user, filter]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user, filter, activeMerchantId]);
 
   const counts = useMemo(() => {
     const c = { pending: 0, verified: 0, rejected: 0 };

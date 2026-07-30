@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Copy, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/security/api-keys")({
@@ -35,6 +36,7 @@ async function sha256Hex(text: string) {
 
 function ApiKeysPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [name, setName] = useState("Default");
   const [env, setEnv] = useState<"test" | "live">("test");
@@ -45,11 +47,11 @@ function ApiKeysPage() {
     const { data } = await supabase
       .from("api_keys")
       .select("id, name, environment, public_key, is_active, created_at, last_used_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
   }
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   async function create() {
     if (!user) return;
@@ -57,7 +59,7 @@ function ApiKeysPage() {
     const secret = randomKey(env === "live" ? "sk_live" : "sk_test");
     const secretHash = await sha256Hex(secret);
     const { error } = await supabase.from("api_keys").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       name,
       environment: env,
       public_key: publicKey,

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
   head: () => ({ meta: [{ title: "New invoice · PayNOC" }] }),
@@ -19,6 +20,7 @@ function generateInvoiceNumber() {
 
 function NewInvoicePage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -47,13 +49,18 @@ function NewInvoicePage() {
     const amount = Number(form.amount) || 0;
     if (!form.allow_custom_amount && amount <= 0) return toast.error("Enter a valid amount");
     setSaving(true);
-    const expires_at = form.expires_in_hours
-      ? new Date(Date.now() + Number(form.expires_in_hours) * 3_600_000).toISOString()
+    const expiryHours = form.expires_in_hours ? Number(form.expires_in_hours) : null;
+    if (expiryHours !== null && (!Number.isFinite(expiryHours) || expiryHours <= 0)) {
+      setSaving(false);
+      return toast.error("Expiry must be a number of hours greater than 0");
+    }
+    const expires_at = expiryHours
+      ? new Date(Date.now() + expiryHours * 3_600_000).toISOString()
       : null;
     const { data, error } = await supabase
       .from("invoices")
       .insert({
-        merchant_id: user.id,
+        merchant_id: activeMerchantId ?? user.id,
         invoice_number: generateInvoiceNumber(),
         amount,
         currency: form.currency,

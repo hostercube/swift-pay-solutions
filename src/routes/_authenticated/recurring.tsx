@@ -6,6 +6,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 
 export const Route = createFileRoute("/_authenticated/recurring")({
   head: () => ({ meta: [{ title: "Recurring · PayNOC" }] }),
@@ -29,6 +30,7 @@ type Row = {
 
 function RecurringPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -39,12 +41,12 @@ function RecurringPage() {
     const { data } = await supabase
       .from("recurring_schedules")
       .select("id, name, amount, currency, customer_email, interval_unit, interval_count, next_run_at, last_run_at, is_active, runs_count, mode")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
     setLoading(false);
   }
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user, activeMerchantId]);
 
   async function toggle(id: string, active: boolean) {
     const { error } = await supabase.from("recurring_schedules").update({ is_active: !active }).eq("id", id);
@@ -161,6 +163,7 @@ function RecurringPage() {
 
 function NewScheduleForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     name: "",
@@ -180,7 +183,7 @@ function NewScheduleForm({ onClose, onCreated }: { onClose: () => void; onCreate
     if (!user) return;
     setBusy(true);
     const { error } = await supabase.from("recurring_schedules").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       name: f.name,
       amount: Number(f.amount),
       currency: f.currency,

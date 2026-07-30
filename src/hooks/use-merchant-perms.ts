@@ -43,6 +43,8 @@ export function useMerchantPerms() {
     ready,
     isOwner,
     perms,
-    has: (p: MerchantPerm) => isOwner || perms.includes(p),
+    // Until the team_members lookup resolves we grant nothing, so a restricted
+    // team member never sees permission-gated nav items flash on load.
+    has: (p: MerchantPerm) => ready && (isOwner || perms.includes(p)),
   };
 }

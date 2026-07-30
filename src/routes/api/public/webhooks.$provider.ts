@@ -28,7 +28,12 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
               };
             };
             insert: (v: object) => Promise<{ error: unknown }>;
-            update: (v: object) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+            update: (v: object) => {
+              eq: (c: string, v: string) => Promise<{ error: unknown }> & {
+                eq: (c: string, v: string) => Promise<{ error: unknown }>;
+              };
+            };
+
           };
         };
 
@@ -127,7 +132,9 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
               status: "verified",
               verified_at: new Date().toISOString(),
               provider_txn_id: result.providerTxnId,
-            }).eq("provider_txn_id", result.providerTxnId);
+            })
+              .eq("invoice_id", result.invoiceRef)
+              .eq("provider_txn_id", result.providerTxnId);
           }
         } else if (result.invoiceRef && result.status === "failed") {
           await admin.from("invoices").update({ status: "failed" }).eq("id", result.invoiceRef);

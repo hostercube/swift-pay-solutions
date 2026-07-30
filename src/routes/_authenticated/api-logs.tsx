@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/api-logs")({
@@ -31,6 +32,7 @@ function statusTone(code: number) {
 
 function ApiLogsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,14 +42,14 @@ function ApiLogsPage() {
     const { data } = await supabase
       .from("api_request_logs")
       .select("id, method, path, status_code, latency_ms, ip_address, error_message, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false })
       .limit(500);
     setLogs((data ?? []) as Log[]);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   const successCount = logs.filter((l) => l.status_code < 400).length;
   const errorCount = logs.length - successCount;

@@ -32,6 +32,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantPerms } from "@/hooks/use-merchant-perms";
 import type { MerchantPerm } from "@/lib/permissions";
@@ -114,6 +115,7 @@ export function MerchantShell({
 }) {
   const navigate = useNavigate();
   const { signOut, roles, user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSuperAdmin = roles.includes("super_admin");
   const perms = useMerchantPerms();
@@ -121,6 +123,7 @@ export function MerchantShell({
   const [unread, setUnread] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [profile, setProfile] = useState<{ business_name: string | null; full_name: string | null; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
@@ -139,6 +142,7 @@ export function MerchantShell({
       const { count } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
+        .eq("merchant_id", activeMerchantId ?? user.id)
         .is("read_at", null);
       if (!cancelled) setUnread(count ?? 0);
     };
@@ -147,7 +151,7 @@ export function MerchantShell({
       .channel("notif-unread")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${activeMerchantId ?? user.id}` },
         () => load(),
       )
       .subscribe();
@@ -155,7 +159,7 @@ export function MerchantShell({
       cancelled = true;
       supabase.removeChannel(ch);
     };
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   // Close menus on navigation
   useEffect(() => { setMobileOpen(false); setMenuOpen(false); }, [pathname]);
@@ -274,14 +278,24 @@ export function MerchantShell({
               <Menu className="h-5 w-5" />
             </button>
             <div className="hidden flex-1 sm:block">
-              <div className="relative max-w-md">
+              <form
+                className="relative max-w-md"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const q = search.trim();
+                  if (!q) return;
+                  navigate({ to: "/invoices", search: { q } });
+                }}
+              >
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="search"
-                  placeholder="Search invoices, transactions, customers..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search invoices by number, name or email..."
                   className="h-9 w-full rounded-lg border border-glass-border bg-card/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
                 />
-              </div>
+              </form>
             </div>
             <div className="ml-auto flex items-center gap-1">
               <Link to="/notifications" className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Notifications">
