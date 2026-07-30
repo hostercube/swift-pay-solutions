@@ -5,6 +5,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ type Row = {
 
 function DiscountsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [form, setForm] = useState({
     code: "",
@@ -48,13 +50,13 @@ function DiscountsPage() {
       };
     }).bind(supabase))("discount_codes")
       .select("*")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows(data ?? []);
   };
   useEffect(() => {
     load();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const create = async () => {
     if (!user) return;
@@ -63,7 +65,7 @@ function DiscountsPage() {
     const { error } = await ((supabase.from as unknown as (t: string) => {
       insert: (r: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
     }).bind(supabase))("discount_codes").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       code: form.code.trim().toUpperCase(),
       discount_type: form.discount_type,
       value: Number(form.value),

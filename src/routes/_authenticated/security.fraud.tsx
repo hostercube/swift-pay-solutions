@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ type Row = { id: string; block_type: string; value: string; reason: string | nul
 
 function FraudPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [blockType, setBlockType] = useState("email");
   const [value, setValue] = useState("");
@@ -28,19 +30,19 @@ function FraudPage() {
     const { data } = await supabase
       .from("fraud_blocklist")
       .select("id, block_type, value, reason, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Row[]);
   };
 
   useEffect(() => {
     load();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const add = async () => {
     if (!user || !value.trim()) return;
     const { error } = await supabase.from("fraud_blocklist").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       block_type: blockType,
       value: value.trim().toLowerCase(),
       reason: reason.trim() || null,

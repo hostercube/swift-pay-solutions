@@ -5,6 +5,7 @@ import { Pencil, Trash2, Plus, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn } from "@/components/data-table";
 import { defaultLogoFor } from "@/lib/gateways/registry";
 import { resolveLogoUrl } from "@/lib/logo-url";
@@ -84,6 +85,7 @@ const EMPTY: Partial<Method> = {
 
 function MethodsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const { isEnabled } = useEnabledProviders();
   const availableTypes = METHOD_TYPES.filter((t) => isEnabled(t.value));
   const [rows, setRows] = useState<Method[]>([]);
@@ -95,20 +97,20 @@ function MethodsPage() {
     const { data, error } = await supabase
       .from("payment_methods")
       .select("*")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (error) return toast.error(error.message);
     setRows((data ?? []) as Method[]);
   }
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   async function save() {
     if (!user || !editing) return;
     if (!editing.label?.trim()) return toast.error("Label is required");
     setLoading(true);
     const payload = {
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       type: editing.type as MethodType,
       label: editing.label,
       mode: "manual" as Mode,

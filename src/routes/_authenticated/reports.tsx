@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, TrendingUp, PieChart as PieIcon, Activity } from "lucide-react";
@@ -53,6 +54,7 @@ function toCSV(rows: Row[]) {
 
 function ReportsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ function ReportsPage() {
     supabase
       .from("invoices")
       .select("id, invoice_number, amount, currency, status, method_type, customer_name, customer_email, created_at, paid_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .then(({ data }) => {

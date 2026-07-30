@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -57,7 +58,7 @@ function RefundsPage() {
     let refundsQuery = supabase
       .from("refunds")
       .select("*");
-    if (!isAdmin) refundsQuery = refundsQuery.eq("merchant_id", user.id);
+    if (!isAdmin) refundsQuery = refundsQuery.eq("merchant_id", activeMerchantId ?? user.id);
     const { data, error } = await refundsQuery
       .order("created_at", { ascending: false })
       .limit(500);

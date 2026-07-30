@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 
 export const Route = createFileRoute("/_authenticated/invoices/new")({
   head: () => ({ meta: [{ title: "New invoice · PayNOC" }] }),
@@ -19,6 +20,7 @@ function generateInvoiceNumber() {
 
 function NewInvoicePage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -53,7 +55,7 @@ function NewInvoicePage() {
     const { data, error } = await supabase
       .from("invoices")
       .insert({
-        merchant_id: user.id,
+        merchant_id: activeMerchantId ?? user.id,
         invoice_number: generateInvoiceNumber(),
         amount,
         currency: form.currency,

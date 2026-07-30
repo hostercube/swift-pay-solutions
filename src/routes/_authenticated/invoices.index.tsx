@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/data-table";
 
 export const Route = createFileRoute("/_authenticated/invoices/")({
@@ -26,6 +27,7 @@ type Row = {
 
 function InvoicesPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +37,7 @@ function InvoicesPage() {
     supabase
       .from("invoices")
       .select("id, invoice_number, amount, currency, customer_name, customer_email, status, created_at, mode")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false })
       .limit(500)
       .then(({ data }) => {
@@ -43,7 +45,7 @@ function InvoicesPage() {
         setLoading(false);
       });
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, [user, activeMerchantId]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -106,7 +108,7 @@ function InvoicesPage() {
       const parsed = parseCsv(text);
       if (parsed.length === 0) { toast.error("CSV is empty"); return; }
       const payload = parsed.map((r) => ({
-        merchant_id: user.id,
+        merchant_id: activeMerchantId ?? user.id,
         amount: Number(r.amount || 0),
         currency: r.currency || "BDT",
         customer_name: r.customer_name || null,

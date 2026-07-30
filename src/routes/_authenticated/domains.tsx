@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { verifyMerchantDomain } from "@/lib/domains.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ type Domain = {
 
 function DomainsPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Domain[]>([]);
   const [loading, setLoading] = useState(true);
   const [newDomain, setNewDomain] = useState("");
@@ -43,12 +45,12 @@ function DomainsPage() {
     const { data, error } = await supabase
       .from("merchant_domains" as never)
       .select("id, domain, verify_token, verified_at, is_primary, use_for, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     setRows((data ?? []) as unknown as Domain[]);
     setLoading(false);
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   useEffect(() => {
     load();
@@ -64,7 +66,7 @@ function DomainsPage() {
     setAdding(true);
     const { error } = await supabase
       .from("merchant_domains" as never)
-      .insert({ merchant_id: user.id, domain: clean } as never);
+      .insert({ merchant_id: activeMerchantId ?? user.id, domain: clean } as never);
     setAdding(false);
     if (error) {
       toast.error(error.message);

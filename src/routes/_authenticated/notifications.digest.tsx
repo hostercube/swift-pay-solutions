@@ -5,6 +5,7 @@ import { MerchantShell } from "@/components/merchant-shell";
 import { NotificationsTabs } from "@/components/notifications-tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/notifications/digest")({
 
 function DigestPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [enabled, setEnabled] = useState(true);
   const [frequency, setFrequency] = useState("daily");
   const [lastSent, setLastSent] = useState<string | null>(null);
@@ -32,7 +34,7 @@ function DigestPage() {
         };
       }).bind(supabase))("digest_settings")
         .select("*")
-        .eq("merchant_id", user.id)
+        .eq("merchant_id", activeMerchantId ?? user.id)
         .maybeSingle();
       if (data) {
         setEnabled(Boolean(data.enabled));
@@ -40,7 +42,7 @@ function DigestPage() {
         setLastSent((data.last_sent_at as string) ?? null);
       }
     })();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const save = async () => {
     if (!user) return;
@@ -51,7 +53,7 @@ function DigestPage() {
         o: { onConflict: string },
       ) => Promise<{ error: { message: string } | null }>;
     }).bind(supabase))("digest_settings").upsert(
-      { merchant_id: user.id, enabled, frequency },
+      { merchant_id: activeMerchantId ?? user.id, enabled, frequency },
       { onConflict: "merchant_id" },
     );
     setSaving(false);

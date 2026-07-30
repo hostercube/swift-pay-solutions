@@ -5,6 +5,7 @@ import { Copy, Smartphone, RefreshCw, Download, ShieldCheck } from "lucide-react
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 
 export const Route = createFileRoute("/_authenticated/security/devices")({
   head: () => ({ meta: [{ title: "Connect device (APK) · PayNOC" }] }),
@@ -39,6 +40,7 @@ async function sha256Hex(text: string) {
 
 function DevicesPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [keys, setKeys] = useState<KeyRow[]>([]);
   const [selectedKeyId, setSelectedKeyId] = useState<string>("");
   const [secret, setSecret] = useState<string>("");
@@ -53,14 +55,14 @@ function DevicesPage() {
     const { data } = await supabase
       .from("api_keys")
       .select("id, name, environment, public_key, is_active")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
     const rows = (data ?? []) as KeyRow[];
     setKeys(rows);
     if (!selectedKeyId && rows.length > 0) setSelectedKeyId(rows[0].id);
   }
-  useEffect(() => { loadKeys(); }, [user]);
+  useEffect(() => { loadKeys(); }, [user, activeMerchantId]);
 
   async function mintDeviceKey() {
     if (!user) return;
@@ -71,7 +73,7 @@ function DevicesPage() {
     const { data, error } = await supabase
       .from("api_keys")
       .insert({
-        merchant_id: user.id,
+        merchant_id: activeMerchantId ?? user.id,
         name: `APK · Device ${new Date().toLocaleDateString()}`,
         environment: "live",
         public_key: publicKey,

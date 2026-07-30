@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { MerchantShell } from "@/components/merchant-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const COLOR: Record<string, string> = {
 
 function DisputesPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
   const [invoiceId, setInvoiceId] = useState("");
   const [reason, setReason] = useState("");
@@ -57,13 +59,13 @@ function DisputesPage() {
       };
     }).bind(supabase))("disputes")
       .select("*")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows(data ?? []);
   };
   useEffect(() => {
     load();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const create = async () => {
     if (!user) return;
@@ -73,7 +75,7 @@ function DisputesPage() {
     const { error } = await ((supabase.from as unknown as (t: string) => {
       insert: (r: Record<string, unknown>) => Promise<{ error: { message: string } | null }>;
     }).bind(supabase))("disputes").insert({
-      merchant_id: user.id,
+      merchant_id: activeMerchantId ?? user.id,
       invoice_id: invoiceId.trim(),
       reason: reason.trim(),
       merchant_note: note.trim() || null,

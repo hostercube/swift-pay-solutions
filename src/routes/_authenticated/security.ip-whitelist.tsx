@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ type Entry = { id: string; ip_address: string; label: string | null; created_at:
 
 function IpWhitelistPage() {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Entry[]>([]);
   const [ip, setIp] = useState("");
   const [label, setLabel] = useState("");
@@ -27,21 +29,21 @@ function IpWhitelistPage() {
     const { data } = await supabase
       .from("ip_whitelist")
       .select("id, ip_address, label, created_at")
-      .eq("merchant_id", user.id)
+      .eq("merchant_id", activeMerchantId ?? user.id)
       .order("created_at", { ascending: false });
     setRows((data ?? []) as Entry[]);
   };
 
   useEffect(() => {
     load();
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   const add = async () => {
     if (!user || !ip.trim()) return;
     setBusy(true);
     const { error } = await supabase
       .from("ip_whitelist")
-      .insert({ merchant_id: user.id, ip_address: ip.trim(), label: label.trim() || null });
+      .insert({ merchant_id: activeMerchantId ?? user.id, ip_address: ip.trim(), label: label.trim() || null });
     setBusy(false);
     if (error) return toast.error(error.message);
     setIp("");
