@@ -62,10 +62,11 @@ function InvoiceDetailPage() {
 
   const load = useCallback(async () => {
     if (!user) return;
-    const [{ data: i }, { data: t }] = await Promise.all([
+    const [{ data: i, error: iErr }, { data: t, error: tErr }] = await Promise.all([
       supabase.from("invoices").select("*").eq("id", id).maybeSingle(),
       supabase.from("transactions").select("*").eq("invoice_id", id).order("created_at", { ascending: false }),
     ]);
+    if (iErr || tErr) toast.error((iErr ?? tErr)!.message);
     setInv((i ?? null) as Invoice | null);
     setTxns((t ?? []) as Txn[]);
     setLoading(false);

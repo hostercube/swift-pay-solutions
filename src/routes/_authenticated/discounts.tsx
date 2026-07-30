@@ -80,18 +80,22 @@ function DiscountsPage() {
   };
 
   const toggle = async (r: Row) => {
-    await ((supabase.from as unknown as (t: string) => {
+    const { error } = await ((supabase.from as unknown as (t: string) => {
       update: (p: Record<string, unknown>) => {
         eq: (c: string, v: unknown) => Promise<{ error: unknown }>;
       };
     }).bind(supabase))("discount_codes").update({ active: !r.active }).eq("id", r.id);
+    if (error) return toast.error(String((error as { message?: string }).message ?? "Could not update code"));
+    toast.success(r.active ? "Code disabled" : "Code enabled");
     load();
   };
 
   const remove = async (id: string) => {
-    await ((supabase.from as unknown as (t: string) => {
+    const { error } = await ((supabase.from as unknown as (t: string) => {
       delete: () => { eq: (c: string, v: unknown) => Promise<{ error: unknown }> };
     }).bind(supabase))("discount_codes").delete().eq("id", id);
+    if (error) return toast.error(String((error as { message?: string }).message ?? "Could not delete code"));
+    toast.success("Discount code deleted");
     load();
   };
 

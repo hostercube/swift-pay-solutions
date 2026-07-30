@@ -49,8 +49,13 @@ function NewInvoicePage() {
     const amount = Number(form.amount) || 0;
     if (!form.allow_custom_amount && amount <= 0) return toast.error("Enter a valid amount");
     setSaving(true);
-    const expires_at = form.expires_in_hours
-      ? new Date(Date.now() + Number(form.expires_in_hours) * 3_600_000).toISOString()
+    const expiryHours = form.expires_in_hours ? Number(form.expires_in_hours) : null;
+    if (expiryHours !== null && (!Number.isFinite(expiryHours) || expiryHours <= 0)) {
+      setSaving(false);
+      return toast.error("Expiry must be a number of hours greater than 0");
+    }
+    const expires_at = expiryHours
+      ? new Date(Date.now() + expiryHours * 3_600_000).toISOString()
       : null;
     const { data, error } = await supabase
       .from("invoices")
