@@ -214,6 +214,7 @@ function InvoicesPage() {
         loading={loading}
         emptyMessage="No invoices yet — click New invoice to create one."
         searchable={(r) => `${r.invoice_number} ${r.customer_name ?? ""} ${r.customer_email ?? ""}`}
+        initialSearch={search.q ?? ""}
         filters={filters}
         dateField={(r) => r.created_at}
       />

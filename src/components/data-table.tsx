@@ -25,6 +25,8 @@ export type DataTableProps<T> = {
   rows: T[];
   rowKey: (row: T) => string;
   searchable?: (row: T) => string;
+  /** Pre-fill the search box (e.g. from a URL query param). */
+  initialSearch?: string;
   filters?: DataTableFilter<T>[];
   dateField?: (row: T) => string | Date | null | undefined;
   pageSize?: number;
@@ -55,6 +57,7 @@ export function DataTable<T>({
   rows,
   rowKey,
   searchable,
+  initialSearch = "",
   filters = [],
   dateField,
   pageSize: initialPageSize = 20,
@@ -66,7 +69,7 @@ export function DataTable<T>({
   className = "",
   exportFilename,
 }: DataTableProps<T>) {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialSearch);
   const [filterState, setFilterState] = useState<Record<string, string>>({});
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
