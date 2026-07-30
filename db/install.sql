@@ -1755,3 +1755,18 @@ GRANT EXECUTE ON FUNCTION public.claim_first_super_admin() TO service_role;
 -- =============================================================
 -- End addendum
 -- =============================================================
+
+-- =============================================================
+-- Internal-only helper functions: not callable from the Data API.
+-- (Server-side jobs use the service-role key.)
+-- =============================================================
+REVOKE EXECUTE ON FUNCTION public.consume_rate_limit(UUID, INTEGER, INTEGER) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.renew_due_subscriptions() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.expire_due_subscriptions() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.check_fraud_block(UUID, TEXT, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.activate_team_invites() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.activate_admin_staff() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.consume_rate_limit(UUID, INTEGER, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.renew_due_subscriptions() TO service_role;
+GRANT EXECUTE ON FUNCTION public.expire_due_subscriptions() TO service_role;
+GRANT EXECUTE ON FUNCTION public.check_fraud_block(UUID, TEXT, TEXT, TEXT) TO service_role;
