@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 import { signPayload } from "@/lib/webhooks.server";
 
 const MAX_ATTEMPTS = 6;
@@ -9,7 +10,9 @@ const BACKOFF_SECONDS = [60, 300, 1800, 7200, 21600, 86400];
 export const Route = createFileRoute("/api/public/hooks/webhook-retry")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = assertCronRequest(request);
+        if (denied) return denied;
         const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
 
         const { data: due, error } = await supabaseAdmin

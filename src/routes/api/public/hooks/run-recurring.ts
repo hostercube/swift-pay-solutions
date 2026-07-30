@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { assertCronRequest } from "@/lib/cron-auth.server";
 
 const BATCH = 100;
 
@@ -13,7 +14,9 @@ function addInterval(from: Date, unit: string, count: number): Date {
 export const Route = createFileRoute("/api/public/hooks/run-recurring")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = assertCronRequest(request);
+        if (denied) return denied;
         const { supabaseAdmin } = await import("@/lib/supabase-admin.server");
         const nowIso = new Date().toISOString();
 
