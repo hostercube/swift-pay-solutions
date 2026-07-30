@@ -73,7 +73,7 @@ function ReportsPage() {
         setRows((data ?? []) as Row[]);
         setLoading(false);
       });
-  }, [user, days]);
+  }, [user, days, activeMerchantId]);
 
   const {
     chart, monthly, methodBreakdown, statusBreakdown,

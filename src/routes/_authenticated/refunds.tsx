@@ -77,7 +77,7 @@ function RefundsPage() {
     setInvoices((inv ?? []) as Invoice[]);
   };
 
-  useEffect(() => { load(); }, [user, isAdmin]);
+  useEffect(() => { load(); }, [user, isAdmin, activeMerchantId]);
 
   const submit = async () => {
     if (!invoiceId || !amount) return toast.error("Pick an invoice and enter an amount");

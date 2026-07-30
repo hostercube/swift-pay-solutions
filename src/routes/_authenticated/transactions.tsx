@@ -58,7 +58,7 @@ function TransactionsPage() {
       });
   };
 
-  useEffect(load, [user]);
+  useEffect(load, [user, activeMerchantId]);
 
   const onDrain = async () => {
     if (!user || draining) return;

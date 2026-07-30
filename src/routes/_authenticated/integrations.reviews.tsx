@@ -59,7 +59,7 @@ function ReviewsPage() {
     if (error) return toast.error(error.message);
     setRows((data ?? []) as unknown as Row[]);
   }
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user, filter]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user, filter, activeMerchantId]);
 
   const counts = useMemo(() => {
     const c = { pending: 0, verified: 0, rejected: 0 };
