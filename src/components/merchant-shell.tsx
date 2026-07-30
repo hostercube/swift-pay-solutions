@@ -142,6 +142,7 @@ export function MerchantShell({
       const { count } = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
+        .eq("merchant_id", activeMerchantId ?? user.id)
         .is("read_at", null);
       if (!cancelled) setUnread(count ?? 0);
     };
