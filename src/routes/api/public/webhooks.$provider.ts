@@ -28,7 +28,12 @@ export const Route = createFileRoute("/api/public/webhooks/$provider")({
               };
             };
             insert: (v: object) => Promise<{ error: unknown }>;
-            update: (v: object) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+            update: (v: object) => {
+              eq: (c: string, v: string) => Promise<{ error: unknown }> & {
+                eq: (c: string, v: string) => Promise<{ error: unknown }>;
+              };
+            };
+
           };
         };
 
