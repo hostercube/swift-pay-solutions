@@ -163,6 +163,7 @@ function RecurringPage() {
 
 function NewScheduleForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const { user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const [busy, setBusy] = useState(false);
   const [f, setF] = useState({
     name: "",

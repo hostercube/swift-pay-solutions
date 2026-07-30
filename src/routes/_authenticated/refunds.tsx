@@ -41,6 +41,7 @@ const COLOR: Record<string, string> = {
 
 function RefundsPage() {
   const { roles, user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const isAdmin = roles.includes("super_admin");
   const [rows, setRows] = useState<Row[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
