@@ -32,6 +32,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveMerchant } from "@/hooks/use-active-merchant";
 import { supabase } from "@/integrations/supabase/client";
 import { useMerchantPerms } from "@/hooks/use-merchant-perms";
 import type { MerchantPerm } from "@/lib/permissions";
@@ -114,6 +115,7 @@ export function MerchantShell({
 }) {
   const navigate = useNavigate();
   const { signOut, roles, user } = useAuth();
+  const { merchantId: activeMerchantId } = useActiveMerchant();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isSuperAdmin = roles.includes("super_admin");
   const perms = useMerchantPerms();
@@ -121,6 +123,7 @@ export function MerchantShell({
   const [unread, setUnread] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [profile, setProfile] = useState<{ business_name: string | null; full_name: string | null; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
@@ -155,7 +158,7 @@ export function MerchantShell({
       cancelled = true;
       supabase.removeChannel(ch);
     };
-  }, [user]);
+  }, [user, activeMerchantId]);
 
   // Close menus on navigation
   useEffect(() => { setMobileOpen(false); setMenuOpen(false); }, [pathname]);
