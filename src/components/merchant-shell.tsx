@@ -147,7 +147,7 @@ export function MerchantShell({
       .channel("notif-unread")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "notifications", filter: `merchant_id=eq.${activeMerchantId ?? user.id}` },
         () => load(),
       )
       .subscribe();
@@ -274,14 +274,24 @@ export function MerchantShell({
               <Menu className="h-5 w-5" />
             </button>
             <div className="hidden flex-1 sm:block">
-              <div className="relative max-w-md">
+              <form
+                className="relative max-w-md"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const q = search.trim();
+                  if (!q) return;
+                  navigate({ to: "/invoices", search: { q } });
+                }}
+              >
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="search"
-                  placeholder="Search invoices, transactions, customers..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search invoices by number, name or email..."
                   className="h-9 w-full rounded-lg border border-glass-border bg-card/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-primary/40 focus:outline-none"
                 />
-              </div>
+              </form>
             </div>
             <div className="ml-auto flex items-center gap-1">
               <Link to="/notifications" className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="Notifications">

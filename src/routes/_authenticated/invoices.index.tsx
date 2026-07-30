@@ -10,6 +10,9 @@ import { DataTable, type DataTableColumn, type DataTableFilter } from "@/compone
 
 export const Route = createFileRoute("/_authenticated/invoices/")({
   head: () => ({ meta: [{ title: "Invoices · PayNOC" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
   component: InvoicesPage,
 });
 
@@ -26,6 +29,7 @@ type Row = {
 };
 
 function InvoicesPage() {
+  const search = Route.useSearch();
   const { user } = useAuth();
   const { merchantId: activeMerchantId } = useActiveMerchant();
   const [rows, setRows] = useState<Row[]>([]);
