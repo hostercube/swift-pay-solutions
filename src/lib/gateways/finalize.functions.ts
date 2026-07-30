@@ -32,9 +32,14 @@ export const finalizeGatewayReturn = createServerFn({ method: "POST" })
       if (inv.status === "processing") {
         await supabaseAdmin.from("invoices").update({ status: "pending" }).eq("id", inv.id);
       }
-      await supabaseAdmin.from("transactions")
+      // Only reject the attempt that was cancelled — a parallel pending attempt
+      // (customer retried with another method) must stay alive.
+      const cancelRef = data.params.paymentID ?? data.params.paymentId ?? data.params.providerRef;
+      let cancelQuery = supabaseAdmin.from("transactions")
         .update({ status: "rejected", note: "Customer cancelled at gateway" })
         .eq("invoice_id", inv.id).eq("status", "pending");
+      if (cancelRef) cancelQuery = cancelQuery.eq("provider_txn_id", cancelRef);
+      await cancelQuery;
       return { ok: true, status: "cancelled" as const };
     }
 

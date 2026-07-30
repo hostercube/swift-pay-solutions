@@ -1,5 +1,8 @@
 import { createHmac } from "crypto";
 
+// Merchant endpoints are untrusted — never let a slow one hang the request.
+const WEBHOOK_TIMEOUT_MS = 10_000;
+
 export async function sha256Hex(text: string) {
   const { createHash } = await import("crypto");
   return createHash("sha256").update(text).digest("hex");
@@ -61,6 +64,7 @@ export async function dispatchWebhooks(opts: {
             "x-paynoc-signature": `t=${ts},v1=${signature}`,
           },
           body,
+          signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
         });
         httpStatus = res.status;
         responseBody = (await res.text()).slice(0, 4000);
