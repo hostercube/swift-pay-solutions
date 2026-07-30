@@ -25,35 +25,35 @@ EXCEPTION WHEN OTHERS THEN NULL; END $$;
 SELECT cron.schedule('paynoc-expire-invoices', '*/5 * * * *', $$
   SELECT net.http_post(
     url:='{{APP_URL}}/api/public/hooks/expire-invoices',
-    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}","x-cron-secret":"{{CRON_SECRET}}"}'::jsonb,
     body:='{}'::jsonb);
 $$);
 
 SELECT cron.schedule('paynoc-webhook-retry', '*/2 * * * *', $$
   SELECT net.http_post(
     url:='{{APP_URL}}/api/public/hooks/webhook-retry',
-    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}","x-cron-secret":"{{CRON_SECRET}}"}'::jsonb,
     body:='{}'::jsonb);
 $$);
 
 SELECT cron.schedule('paynoc-run-recurring', '*/15 * * * *', $$
   SELECT net.http_post(
     url:='{{APP_URL}}/api/public/hooks/run-recurring',
-    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}","x-cron-secret":"{{CRON_SECRET}}"}'::jsonb,
     body:='{}'::jsonb);
 $$);
 
 SELECT cron.schedule('paynoc-run-digest', '0 * * * *', $$
   SELECT net.http_post(
     url:='{{APP_URL}}/api/public/hooks/run-digest',
-    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}","x-cron-secret":"{{CRON_SECRET}}"}'::jsonb,
     body:='{}'::jsonb);
 $$);
 
 SELECT cron.schedule('paynoc-run-payout-schedule', '*/30 * * * *', $$
   SELECT net.http_post(
     url:='{{APP_URL}}/api/public/hooks/run-payout-schedule',
-    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}"}'::jsonb,
+    headers:='{"Content-Type":"application/json","apikey":"{{ANON_KEY}}","x-cron-secret":"{{CRON_SECRET}}"}'::jsonb,
     body:='{}'::jsonb);
 $$);
 
